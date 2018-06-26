@@ -1,7 +1,7 @@
 # Policy-Machine
 NGAC ABAC Web Service Implementation
 
-Policy Machine Webservices
+Policy Machine Web Services
 Setup Guide
 
 ### Docker Deployment
