@@ -3,11 +3,6 @@ NGAC ABAC Web Service Implementation
 
 Policy Machine Setup Guide
 
-uiuiuiug
-
-Gopi 
-josh change
-
 ### Docker Deployment
 *Note:* Using Neo4j only
 To run the Policy Machine in a Docker container using Docker Compose, using the Docker Quickstart Terminal:
