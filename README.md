@@ -1,8 +1,7 @@
 # Policy-Machine
 NGAC ABAC Web Service Implementation
 
-Policy Machine Web Services
-Setup Guide
+Policy Machine Setup Guide
 
 ### Docker Deployment
 *Note:* Using Neo4j only
