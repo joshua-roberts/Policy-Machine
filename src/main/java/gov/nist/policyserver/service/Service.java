@@ -1,10 +1,8 @@
 package gov.nist.policyserver.service;
 
-import gov.nist.policyserver.access.PmAccess;
-import gov.nist.policyserver.exceptions.ConfigurationException;
-import gov.nist.policyserver.exceptions.InvalidPropertyException;
-import gov.nist.policyserver.exceptions.SessionDoesNotExistException;
-import gov.nist.policyserver.exceptions.SessionUserNotFoundException;
+import gov.nist.policyserver.analytics.PmAnalytics;
+import gov.nist.policyserver.dao.DAOManager;
+import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
@@ -12,43 +10,41 @@ import gov.nist.policyserver.model.graph.nodes.Property;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 import java.util.HashSet;
 
 import static gov.nist.policyserver.common.Constants.*;
-import static gov.nist.policyserver.dao.DAO.getDao;
 
 public class Service {
-    public PmGraph graph;
-    public PmAccess access;
-
-    public Service() throws ConfigurationException {
-        graph = getDao().getGraph();
-        access = getDao().getAccess();
+    public PmGraph getGraph() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+        return getDaoManager().getGraphDAO().getGraph();
     }
 
-    public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException {
-        HashSet<Node> sessions = graph.getNodesOfType(NodeType.S);
-        for(Node node : sessions) {
-            if(node.getName().equals(session)) {
-                //get the user that is assigned to this node
-                HashSet<Node> children = graph.getChildren(node);
-                if(children.isEmpty()) {
-                    throw new SessionUserNotFoundException(session);
-                }
+    public PmAnalytics getAnalytics() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+        return getDaoManager().getGraphDAO().getAnalytics();
+    }
 
-                return children.iterator().next();
-            }
+    public DAOManager getDaoManager() throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+        return DAOManager.getDaoManager();
+    }
+
+    public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        long sessionUserId = getDaoManager().getSessionsDAO().getSessionUserId(session);
+        Node node = getGraph().getNode(sessionUserId);
+        if(node == null) {
+            throw new SessionUserNotFoundException(session);
         }
 
-        throw new SessionDoesNotExistException(session);
+        return node;
     }
 
-    public Node getConnector() throws InvalidPropertyException, ConfigurationException {
-        HashSet<Node> nodes = graph.getNodes();
+    public Node getConnector() throws InvalidPropertyException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        HashSet<Node> nodes = getGraph().getNodes();
         for(Node node : nodes) {
             if(node.getName().equals(CONNECTOR_NAME) && node.hasProperty(new Property(NAMESPACE_PROPERTY, CONNECTOR_NAMESPACE))) {
                 return node;

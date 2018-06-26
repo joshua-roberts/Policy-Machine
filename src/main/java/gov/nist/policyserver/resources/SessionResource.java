@@ -9,8 +9,10 @@ import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 
 @Path("/sessions")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -18,16 +20,13 @@ import java.security.spec.InvalidKeySpecException;
 public class SessionResource {
     private SessionService sessionService = new SessionService();
 
-    public SessionResource() throws ConfigurationException {
-    }
-
     @POST
     public Response createSession(CreateSessionRequest request)
             throws NullNameException, NodeNameExistsInNamespaceException, NodeNameExistsException,
             NodeNotFoundException, DatabaseException, InvalidNodeTypeException,
             InvalidPropertyException, ConfigurationException, NullTypeException, NodeIdExistsException,
             AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException,
-            PMAccessDeniedException, PropertyNotFoundException {
+            PMAccessDeniedException, PropertyNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         String username = request.getUsername();
         String password = request.getPassword();
 
@@ -36,14 +35,8 @@ public class SessionResource {
 
     @Path("/{sessionId}")
     @DELETE
-    public Response deleteSession(@PathParam("sessionId") String sessionId) throws NodeNotFoundException, InvalidPropertyException, InvalidNodeTypeException, DatabaseException, ConfigurationException, SessionDoesNotExistException {
+    public Response deleteSession(@PathParam("sessionId") String sessionId) throws ClassNotFoundException, SQLException, IOException, DatabaseException {
         sessionService.deleteSession(sessionId);
         return new ApiResponse(ApiResponse.DELETE_SESSION_SUCCESS).toResponse();
-    }
-
-    @Path("/users/{username}")
-    @GET
-    public Response createSessionForUser(@PathParam("username") String username) throws NullNameException, NodeIdExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NodeNotFoundException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, ConfigurationException, NullTypeException {
-        return new ApiResponse(sessionService.createSession(username)).toResponse();
     }
 }

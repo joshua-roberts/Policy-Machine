@@ -1,7 +1,7 @@
 package gov.nist.policyserver.resources;
 
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.model.access.PmAccessEntry;
+import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.response.ApiResponse;
@@ -15,37 +15,36 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @Path("/analytics")
 public class AnalyticsResource {
-    AnalyticsService analyticsService = new AnalyticsService();
-    NodeService nodeService = new NodeService();
-
-    public AnalyticsResource() throws ConfigurationException {
-    }
+    private AnalyticsService analyticsService = new AnalyticsService();
+    private NodeService      nodeService      = new NodeService();
 
     @Path("/{var1:target}/users/permissions")
     @GET
     public Response getUsersWithPermissions(@PathParam("var1") PathSegment targetPs,
                                             @QueryParam("permissions") String permissions,
                                             @QueryParam("session") String session,
-                                            @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException {
+                                            @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //get the target node from matrix params
         MultivaluedMap<String, String> targetParams = targetPs.getMatrixParameters();
         Node targetNode = nodeService.getNode(targetParams.getFirst("name"), targetParams.getFirst("type"), targetParams.getFirst("properties"));
 
         //Get all users' permissions on target
-        List<PmAccessEntry> usersPerms = analyticsService.getUsersPermissionsOn(targetNode.getId());
+        List<PmAnalyticsEntry> usersPerms = analyticsService.getUsersPermissionsOn(targetNode.getId());
 
         //if there are permissions to check for, split the string and check
         if(permissions != null && permissions.length() > 0) {
             String[] permArr = permissions.split(",\\s*");
 
-            List<PmAccessEntry> usersWithPerms = new ArrayList<>();
-            for(PmAccessEntry entry : usersPerms) {
+            List<PmAnalyticsEntry> usersWithPerms = new ArrayList<>();
+            for(PmAnalyticsEntry entry : usersPerms) {
                 if(entry.getOperations().containsAll(Arrays.asList(permArr))) {
                     usersWithPerms.add(entry);
                 }
@@ -62,7 +61,7 @@ public class AnalyticsResource {
     public Response getUserPermissions(@PathParam("var1") PathSegment targetPs,
                                        @PathParam("username") String username,
                                        @QueryParam("session") String session,
-                                       @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, NoSubjectParameterException {
+                                       @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, NoSubjectParameterException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //get the target node from matrix params
         MultivaluedMap<String, String> targetParams = targetPs.getMatrixParameters();
         Node targetNode = nodeService.getNode(targetParams.getFirst("name"), targetParams.getFirst("type"), targetParams.getFirst("properties"));
@@ -79,7 +78,7 @@ public class AnalyticsResource {
                                             @PathParam("username") String username,
                                             @QueryParam("permissions") String permissions,
                                             @QueryParam("session") String session,
-                                            @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, NoSubjectParameterException {
+                                            @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, NoSubjectParameterException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //get the target node from matrix params
         MultivaluedMap<String, String> targetParams = targetPs.getMatrixParameters();
         Node targetNode = nodeService.getNode(targetParams.getFirst("name"), targetParams.getFirst("type"), targetParams.getFirst("properties"));
@@ -88,7 +87,7 @@ public class AnalyticsResource {
         Node userNode = nodeService.getNode(username, NodeType.U.toString(), null);
 
         //get user permissions
-        PmAccessEntry userPerms = analyticsService.getUserPermissionsOn(targetNode.getId(), userNode.getId());
+        PmAnalyticsEntry userPerms = analyticsService.getUserPermissionsOn(targetNode.getId(), userNode.getId());
 
         //get permissions to check, if empty check if the user has any permissions
         if(permissions != null) {
@@ -104,17 +103,17 @@ public class AnalyticsResource {
     public Response getAccessibleNodes(@PathParam("username") String username,
                                        @QueryParam("permissions") String permissions,
                                        @QueryParam("session") String session,
-                                       @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, NoUserParameterException, ConfigurationException {
+                                       @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         //get user node
         Node userNode = nodeService.getNode(username, NodeType.U.toString(), null);
 
         //get all accessible nodes
-        List<PmAccessEntry> accessibleNodes = analyticsService.getAccessibleNodes(userNode.getId());
+        List<PmAnalyticsEntry> accessibleNodes = analyticsService.getAccessibleNodes(userNode.getId());
 
         if(permissions != null) {
             String[] permArr = permissions.split(",\\s*");
-            List<PmAccessEntry> entries = new ArrayList<>();
-            for(PmAccessEntry entry : accessibleNodes) {
+            List<PmAnalyticsEntry> entries = new ArrayList<>();
+            for(PmAnalyticsEntry entry : accessibleNodes) {
                 if(entry.getOperations().containsAll(Arrays.asList(permArr))) {
                     entries.add(entry);
                 }
@@ -140,7 +139,7 @@ public class AnalyticsResource {
     @Path("/sessions")
     @GET
     public Response getAccessibleNodes(@QueryParam("session") String session,
-                                       @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException {
+                                       @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
 
         Node user = analyticsService.getSessionUser(session);
 

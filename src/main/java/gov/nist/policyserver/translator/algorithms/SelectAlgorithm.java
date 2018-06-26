@@ -48,7 +48,7 @@ public class SelectAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, JSQLParserException, PMAccessDeniedException, PolicyMachineException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    public String run() throws SQLException, JSQLParserException, PMAccessDeniedException, PolicyMachineException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
         log("SELECT: " + plainSelect);
 
@@ -192,7 +192,7 @@ public class SelectAlgorithm extends Algorithm {
         System.out.println(compositeTable);
     }
 
-    private Hashtable groupRows() throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    private Hashtable groupRows() throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
@@ -323,7 +323,7 @@ public class SelectAlgorithm extends Algorithm {
 
                 boolean bOR = false;
                 ExpressionList inRows = new ExpressionList();
-                List<Expression> expList = new ArrayList<>();//rows.stream().map(StringValue::new).collect(Collectors.toList());
+                List<Expression> expList = new ArrayList<>();//rows.stream().map(StringValue::new).collect(Collectors.toLongList());
                 for(CompositeRow compositeRow : rows){
                     for(SimpleRow row : compositeRow.getCompositeRow()){
                         if(row.getTableName().equals(table.getTableName())) {

@@ -62,6 +62,7 @@ public class Constants {
     public static final int ERR_MISSING_PERMISSIONS        = 6027;
     public static final int ERR_SESSION_USER_NOT_FOUND     = 6028;
     public static final int ERR_UNEXPECTED_NUMBER_OF_NODES = 6029;
+    public static final int ERR_INVALID_ASSIGNMENT       = 6030;
 
     public static final int ERR_NEO                                 = 7000;
 
@@ -103,11 +104,12 @@ public class Constants {
     public static final String SCHEMA_COMP_TABLE_PROPERTY  = "table";
     public static final String SCHEMA_COMP_ROW_PROPERTY    = "row";
     public static final String SCHEMA_COMP_COLUMN_PROPERTY = "col";
-    public static final String SCHEMA_COMP_CELL_PROPERTY   = "cell";
-    public static final String SCHEMA_NAME_PROPERTY        = "schema";
-    public static final String COLUMN_CONTAINER_NAME       = "Columns";
-    public static final String ROW_CONTAINER_NAME          = "Rows";
-    public static final boolean INHERIT_DEFAULT                = true;
-    public static final String SUPER_USER_NAME             = "super";
-    public static final int NEW_NODE_ID = 0;
+    public static final String SCHEMA_COMP_CELL_PROPERTY = "cell";
+    public static final String SCHEMA_NAME_PROPERTY      = "schema";
+    public static final String COLUMN_CONTAINER_NAME     = "Columns";
+    public static final String ROW_CONTAINER_NAME        = "Rows";
+    public static final boolean INHERIT_DEFAULT          = true;
+    public static final String SUPER_USER_NAME           = "super";
+    public static final int NEW_NODE_ID                  = 0;
+    public static final String COMMA_DELIMETER = ",\\s*";
 }

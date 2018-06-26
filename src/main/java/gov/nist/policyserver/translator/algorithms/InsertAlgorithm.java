@@ -25,11 +25,11 @@ public class InsertAlgorithm extends Algorithm{
     }
 
     @Override
-    public String run() throws PmException {
+    public String run() throws PmException, SQLException, IOException, ClassNotFoundException {
         //Check user can create an object attribute in the table oa
         Table table = insert.getTable();
 
-        //get the columns the user has access to
+        //get the columns the user has analytics to
         long columnsContId = pmManager.getEntityId(table.getName(), "Columns");
         List<Node> accColumns = pmManager.getAccessibleChildren(columnsContId, table.getName());
         List<String> accColumnNames = new ArrayList<>();
@@ -40,7 +40,13 @@ public class InsertAlgorithm extends Algorithm{
         //check user can create a row in the table and assign the row to the table
         //schema_comp = table
         //namespace = tableName
-        boolean access = pmManager.checkRowAccess(table.getName(), CREATE_OBJECT_ATTRIBUTE, ASSIGN_OBJECT_ATTRIBUTE);
+        boolean access = false;
+        try {
+            access = pmManager.checkRowAccess(table.getName(), CREATE_OBJECT_ATTRIBUTE, ASSIGN_OBJECT_ATTRIBUTE);
+        }
+        catch (PmException | SQLException | ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
         if(!access) {
             throw new PMAccessDeniedException(table.getName());
         }

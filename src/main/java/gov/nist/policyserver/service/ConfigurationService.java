@@ -10,6 +10,7 @@ import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
@@ -19,22 +20,20 @@ import gov.nist.policyserver.model.graph.relationships.Association;
 
 import static gov.nist.policyserver.common.Constants.DESCRIPTION_PROPERTY;
 import static gov.nist.policyserver.common.Constants.NAMESPACE_PROPERTY;
-import static gov.nist.policyserver.dao.DAO.getDao;
+import static gov.nist.policyserver.common.Constants.NEW_NODE_ID;
 
 public class ConfigurationService extends Service{
     private NodeService nodeService;
     private AssignmentService assignmentService;
     private AssociationsService associationsService;
 
-    public ConfigurationService() throws ConfigurationException {
-        super();
-
+    public ConfigurationService() {
         nodeService = new NodeService();
         assignmentService = new AssignmentService();
         associationsService = new AssociationsService();
     }
 
-    public void connect(String database, String host, int port, String schema, String username, String password) throws DatabaseException, ConfigurationException {
+    public void connect(String database, String host, int port, String schema, String username, String password) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         Properties props = new Properties();
         props.put("database", database);
         props.put("host", host);
@@ -51,12 +50,12 @@ public class ConfigurationService extends Service{
 
     public void importData(String host, int port, String schema, String username, String password)
             throws DatabaseException, NodeNotFoundException, ConfigurationException, AssignmentExistsException,
-            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException {
+            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException {
         //create the schema policy class node
         Property[] properties = new Property[] {
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
                 new Property(Constants.DESCRIPTION_PROPERTY, "Policy Class for " + schema)
-                };
+        };
         Node pcNode = createNode(schema, NodeType.PC.toString(), properties);
 
         properties = new Property[] {
@@ -205,13 +204,13 @@ public class ConfigurationService extends Service{
         }
     }
 
-    private Node createNode(String name, String type, Property[] properties) throws DatabaseException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException {
+    private Node createNode(String name, String type, Property[] properties) throws DatabaseException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException, SQLException, IOException, ClassNotFoundException {
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
-        Node newNode = getDao().createNode(0, name, nt);
+        Node newNode = getDaoManager().getNodesDAO().createNode(0, name, nt);
 
         //add the node to the nodes
-        graph.addNode(newNode);
+        getGraph().addNode(newNode);
 
         //add properties to the node
         if(properties != null) {
@@ -228,7 +227,7 @@ public class ConfigurationService extends Service{
         return newNode;
     }
 
-    public Table getData(String host, int port, String username, String password, String database, String tableName) throws InvalidNodeTypeException, InvalidPropertyException, PropertyNotFoundException, NodeNotFoundException, NameInNamespaceNotFoundException {
+    public Table getData(String host, int port, String username, String password, String database, String tableName) throws InvalidNodeTypeException, InvalidPropertyException, PropertyNotFoundException, NodeNotFoundException, NameInNamespaceNotFoundException, IOException, DatabaseException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
@@ -365,28 +364,31 @@ public class ConfigurationService extends Service{
         }
     }
 
-    public void uploadFiles(String[] files) throws NullNameException, NodeIdExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException {
+    public void uploadFiles(String[] files) throws NullNameException, NodeIdExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         for(String file : files) {
             String[] split = file.split("/");
             for(int i = 0; i < split.length; i++) {
-                String p = split[i];
+                String fileStr = split[i];
+                String[] filePieces = fileStr.split(":");
+                String fileName = filePieces[0];
+                String fileId = filePieces[1];
 
                 //get namespace
                 String namespace;
                 if(i == 0) {
-                    namespace = p;
+                    namespace = fileName;
                 } else {
-                    namespace = split[i-1];
+                    namespace = split[i-1].split(":")[0];
                 }
 
                 String parentName = "";
                 String parentNamespace = "";
                 if(i == 1) {
-                    parentName = split[i-1];
-                    parentNamespace = split[i-1];
+                    parentName = split[i-1].split(":")[0];
+                    parentNamespace = split[i-1].split(":")[0];
                 } else if (i > 1){
-                    parentName = split[i-1];
-                    parentNamespace = split[i-2];
+                    parentName = split[i-1].split(":")[0];
+                    parentNamespace = split[i-2].split(":")[0];
                 }
 
                 Node node = null;
@@ -396,18 +398,23 @@ public class ConfigurationService extends Service{
                 }catch (Exception e){}
 
                 try {
-                    node = nodeService.getNodeInNamespace(namespace, p);
+                    node = nodeService.getNodeInNamespace(namespace, fileName);
                 }catch (Exception e) {}
 
                 if(node == null) {
                     //create node
-                    node = nodeService.createNode(0, p, file.endsWith("/") ? NodeType.OA.toString() : NodeType.O.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, namespace)});
-                    System.out.println("creating node " + p + " in namespace " + namespace);
-
-                    if(parentNode != null) {
-                        //assign to parentNode
-                        assignmentService.createAssignment(node.getId(), parentNode.getId());
+                    if(parentNode == null) {
+                        //create pc
+                        parentNode = nodeService.createNode(NEW_NODE_ID, NEW_NODE_ID, fileName, NodeType.PC.toString(), null);
                     }
+                    nodeService.createNode(parentNode.getId(), NEW_NODE_ID, fileName,
+                            file.endsWith("/") ? NodeType.OA.toString() : NodeType.O.toString(),
+                            new Property[]{
+                            new Property(NAMESPACE_PROPERTY, namespace),
+                            new Property("storage", "google"),
+                            new Property("uuid", fileId)
+                    });
+                    System.out.println("creating node " + fileName + " (" + fileId + ") in namespace " + namespace);
                 }
             }
         }
@@ -485,14 +492,14 @@ public class ConfigurationService extends Service{
         }
     }
 
-    public String save() {
+    public String save() throws ClassNotFoundException, SQLException, DatabaseException, IOException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        HashSet<Node> nodes = graph.getNodes();
+        HashSet<Node> nodes = getGraph().getNodes();
         //remove meta data nodes (ids are less than 0)
         nodes.removeIf(node -> node.getId() < 0);
 
-        HashSet<Assignment> assignments = graph.getAssignments();
+        HashSet<Assignment> assignments = getGraph().getAssignments();
         HashSet<JsonAssignment> jsonAssignments = new HashSet<>();
         for(Assignment assignment : assignments) {
             if(assignment.getParent().getId() > 0 && assignment.getChild().getId() > 0) {// filter meta data assignments
@@ -500,7 +507,7 @@ public class ConfigurationService extends Service{
             }
         }
 
-        List<Association> associations = graph.getAssociations();
+        List<Association> associations = getGraph().getAssociations();
         HashSet<JsonAssociation> jsonAssociations = new HashSet<>();
         for(Association association : associations) {
             if (association.getChild().getId() > 0 && association.getParent().getId() > 0) {//filter meta data association
@@ -512,7 +519,7 @@ public class ConfigurationService extends Service{
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) throws NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, NullTypeException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException, NodeNotFoundException, AssignmentExistsException, NodeIdExistsException, AssociationExistsException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public void load(String config) throws NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, NullTypeException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException, NodeNotFoundException, AssignmentExistsException, NodeIdExistsException, AssociationExistsException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<Node> nodes = graph.getNodes();
@@ -523,7 +530,7 @@ public class ConfigurationService extends Service{
                 propArr = new Property[properties.size()];
                 propArr = properties.toArray(propArr);
             }
-            nodeService.createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
+            nodeService.createNode(0, node.getId(), node.getName(), node.getType().toString(), propArr);
         }
 
         HashSet<JsonAssignment> assignments = graph.getAssignments();
@@ -540,32 +547,32 @@ public class ConfigurationService extends Service{
         }
     }
 
-    public void reset() throws ConfigurationException, DatabaseException {
-        getDao().reset();
-        getDao().buildGraph();
+    public void reset() throws SQLException, IOException, ClassNotFoundException, DatabaseException {
+        getDaoManager().getGraphDAO().reset();
+        getDaoManager().getGraphDAO().buildGraph();
     }
 
-    public JsonNode getGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException {
+    public JsonNode getJsonGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         HashSet<Node> cNodes = nodeService.getNodes(null, "PM", "OA", null, null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getId(), cNode.getName(), "C", cNode.getProperties(), getJsonNodes(cNode.getId()));
         return root;
     }
-    public JsonNode getUserGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException {
+    public JsonNode getUserGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         System.out.println("in get user graph");
         HashSet<Node> cNodes = nodeService.getNodes(null, "PM", "OA", null, null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getId(), cNode.getName(), "C", cNode.getProperties(), getJsonUserNodes(cNode.getId()));
         return root;
     }
-    public JsonNode getObjGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException {
+    public JsonNode getObjGraph() throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         HashSet<Node> cNodes = nodeService.getNodes(null, "PM", "OA", null, null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getId(), cNode.getName(), "C", cNode.getProperties(), getJsonObjNodes(cNode.getId()));
         return root;
     }
 
-    List<JsonNode> getJsonUserNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException {
+    List<JsonNode> getJsonUserNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         System.out.println("in get user nodes");
         List<JsonNode> jsonNodes = new ArrayList<>();
         HashSet<Node> children = nodeService.getChildrenOfType(id, "PC");
@@ -587,7 +594,7 @@ public class ConfigurationService extends Service{
         }
     }
 
-    List<JsonNode> getJsonObjNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException {
+    List<JsonNode> getJsonObjNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         List<JsonNode> jsonNodes = new ArrayList<>();
         HashSet<Node> children = nodeService.getChildrenOfType(id, "PC");
         children.addAll(nodeService.getChildrenOfType(id, "O"));
@@ -634,7 +641,7 @@ public class ConfigurationService extends Service{
         }
     }
 
-    List<JsonNode> getJsonNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException {
+    List<JsonNode> getJsonNodes(long id) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         List<JsonNode> jsonNodes = new ArrayList<>();
         HashSet<Node> children = nodeService.getChildrenOfType(id, null);
         for(Node node : children) {

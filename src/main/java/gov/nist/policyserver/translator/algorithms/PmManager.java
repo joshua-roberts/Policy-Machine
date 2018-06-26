@@ -1,11 +1,11 @@
 package gov.nist.policyserver.translator.algorithms;
 
 import gov.nist.policyserver.dao.DAO;
-import gov.nist.policyserver.evr.EvrManager;
-import gov.nist.policyserver.evr.exceptions.InvalidEntityException;
-import gov.nist.policyserver.evr.exceptions.InvalidEvrException;
+import gov.nist.policyserver.obligations.EvrManager;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEvrException;
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.model.access.PmAccessEntry;
+import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.service.AnalyticsService;
@@ -16,9 +16,12 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.update.Update;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.*;
+
+import static gov.nist.policyserver.dao.DAOManager.getDaoManager;
 
 public class PmManager {
     public static final String GET_ENTITY_ID = "getEntityId";
@@ -39,11 +42,11 @@ public class PmManager {
     private EvrManager       evrManager;
     private String           process;
 
-    public PmManager(String username, String process) throws NodeNotFoundException, ConfigurationException {
+    public PmManager(String username, String process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException {
         this.nodeService = new NodeService();
         this.analyticsService = new AnalyticsService();
         this.pmUser = getPmUser(username);
-        this.evrManager = DAO.getDao().getEvrManager();
+        this.evrManager = getDaoManager().getObligationsDAO().getEvrManager();
         this.process = process;
     }
 
@@ -55,7 +58,7 @@ public class PmManager {
         this.process = process;
     }
 
-    private Node getPmUser(String username) throws NodeNotFoundException {
+    private Node getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         try {
             HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null, null);
             if(!nodes.isEmpty()) {
@@ -74,14 +77,14 @@ public class PmManager {
         return pmUser;
     }
 
-    public long getEntityId(String namespace, String name) throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException {
+    public long getEntityId(String namespace, String name) throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         return nodeService.getNodeInNamespace(namespace, name).getId();
     }
 
-    public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
-        List<PmAccessEntry> accessibleChildren = analyticsService.getAccessibleChildren(id, pmUser.getId());
+    public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+        List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(id, pmUser.getId());
         List<Node> nodes = new ArrayList<>();
-        for(PmAccessEntry entry : accessibleChildren) {
+        for(PmAnalyticsEntry entry : accessibleChildren) {
             Node target = entry.getTarget();
             HashSet<String> prohibitedOps = getProhibitedOps(target.getId());
             if(entry.getOperations().contains(perm) && !prohibitedOps.contains(perm)) {
@@ -100,7 +103,7 @@ public class PmManager {
      * @throws NodeNotFoundException
      * @throws InvalidProhibitionSubjectTypeException
      */
-    private HashSet<String> getProhibitedOps(long id) throws NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    private HashSet<String> getProhibitedOps(long id) throws NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         //get the prohibited ops for the user
         HashSet<String> prohibitedOps = analyticsService.getProhibitedOps(id, pmUser.getId(), "U");
 
@@ -112,7 +115,7 @@ public class PmManager {
         return prohibitedOps;
     }
 
-    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException {
+    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         HashSet<Node> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.O.toString());
         HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.O.toString());
         columnChildren.retainAll(rowChildren);
@@ -123,7 +126,7 @@ public class PmManager {
         }
     }
 
-    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException {
+    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
         Node node = nodeService.getNodeInNamespace(tableName, columnName);
         if(node == null) {
             throw new NodeNotFoundException("Could not find column object attribute for " + tableName);
@@ -131,7 +134,7 @@ public class PmManager {
 
         List<String> permList = Arrays.asList(perms);
 
-        PmAccessEntry access = analyticsService.getUserPermissionsOn(node.getId(), pmUser.getId());
+        PmAnalyticsEntry access = analyticsService.getUserPermissionsOn(node.getId(), pmUser.getId());
         HashSet<String> operations = access.getOperations();
 
         //get and remove all prohibited operations
@@ -141,7 +144,7 @@ public class PmManager {
         return operations.containsAll(permList);
     }
 
-    public boolean checkRowAccess(String tableName, String ... perms) throws PmException {
+    public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
         HashSet<Node> nodes = nodeService.getNodes(tableName, "Rows", NodeType.OA.toString(), null, null);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException("Could not find row object attribute for table " + tableName);
@@ -150,7 +153,7 @@ public class PmManager {
         List<String> permList = Arrays.asList(perms);
 
         Node node = nodes.iterator().next();
-        PmAccessEntry access = analyticsService.getUserPermissionsOn(node.getId(), pmUser.getId());
+        PmAnalyticsEntry access = analyticsService.getUserPermissionsOn(node.getId(), pmUser.getId());
         HashSet<String> operations = access.getOperations();
 
         //get and remove all prohibited operations
@@ -177,6 +180,12 @@ public class PmManager {
                         evrManager.processUpdate(pmUser, process, update);
                     }
                     catch (InvalidEntityException | SQLException | InvalidEvrException | DatabaseException | ConfigurationException | InvalidPropertyException | InvalidNodeTypeException | NodeNotFoundException | AssignmentExistsException | ProhibitionDoesNotExistException | InvalidProhibitionSubjectTypeException | ProhibitionResourceExistsException | ProhibitionNameExistsException | NullNameException e) {
+                        e.printStackTrace();
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     }
                     return;
@@ -216,7 +225,7 @@ public class PmManager {
 
                         evrManager.processSelect(pmUser, process);
                     }
-                    catch (InvalidEntityException | SQLException | InvalidEvrException | DatabaseException | ConfigurationException | InvalidPropertyException | InvalidNodeTypeException | NodeNotFoundException | AssignmentExistsException | ProhibitionDoesNotExistException | ProhibitionResourceExistsException | InvalidProhibitionSubjectTypeException | ProhibitionNameExistsException | NullNameException e) {
+                    catch (InvalidEntityException | SQLException | InvalidEvrException | DatabaseException | ConfigurationException | InvalidPropertyException | InvalidNodeTypeException | NodeNotFoundException | AssignmentExistsException | ProhibitionDoesNotExistException | ProhibitionResourceExistsException | InvalidProhibitionSubjectTypeException | ProhibitionNameExistsException | NullNameException | IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
                     return;

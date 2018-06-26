@@ -1,64 +1,57 @@
 package gov.nist.policyserver.service;
 
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.model.access.PmAccessEntry;
 import gov.nist.policyserver.model.graph.nodes.Node;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
-import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashSet;
 
-import static gov.nist.policyserver.common.Constants.*;
-import static gov.nist.policyserver.dao.DAO.getDao;
 
 public class AssignmentService extends Service{
-    private NodeService nodeService = new NodeService();
 
-    public AssignmentService() throws ConfigurationException {
-        super();
-    }
-
-    public boolean isAssigned(long childId, long parentId) throws NodeNotFoundException {
+    public boolean isAssigned(long childId, long parentId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //check if the nodes exist
-        Node child = graph.getNode(childId);
+        Node child = getGraph().getNode(childId);
         if(child == null){
             throw new NodeNotFoundException(childId);
         }
-        Node parent = graph.getNode(parentId);
+        Node parent = getGraph().getNode(parentId);
         if(parent == null){
             throw new NodeNotFoundException(parentId);
         }
 
-        return graph.isAssigned(child, parent);
+        return getGraph().isAssigned(child, parent);
     }
 
-    public void createAssignment(long childId, long parentId) throws NodeNotFoundException, AssignmentExistsException, ConfigurationException, DatabaseException {
+    public void createAssignment(long childId, long parentId) throws NodeNotFoundException, AssignmentExistsException, DatabaseException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException {
         //check if the nodes exist
-        Node child = graph.getNode(childId);
+        Node child = getGraph().getNode(childId);
         if(child == null){
             throw new NodeNotFoundException(childId);
         }
-        Node parent = graph.getNode(parentId);
+        Node parent = getGraph().getNode(parentId);
         if(parent == null){
             throw new NodeNotFoundException(parentId);
         }
         if (isAssigned(childId, parentId) ) {
             throw new AssignmentExistsException("Assignment exists between node " + childId + " and " + parentId);
         }
+
         //create assignment in database
-        getDao().createAssignment(childId, parentId);
+        getDaoManager().getAssignmentsDAO().createAssignment(childId, parentId);
 
         //create assignment in nodes
-        graph.createAssignment(child, parent);
+        getGraph().createAssignment(child, parent);
     }
 
-    public void deleteAssignment(long childId, long parentId) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public void deleteAssignment(long childId, long parentId) throws NodeNotFoundException, AssignmentDoesNotExistException, DatabaseException,SQLException, IOException, ClassNotFoundException {
         //check if the nodes exist
-        Node child = graph.getNode(childId);
+        Node child = getGraph().getNode(childId);
         if(child == null){
             throw new NodeNotFoundException(childId);
         }
-        Node parent = graph.getNode(parentId);
+        Node parent = getGraph().getNode(parentId);
         if(parent == null){
             throw new NodeNotFoundException(childId);
         }
@@ -69,18 +62,18 @@ public class AssignmentService extends Service{
         }
 
         //delete assignment in database
-        getDao().deleteAssignment(childId, parentId);
+        getDaoManager().getAssignmentsDAO().deleteAssignment(childId, parentId);
 
         //delete assignment in nodes
-        graph.deleteAssignment(child, parent);
+        getGraph().deleteAssignment(child, parent);
     }
 
-    public HashSet<Node> getAscendants(long nodeId) throws NodeNotFoundException {
-        Node node = graph.getNode(nodeId);
+    public HashSet<Node> getAscendants(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        Node node = getGraph().getNode(nodeId);
         if(node == null) {
             throw new NodeNotFoundException(nodeId);
         }
 
-        return graph.getAscesndants(nodeId);
+        return getGraph().getAscesndants(nodeId);
     }
 }

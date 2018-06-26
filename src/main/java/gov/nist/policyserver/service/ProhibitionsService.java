@@ -1,6 +1,5 @@
 package gov.nist.policyserver.service;
 
-import gov.nist.policyserver.dao.DAO;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.prohibitions.Prohibition;
@@ -8,24 +7,21 @@ import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
 import gov.nist.policyserver.model.prohibitions.ProhibitionSubject;
 import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.policyserver.dao.DAO.getDao;
-
 public class ProhibitionsService extends Service{
-    public ProhibitionsService() throws ConfigurationException {
-        super();
-    }
 
     public Prohibition createProhibition(String name, String[] operations, boolean intersection,
                                          ProhibitionResource[] resources, ProhibitionSubject denySubject)
-            throws ProhibitionNameExistsException, DatabaseException, ConfigurationException, NullNameException {
+            throws ProhibitionNameExistsException, DatabaseException, NullNameException, SQLException, IOException, ClassNotFoundException {
         if(name == null || name.isEmpty()) {
             throw new NullNameException();
         }
 
         //check the prohibitions doesn't already exist
-        Prohibition prohibition = access.getProhibition(name);
+        Prohibition prohibition = getAnalytics().getProhibition(name);
         if(prohibition != null){
             throw new ProhibitionNameExistsException(name);
         }
@@ -33,21 +29,21 @@ public class ProhibitionsService extends Service{
         HashSet<String> hsOps = new HashSet<>(Arrays.asList(operations));
 
         //create prohibition in database
-        getDao().createProhibition(name, hsOps, intersection, resources, denySubject);
+        getDaoManager().getProhibitionsDAO().createProhibition(name, hsOps, intersection, resources, denySubject);
 
         List<ProhibitionResource> resourcesList = new ArrayList<>();
         Collections.addAll(resourcesList, resources);
 
         //add prohibition to nodes
         prohibition = new Prohibition(denySubject, resourcesList, name, hsOps, intersection);
-        access.addProhibition(prohibition);
+        getAnalytics().addProhibition(prohibition);
 
         return prohibition;
     }
 
     public Prohibition getProhibition(String prohibitionName)
-            throws ProhibitionDoesNotExistException {
-        Prohibition prohibition = access.getProhibition(prohibitionName);
+            throws ProhibitionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        Prohibition prohibition = getAnalytics().getProhibition(prohibitionName);
         if(prohibition == null){
             throw new ProhibitionDoesNotExistException(prohibitionName);
         }
@@ -56,24 +52,24 @@ public class ProhibitionsService extends Service{
     }
 
     public void deleteProhibition(String prohibitionName)
-            throws ProhibitionDoesNotExistException, DatabaseException, ConfigurationException {
+            throws ProhibitionDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException {
         //check that the prohibition exists
         getProhibition(prohibitionName);
 
         //delete prohibition in database
-        DAO.getDao().deleteProhibition(prohibitionName);
+        getDaoManager().getProhibitionsDAO().deleteProhibition(prohibitionName);
 
         //delete prohibition in memory
-        access.removeProhibition(prohibitionName);
+        getAnalytics().removeProhibition(prohibitionName);
     }
 
     private void addResourceToProhibition(String prohibitionName, long resourceId, boolean complement)
-            throws DatabaseException, ProhibitionDoesNotExistException, NodeNotFoundException, ProhibitionResourceExistsException, ConfigurationException {
+            throws DatabaseException, ProhibitionDoesNotExistException, NodeNotFoundException, ProhibitionResourceExistsException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         //check if the prohibition exists
         Prohibition prohibition = getProhibition(prohibitionName);
 
         //check if the resource exists
-        Node node = graph.getNode(resourceId);
+        Node node = getGraph().getNode(resourceId);
         if(node == null){
             throw new NodeNotFoundException(resourceId);
         }
@@ -84,7 +80,7 @@ public class ProhibitionsService extends Service{
             throw new ProhibitionResourceExistsException(prohibitionName, resourceId);
         }
         //add resource to prohibition in database
-        getDao().addResourceToProhibition(prohibitionName, resourceId, complement);
+        getDaoManager().getProhibitionsDAO().addResourceToProhibition(prohibitionName, resourceId, complement);
 
         //add resource to prohibition in memory
         prohibition.addResource(pr);
@@ -92,30 +88,30 @@ public class ProhibitionsService extends Service{
     }
 
     private void setProhibitionSubject(String prohibitionName, long subjectId, String subjectType)
-            throws InvalidProhibitionSubjectTypeException, DatabaseException, ProhibitionDoesNotExistException, ConfigurationException {
+            throws InvalidProhibitionSubjectTypeException, DatabaseException, ProhibitionDoesNotExistException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         ProhibitionSubjectType subType = ProhibitionSubjectType.toProhibitionSubjectType(subjectType);
 
         //check if prohibition exists
         Prohibition prohibition = getProhibition(prohibitionName);
 
         //set the prohibition subject in the database
-        getDao().setProhibitionSubject(prohibitionName, subjectId, subType);
+        getDaoManager().getProhibitionsDAO().setProhibitionSubject(prohibitionName, subjectId, subType);
 
         //set the prohibition subject in memory
         prohibition.setSubject(new ProhibitionSubject(subjectId, subType));
     }
 
-    public Prohibition updateProhibition(String name, boolean intersection, String[] operations, ProhibitionResource[] resources, ProhibitionSubject subject) throws ProhibitionDoesNotExistException, ConfigurationException, DatabaseException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, ProhibitionResourceExistsException {
+    public Prohibition updateProhibition(String name, boolean intersection, String[] operations, ProhibitionResource[] resources, ProhibitionSubject subject) throws ProhibitionDoesNotExistException, ConfigurationException, DatabaseException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, ProhibitionResourceExistsException, SQLException, IOException, ClassNotFoundException {
         //check the prohibition exists
         Prohibition prohibition = getProhibition(name);
 
         //set intersection
-        getDao().setProhibitionIntersection(name, intersection);
+        getDaoManager().getProhibitionsDAO().setProhibitionIntersection(name, intersection);
         prohibition.setIntersection(intersection);
 
         //set operations
         HashSet<String> opSet = new HashSet<>(Arrays.asList(operations));
-        getDao().setProhibitionOperations(prohibition.getName(), opSet);
+        getDaoManager().getProhibitionsDAO().setProhibitionOperations(prohibition.getName(), opSet);
         prohibition.setOperations(opSet);
 
         //set resources
@@ -123,7 +119,7 @@ public class ProhibitionsService extends Service{
 
         //delete from database
         for(ProhibitionResource prohibitionResource : oldResources) {
-            getDao().deleteProhibitionResource(name, prohibitionResource.getResourceId());
+            getDaoManager().getProhibitionsDAO().deleteProhibitionResource(name, prohibitionResource.getResourceId());
         }
         //remove from memory
         prohibition.clearResources();
@@ -140,8 +136,8 @@ public class ProhibitionsService extends Service{
         return getProhibition(name);
     }
 
-    public List<Prohibition> getProhibitions(long subjectId, long resourceId) {
-        List<Prohibition> prohibitions = access.getProhibitions();
+    public List<Prohibition> getProhibitions(long subjectId, long resourceId) throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+        List<Prohibition> prohibitions = getAnalytics().getProhibitions();
         if(subjectId != 0) {
             prohibitions.removeIf(prohibition -> prohibition.getSubject().getSubjectId() != subjectId);
         }

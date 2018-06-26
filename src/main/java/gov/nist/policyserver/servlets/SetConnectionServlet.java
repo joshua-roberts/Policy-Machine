@@ -1,8 +1,10 @@
 package gov.nist.policyserver.servlets;
 
 import gov.nist.policyserver.dao.DAO;
+import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.exceptions.InvalidPropertyException;
 
 import java.io.IOException;
 import javax.servlet.ServletContext;
@@ -12,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class SetConnectionServlet extends HttpServlet {
@@ -35,10 +38,11 @@ public class SetConnectionServlet extends HttpServlet {
 
         try {
             DAO.init(props);
+            DAOManager.init(props);
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
-        catch (DatabaseException | ConfigurationException e) {
+        catch (DatabaseException | ConfigurationException | ClassNotFoundException | SQLException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

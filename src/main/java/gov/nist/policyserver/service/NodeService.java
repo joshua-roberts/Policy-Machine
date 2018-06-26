@@ -5,27 +5,24 @@ import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import static gov.nist.policyserver.common.Constants.*;
-import static gov.nist.policyserver.dao.DAO.getDao;
 
 public class NodeService extends Service{
 
-    public NodeService() throws ConfigurationException {
-        super();
-    }
-
     public HashSet<Node> getNodes(String namespace, String name, String type, String key, String value)
-            throws InvalidNodeTypeException, InvalidPropertyException {
+            throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
         Property property = (key==null||value==null)?null : new Property(key, value);
 
-        HashSet<Node> nodes = graph.getNodes();
+        HashSet<Node> nodes = getGraph().getNodes();
 
         //check namespace match
         if(namespace != null){
@@ -58,10 +55,10 @@ public class NodeService extends Service{
     }
 
     public HashSet<Node> getNodes(String namespace, String name, String type, List<Property> properties)
-            throws InvalidNodeTypeException {
+            throws InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
-        HashSet<Node> nodes = graph.getNodes();
+        HashSet<Node> nodes = getGraph().getNodes();
 
         //check namespace match
         if(namespace != null){
@@ -101,10 +98,10 @@ public class NodeService extends Service{
     }
 
     public Node getNode(String namespace, String name, String type, List<Property> properties)
-            throws InvalidNodeTypeException, UnexpectedNumberOfNodesException {
+            throws InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
-        HashSet<Node> nodes = graph.getNodes();
+        HashSet<Node> nodes = getGraph().getNodes();
 
         //check namespace match
         if(namespace != null){
@@ -182,7 +179,7 @@ public class NodeService extends Service{
         return nodes;
     }
 
-    public Node getNode(String name, String type, String properties) throws InvalidPropertyException, InvalidNodeTypeException, UnexpectedNumberOfNodesException {
+    public Node getNode(String name, String type, String properties) throws InvalidPropertyException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         //get target node
         //get properties
         List<Property> propList = new ArrayList<>();
@@ -198,11 +195,11 @@ public class NodeService extends Service{
         return getNode(null, name, type, propList);
     }
 
-    public Node createNode(long id, String name, String type, Property[] properties)
+    public Node createNode(long baseId, long id, String name, String type, Property[] properties)
             throws NullNameException, NullTypeException, InvalidNodeTypeException,
             InvalidPropertyException, NodeNameExistsInNamespaceException, DatabaseException,
             ConfigurationException, NodeNameExistsException, NodeIdExistsException,
-            NodeNotFoundException {
+            NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException {
         //check name and type are not null
         if(name == null){
             throw new NullNameException();
@@ -248,21 +245,18 @@ public class NodeService extends Service{
 
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
-        Node newNode = getDao().createNode(id, name, nt);
+        Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt);
 
         //add the node to the nodes
-        graph.addNode(newNode);
+        getGraph().addNode(newNode);
 
-        //assign node to connector
-        if(newNode.getId() > 0) {
-            AssignmentService assignmentService = new AssignmentService();
-            try {
-                assignmentService.createAssignment(newNode.getId(), getConnector().getId());
+        AssignmentService assignmentService = new AssignmentService();
+        if (newNode.getId() > 0) {
+            if(baseId > 0) {
+                assignmentService.createAssignment(newNode.getId(), baseId);
             }
-            catch (AssignmentExistsException e) {
-                //a new node should not be assigned to the connector yet
-                //ignore
-            }
+            //assign node to connector
+            assignmentService.createAssignment(newNode.getId(), getConnector().getId());
         }
 
         //add properties to the node
@@ -276,7 +270,7 @@ public class NodeService extends Service{
         return newNode;
     }
 
-    private Node addNodeProperties(Node node, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException {
+    private Node addNodeProperties(Node node, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException, SQLException, IOException, ClassNotFoundException {
         if(properties != null) {
             for (Property property : properties) {
                 if(property.isValid()) {
@@ -306,8 +300,8 @@ public class NodeService extends Service{
     }
 
     public Node getNode(long nodeId)
-            throws NodeNotFoundException {
-        Node node = graph.getNode(nodeId);
+            throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        Node node = getGraph().getNode(nodeId);
         if(node == null){
             throw new NodeNotFoundException(nodeId);
         }
@@ -316,7 +310,7 @@ public class NodeService extends Service{
     }
 
     public Node getNodeInNamespace(String namespace, String name)
-            throws NameInNamespaceNotFoundException, InvalidNodeTypeException, InvalidPropertyException {
+            throws NameInNamespaceNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         HashSet<Node> nodes = getNodes(namespace, name, null, null, null);
         if(nodes.isEmpty()){
             throw new NameInNamespaceNotFoundException(namespace, name);
@@ -326,22 +320,22 @@ public class NodeService extends Service{
     }
 
     public void deleteNodeInNamespace(String namespace, String nodeName)
-            throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException {
+            throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         //get the node in namespace
         Node node = getNodeInNamespace(namespace, nodeName);
 
         deleteNode(node.getId());
     }
 
-    public Node updateNode(long nodeId, String name, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException {
+    public Node updateNode(long nodeId, String name, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException, SQLException, IOException, ClassNotFoundException {
         //check node exists
         Node node = getNode(nodeId);
 
         //update node in the database
-        getDao().updateNode(nodeId, name);
+        getDaoManager().getNodesDAO().updateNode(nodeId, name);
 
         //update node in graph
-        graph.updateNode(nodeId, name);
+        getGraph().updateNode(nodeId, name);
 
         //delete node properties
         deleteNodeProperties(nodeId);
@@ -349,35 +343,35 @@ public class NodeService extends Service{
         //add the new properties
         addNodeProperties(node, properties);
 
-        return graph.getNode(nodeId);
+        return getGraph().getNode(nodeId);
     }
 
-    public void deleteNode(long nodeId) throws NodeNotFoundException, DatabaseException, ConfigurationException {
+    public void deleteNode(long nodeId) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException {
         //check node exists
         getNode(nodeId);
 
         //delete node in db
-        getDao().deleteNode(nodeId);
+        getDaoManager().getNodesDAO().deleteNode(nodeId);
 
         //delete node in database
-        graph.deleteNode(nodeId);
+        getGraph().deleteNode(nodeId);
     }
 
-    public List<Property> getNodeProperties(long nodeId) throws NodeNotFoundException {
+    public List<Property> getNodeProperties(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         //get node
         Node node = getNode(nodeId);
 
         return node.getProperties();
     }
 
-    public Node addNodeProperty(long nodeId, String key, String value) throws InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException {
+    public Node addNodeProperty(long nodeId, String key, String value) throws InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         Property prop = new Property(key, value);
 
         //check node exists
         Node node = getNode(nodeId);
 
         //add property to node in database
-        getDao().addNodeProperty(nodeId, prop);
+        getDaoManager().getNodesDAO().addNodeProperty(nodeId, prop);
 
         //add property to node in nodes
         node.addProperty(prop);
@@ -385,7 +379,7 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Property getNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException {
+    public Property getNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         //get node
         Node node = getNode(nodeId);
 
@@ -393,28 +387,28 @@ public class NodeService extends Service{
         return node.getProperty(key);
     }
 
-    public void deleteNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, ConfigurationException {
+    public void deleteNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         //check if the property exists
         getNodeProperty(nodeId, key);
 
         //delete the node property
-        getDao().deleteNodeProperty(nodeId, key);
+        getDaoManager().getNodesDAO().deleteNodeProperty(nodeId, key);
 
         //delete node from the nodes
-        graph.deleteNodeProperty(nodeId, key);
+        getGraph().deleteNodeProperty(nodeId, key);
     }
 
-    private void deleteNodeProperties(long nodeId) throws NodeNotFoundException, ConfigurationException, DatabaseException {
+    private void deleteNodeProperties(long nodeId) throws NodeNotFoundException, ConfigurationException, DatabaseException, SQLException, IOException, ClassNotFoundException {
         List<Property> props = getNodeProperties(nodeId);
 
         for(Property property : props) {
-            getDao().deleteNodeProperty(nodeId, property.getKey());
+            getDaoManager().getNodesDAO().deleteNodeProperty(nodeId, property.getKey());
         }
 
-        graph.deleteNodeProperties(nodeId);
+        getGraph().deleteNodeProperties(nodeId);
     }
 
-    public void updateNodeProperty(long nodeId, String key, String value) throws NodeNotFoundException, PropertyNotFoundException, ConfigurationException, DatabaseException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public void updateNodeProperty(long nodeId, String key, String value) throws NodeNotFoundException, PropertyNotFoundException, ConfigurationException, DatabaseException, InvalidKeySpecException, NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException {
         //check if the property exists
         getNodeProperty(nodeId, key);
 
@@ -423,16 +417,16 @@ public class NodeService extends Service{
         }
 
         //update the property
-        getDao().updateNodeProperty(nodeId, key, value);
+        getDaoManager().getNodesDAO().updateNodeProperty(nodeId, key, value);
 
         //update property in graph
-        graph.updateNodeProperty(nodeId, key, value);
+        getGraph().updateNodeProperty(nodeId, key, value);
     }
 
-    public HashSet<Node> getChildrenOfType(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException {
+    public HashSet<Node> getChildrenOfType(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         Node node = getNode(nodeId);
 
-        HashSet<Node> children = graph.getChildren(node);
+        HashSet<Node> children = getGraph().getChildren(node);
         HashSet<Node> retChildren = new HashSet<>();
         retChildren.addAll(children);
         if(childType != null) {
@@ -446,23 +440,21 @@ public class NodeService extends Service{
         return retChildren;
     }
 
-    public void deleteNodeChildren(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, DatabaseException, ConfigurationException {
-        //TODO
-
+    public void deleteNodeChildren(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         HashSet<Node> children = getChildrenOfType(nodeId, childType);
         for(Node node : children){
             //delete node in db
-            getDao().deleteNode(node.getId());
+            getDaoManager().getNodesDAO().deleteNode(node.getId());
 
             //delete node in database
-            graph.deleteNode(node.getId());
+            getGraph().deleteNode(node.getId());
         }
     }
 
-    public HashSet<Node> getParentsOfType(long nodeId, String parentType) throws InvalidNodeTypeException, NodeNotFoundException {
+    public HashSet<Node> getParentsOfType(long nodeId, String parentType) throws InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         Node node = getNode(nodeId);
 
-        HashSet<Node> parents = graph.getParents(node);
+        HashSet<Node> parents = getGraph().getParents(node);
         HashSet<Node> retParents = new HashSet<>();
         retParents.addAll(parents);
         if(parentType != null) {

@@ -8,6 +8,8 @@ import gov.nist.policyserver.service.ProhibitionsService;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.sql.SQLException;
 
 @Path("/prohibitions")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -16,25 +18,22 @@ public class ProhibitionsResource {
 
     private ProhibitionsService prohibitionsService = new ProhibitionsService();
 
-    public ProhibitionsResource() throws ConfigurationException {
-    }
-
     @POST
     public Response createProhibition(CreateProhibitionRequest request)
             throws ProhibitionNameExistsException,
-            DatabaseException, ConfigurationException, NullNameException {
+            DatabaseException, ConfigurationException, NullNameException, SQLException, IOException, ClassNotFoundException {
         return new ApiResponse(prohibitionsService.createProhibition(request.getName(), request.getOperations(), request.isIntersection(), request.getResources(), request.getSubject())).toResponse();
     }
 
     @GET
-    public Response getProhibitions(@QueryParam("subjectId") long subjectId, @QueryParam("resourceId") long resourceId) {
+    public Response getProhibitions(@QueryParam("subjectId") long subjectId, @QueryParam("resourceId") long resourceId) throws ClassNotFoundException, SQLException, IOException, DatabaseException {
         return new ApiResponse(prohibitionsService.getProhibitions(subjectId, resourceId)).toResponse();
     }
 
     @Path("/{prohibitionName}")
     @GET
     public Response getProhibition(@PathParam("prohibitionName") String prohibitionName)
-            throws ProhibitionDoesNotExistException {
+            throws ProhibitionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         return new ApiResponse(prohibitionsService.getProhibition(prohibitionName)).toResponse();
     }
 
@@ -44,14 +43,14 @@ public class ProhibitionsResource {
                                       CreateProhibitionRequest request)
             throws DatabaseException, ProhibitionDoesNotExistException,
             NodeNotFoundException, InvalidProhibitionSubjectTypeException, ProhibitionResourceExistsException,
-            ConfigurationException {
+            ConfigurationException, SQLException, IOException, ClassNotFoundException {
         return new ApiResponse(prohibitionsService.updateProhibition(request.getName(), request.isIntersection(), request.getOperations(), request.getResources(), request.getSubject())).toResponse();
     }
 
     @Path("/{prohibitionName}")
     @DELETE
     public Response deleteProhibition(@PathParam("prohibitionName") String prohibitionName)
-            throws DatabaseException, ProhibitionDoesNotExistException, ConfigurationException {
+            throws DatabaseException, ProhibitionDoesNotExistException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         prohibitionsService.deleteProhibition(prohibitionName) ;
         return new ApiResponse(ApiResponse.DELETE_PROHIBITION_SUCCESS).toResponse();
     }

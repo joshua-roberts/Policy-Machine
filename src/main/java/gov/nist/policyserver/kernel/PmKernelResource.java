@@ -1,7 +1,7 @@
 package gov.nist.policyserver.kernel;
 
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.model.access.PmAccessEntry;
+import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.requests.AssignmentRequest;
@@ -14,8 +14,10 @@ import gov.nist.policyserver.service.NodeService;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,12 +33,12 @@ public class PmKernelResource {
     AnalyticsService  analyticsService  = new AnalyticsService();
     AssignmentService assignmentService = new AssignmentService();
 
-    public PmKernelResource() throws ConfigurationException {
+    public PmKernelResource() throws ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException {
     }
 
-    @Path("/access/rows/{rowId}/columns")
+    @Path("/analytics/rows/{rowId}/columns")
     @GET
-    public Response getRowAccessibleColumns(@PathParam("rowId") String rowId, @QueryParam("table") String table, @QueryParam("username") String username) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, NoUserParameterException, ConfigurationException {
+    public Response getRowAccessibleColumns(@PathParam("rowId") String rowId, @QueryParam("table") String table, @QueryParam("username") String username) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         System.out.println(rowId + " " + table + " " + username);
         //get the user id
         HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null);
@@ -55,8 +57,8 @@ public class PmKernelResource {
         System.out.println(userNode.getId() + "&" + rowNode.getName() + "(" + rowNode.getId() + ")");
 
         //get the accessible children of the row with the given permission
-        List<PmAccessEntry> accessibleChildren = analyticsService.getAccessibleChildren(rowNode.getId(), userNode.getId());
-        for(PmAccessEntry entry : accessibleChildren) {
+        List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(rowNode.getId(), userNode.getId());
+        for(PmAnalyticsEntry entry : accessibleChildren) {
             System.out.println(entry.getTarget().getName() + ": " + entry.getOperations());
         }
 
@@ -73,7 +75,7 @@ public class PmKernelResource {
         List<String> accesibleColumns = new ArrayList<>();
         for(Node column : columns) {
             HashSet<Node> children = nodeService.getChildrenOfType(column.getId(), NodeType.O.toString());
-            for (PmAccessEntry entry : accessibleChildren) {
+            for (PmAnalyticsEntry entry : accessibleChildren) {
                 Node target = entry.getTarget();
                 if (children.contains(target) && entry.getOperations().contains(FILE_WRITE)) {
                     accesibleColumns.add(column.getName());
@@ -86,7 +88,7 @@ public class PmKernelResource {
 
     @Path("/permissions")
     @GET
-    public Response checkPermissions(@QueryParam("username") String username, @QueryParam("property") String property, @QueryParam("value") String value, @QueryParam("permission") String requiredPermission) throws PmException {
+    public Response checkPermissions(@QueryParam("username") String username, @QueryParam("property") String property, @QueryParam("value") String value, @QueryParam("permission") String requiredPermission) throws PmException, SQLException, IOException, ClassNotFoundException {
         HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException(username);
@@ -97,7 +99,7 @@ public class PmKernelResource {
         nodes = nodeService.getNodes(null, null, null, property, value);
 
         for(Node node : nodes) {
-            PmAccessEntry userAccessOn = analyticsService.getUserPermissionsOn(node.getId(), userNode.getId());
+            PmAnalyticsEntry userAccessOn = analyticsService.getUserPermissionsOn(node.getId(), userNode.getId());
             HashSet<String> operations = userAccessOn.getOperations();
             if(!operations.contains(requiredPermission)) {
                 return new ApiResponse(false).toResponse();
@@ -113,28 +115,27 @@ public class PmKernelResource {
                              @QueryParam("name") String name,
                              @QueryParam("type") String type,
                              @QueryParam("key") String key,
-                             @QueryParam("value") String value) throws InvalidNodeTypeException, InvalidPropertyException {
+                             @QueryParam("value") String value) throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         return new ApiResponse(nodeService.getNodes(namespace, name, type, key, value)).toResponse();
     }
 
     @Path("nodes/{baseId}")
     @POST
-    public Response createNode(@PathParam("baseId") long baseId, CreateNodeRequest request) throws NullNameException, NodeNameExistsInNamespaceException, NullTypeException, InvalidPropertyException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, ConfigurationException, NodeIdExistsException, NodeNotFoundException, AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Node node = nodeService.createNode(request.getId(), request.getName(), request.getType(), request.getProperties());
-        assignmentService.createAssignment(node.getId(), baseId);
+    public Response createNode(@PathParam("baseId") long baseId, CreateNodeRequest request) throws NullNameException, NodeNameExistsInNamespaceException, NullTypeException, InvalidPropertyException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, ConfigurationException, NodeIdExistsException, NodeNotFoundException, AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
+        Node node = nodeService.createNode(baseId, request.getId(), request.getName(), request.getType(), request.getProperties());
 
         return new ApiResponse("success").toResponse();
     }
 
     @Path("nodes/{id}/children")
     @GET
-    public Response getChildren(@PathParam("id") long id) throws NodeNotFoundException, InvalidNodeTypeException {
+    public Response getChildren(@PathParam("id") long id) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         return new ApiResponse(nodeService.getChildrenOfType(id, null)).toResponse();
     }
 
     @Path("assignments")
     @POST
-    public Response createAsignment(AssignmentRequest request) throws NodeNotFoundException, AssignmentExistsException, ConfigurationException, DatabaseException {
+    public Response createAsignment(AssignmentRequest request) throws NodeNotFoundException, AssignmentExistsException, ConfigurationException, DatabaseException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException {
         assignmentService.createAssignment(request.getChildId(), request.getParentId());
         return new ApiResponse("success").toResponse();
     }
@@ -142,7 +143,7 @@ public class PmKernelResource {
     @Path("assignments")
     @DELETE
     public Response deleteAssignment(@QueryParam("childId") long childId,
-                                     @QueryParam("parentId") long parentId) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+                                     @QueryParam("parentId") long parentId) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SQLException, IOException, ClassNotFoundException {
         assignmentService.deleteAssignment(childId, parentId);
         return new ApiResponse(ApiResponse.DELETE_ASSIGNMENT_SUCCESS).toResponse();
     }
@@ -150,7 +151,7 @@ public class PmKernelResource {
     @Path("nodes/{nodeId}")
     @DELETE
     public Response deleteNode(@PathParam("nodeId") long id)
-            throws NodeNotFoundException, DatabaseException, ConfigurationException {
+            throws NodeNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         nodeService.deleteNode(id);
         return new ApiResponse(ApiResponse.DELETE_NODE_SUCCESS).toResponse();
     }

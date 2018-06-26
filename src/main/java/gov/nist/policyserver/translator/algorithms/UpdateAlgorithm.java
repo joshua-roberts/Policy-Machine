@@ -1,6 +1,6 @@
 package gov.nist.policyserver.translator.algorithms;
 
-import gov.nist.policyserver.evr.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
 import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
@@ -37,11 +37,11 @@ public class UpdateAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, NodeNotFoundException, InvalidNodeTypeException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, InvalidEntityException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    public String run() throws SQLException, IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, NodeNotFoundException, InvalidNodeTypeException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, InvalidEntityException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException {
         //determine the rows that are going to be updated
         List<String> rows = getTargetRows();
 
-        //check each row that the user has write access to each row,column
+        //check each row that the user has write analytics to each row,column
         checkRows(rows);
 
         //process the statement as an event
@@ -99,7 +99,7 @@ public class UpdateAlgorithm extends Algorithm {
         this.select = select;
     }
 
-    private void checkRows(List<String> rows) throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidNodeTypeException, NodeNotFoundException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    private void checkRows(List<String> rows) throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidNodeTypeException, NodeNotFoundException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException {
         List<String> reqColumns = update.getColumns().stream().map(
                 Column::getColumnName).collect(Collectors.toList());
 

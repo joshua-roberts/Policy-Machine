@@ -1,5 +1,12 @@
 package gov.nist.policyserver.dao;
 
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.model.EvrArg;
+import gov.nist.policyserver.obligations.model.EvrEntity;
+import gov.nist.policyserver.obligations.model.EvrFunction;
+import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTime;
+import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTimeElement;
+import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.exceptions.PmException;
 import gov.nist.policyserver.graph.PmGraph;
@@ -14,10 +21,12 @@ import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
 import gov.nist.policyserver.model.prohibitions.ProhibitionSubject;
 import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static gov.nist.policyserver.common.Constants.ERR_NEO;
 
@@ -25,11 +34,11 @@ import static gov.nist.policyserver.common.Constants.ERR_NEO;
  * Helper class for Neo4j
  */
 public class NeoDAO extends DAO {
-    
-    private static String PROHIBITION_LABEL = "prohibition";
-    
-    public NeoDAO() throws DatabaseException {
 
+    private static String PROHIBITION_LABEL = "prohibition";
+
+    public NeoDAO() throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+        super();
     }
 
     /**
@@ -68,29 +77,37 @@ public class NeoDAO extends DAO {
 
     @Override
     public void buildGraph() throws DatabaseException {
+        System.out.println("Building graph...");
+
         graph = new PmGraph();
 
-        System.out.println("\tGetting nodes...");
+        System.out.print("Getting nodes...");
         List<Node> nodes = getNodes();
         for(Node node : nodes){
             graph.addNode(node);
         }
+        System.out.println("DONE");
 
-        System.out.println("\tGetting assignments...");
+
+        System.out.print("Getting assignments...");
         List<Assignment> assignments = getAssignments();
         for(Assignment assignment : assignments){
             graph.createAssignment(graph.getNode(assignment.getChild().getId()), graph.getNode(assignment.getParent().getId()));
         }
+        System.out.println("DONE");
 
-        System.out.println("\tGetting associations...");
+        System.out.print("Getting associations...");
         List<Association> associations = getAssociations();
         for(Association assoc : associations){
             graph.createAssociation(assoc.getChild(), assoc.getParent(), assoc.getOps(), assoc.isInherit());
         }
+        System.out.println("DONE");
     }
 
     @Override
     public void buildProhibitions() throws DatabaseException {
+        System.out.print("Building prohibitions...");
+
         String cypher = "match(d:D)<-[" + PROHIBITION_LABEL +"]-(s)\n" +
                 "with d, s\n" +
                 "match(d:D)-[" + PROHIBITION_LABEL +"]->(r)\n" +
@@ -115,10 +132,18 @@ public class NeoDAO extends DAO {
         }catch(SQLException e){
             throw new DatabaseException(ERR_NEO, "Error getting prohibitions from nodes");
         }
+
+        System.out.println("DONE");
+    }
+
+    @Override
+    public void buildObligations() throws DatabaseException {
+        //load scripts from db and add to evrManager
+
     }
 
     private List<Node> getNodes() throws DatabaseException {
-        String cypher = "MATCH (n) return n";
+        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
         ResultSet rs = execute(cypher);
         List<Node> nodes = getNodesFromResultSet(rs);
         for(Node node : nodes){
@@ -153,7 +178,7 @@ public class NeoDAO extends DAO {
             while (rs.next()) {
                 Node startNode = JsonHelper.getNodeFromJson(rs.getString(1));
                 Node endNode = JsonHelper.getNodeFromJson(rs.getString(2));
-                HashSet<String> ops = JsonHelper.getOpsFromJson(rs.getString(3));
+                HashSet<String> ops = JsonHelper.getStringSetFromJson(rs.getString(3));
                 boolean inherit = Boolean.valueOf(rs.getString(4));
                 Association assoc = new Association(startNode, endNode, ops, inherit);
                 associations.add(assoc);
@@ -254,9 +279,9 @@ public class NeoDAO extends DAO {
         execute(cypher);
     }
 
-    private String setToCypherArray(HashSet<String> list) {
+    protected String setToCypherArray(HashSet<String> set) {
         String str = "[";
-        for (String op : list) {
+        for (String op : set) {
             op = "'" + op + "'";
             if (str.length()==1) {
                 str += op;
@@ -382,5 +407,308 @@ public class NeoDAO extends DAO {
     public void reset() throws DatabaseException {
         String cypher = "match(n) detach delete n";
         execute(cypher);
+    }
+
+    private String getEvrId() {
+        return UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+    }
+
+    @Override
+    public String createScript(String scriptName) throws DatabaseException, SQLException {
+        String id = getEvrId();
+
+        //check script node exists
+        String cypher = "match(n:obligations:scripts) return n";
+        ResultSet rs = execute(cypher);
+        if(!rs.next()) {
+            //create scripts node
+            cypher = "create(:obligations:scripts{name:'scripts'})";
+            execute(cypher);
+        }
+
+        //create script node in scripts
+        cypher = "match(n:obligations:scripts) " +
+                "create (n)<-[:script]-(m:obligations:script{evr_id:'" + id + "', name:'" + scriptName + "'})";
+        execute(cypher);
+
+        //create rules node in script
+        cypher = "match(n:obligations:script{evr_id:'" + id + "'}) " +
+                "create (n)<-[:rules]-(m:obligations:rules{evr_id:'" + id + "', name:'rules'})";
+        execute(cypher);
+
+        return id;
+    }
+
+    @Override
+    public String createRule(String parentId, String parentLabel, String label) throws DatabaseException {
+        String ruleId = getEvrId();
+
+        //add rule to rules
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:rule]-(:obligations:rule{evr_id:'" + ruleId + "', label:'" + label + "', name:'rule'})";
+        execute(cypher);
+
+        //create event node
+        cypher = "match(n:obligations:rule{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:event]-(:obligations:event{evr_id:'" + ruleId + "', name:'event'})";
+        execute(cypher);
+
+        //create response node
+        cypher = "match(n:obligations:rule{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:response]-(:obligations:response{evr_id:'" + ruleId + "', name:'response'})";
+        execute(cypher);
+
+        return ruleId;
+    }
+
+    @Override
+    public String createSubject(String ruleId, String parentLabel) throws DatabaseException {
+        String subjectId = getEvrId();
+
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:subject]-(:obligations:subject{evr_id:'" + subjectId + "', name:'subject'})";
+        execute(cypher);
+
+        return subjectId;
+    }
+
+    @Override
+    public String createPcSpec(String ruleId, String parentLabel) throws DatabaseException {
+        String pcSpecId = getEvrId();
+
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:pc_spec]-(:obligations:pc_spec{evr_id:'" + pcSpecId + "', name:'pc_spec'})";
+        execute(cypher);
+
+        return pcSpecId;
+    }
+
+    @Override
+    public void createTime(String ruleId, EvrTime evrTime) throws DatabaseException {
+        String timeId = getEvrId();
+
+        String cypher = "match(n:obligations:event{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:time]-(:obligations:time{evr_id:'" + timeId + "'})";
+        execute(cypher);
+
+        EvrTimeElement dow = evrTime.getDow();
+        cypher = "match(n:obligations:time{evr_id:'" + timeId + "'}) " +
+                "create (n)<-[:time_dow]-(:obligations:time_dow{" +
+                "evr_id:'" + timeId + "'" +
+                (dow.isRange() ? (", start: " + dow.getRange().getStart() +
+                        ", end: " + dow.getRange().getEnd()) : ", range: " + dow.getValues()) +
+                "})";
+        execute(cypher);
+
+        EvrTimeElement day = evrTime.getDay();
+        cypher = "match(n:obligations:time{evr_id:'" + timeId + "'}) " +
+                "create (n)<-[:time_day]-(:obligations:time_day{" +
+                "evr_id:'" + timeId + "'" +
+                (day.isRange() ? (", start: " + day.getRange().getStart() +
+                        ", end: " + day.getRange().getEnd()) : ", range: " + day.getValues()) +
+                "})";
+        execute(cypher);
+
+        EvrTimeElement month = evrTime.getDay();
+        cypher = "match(n:obligations:time{evr_id:'" + timeId + "'}) " +
+                "create (n)<-[:time_month]-(:obligations:time_month{" +
+                "evr_id:'" + timeId + "'" +
+                (month.isRange() ? (", start: " + month.getRange().getStart() +
+                        ", end: " + month.getRange().getEnd()) : ", range: " + month.getValues()) +
+                "})";
+        execute(cypher);
+
+        EvrTimeElement year = evrTime.getDay();
+        cypher = "match(n:obligations:time{evr_id:'" + timeId + "'}) " +
+                "create (n)<-[:time_year]-(:obligations:time_year{" +
+                "evr_id:'" + timeId + "'" +
+                (year.isRange() ? (", start: " + year.getRange().getStart() +
+                        ", end: " + year.getRange().getEnd()) : ", range: " + year.getValues()) +
+                "})";
+        execute(cypher);
+
+        EvrTimeElement hour = evrTime.getDay();
+        cypher = "match(n:obligations:time{evr_id:'" + timeId + "'}) " +
+                "create (n)<-[:time_hour]-(:obligations:time_hour{" +
+                "evr_id:'" + timeId + "'" +
+                (hour.isRange() ? (", start: " + hour.getRange().getStart() +
+                        ", end: " + hour.getRange().getEnd()) : ", range: " + hour.getValues()) +
+                "})";
+        execute(cypher);
+    }
+
+    @Override
+    public String createTarget(String ruleId, String parentLabel) throws DatabaseException {
+        String targetId = getEvrId();
+
+        //create target node in event
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:target]-(:obligations:target{evr_id:'" + targetId + "', name:'target'})";
+        execute(cypher);
+
+        //create targetObjects node in target node
+        cypher = "match(n:obligations:target{evr_id:'" + targetId + "'}) " +
+                "create (n)<-[:target_objects]-(:obligations:target_objects{evr_id:'" + targetId + "', name:'target_objects'})";
+        execute(cypher);
+
+        //create targetContainers node in target node
+        cypher = "match(n:obligations:target{evr_id:'" + targetId + "'}) " +
+                "create (n)<-[:target_containers]-(:obligations:target_containers{evr_id:'" + targetId + "', name:'target_containers'})";
+        execute(cypher);
+
+        return targetId;
+    }
+
+    @Override
+    public String createEntity(String parentId, String parentLabel, EvrEntity entity) throws DatabaseException {
+        String entityId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:entity]-(:obligations:entity{evr_id:'" + entityId + "', name:'entity'})";
+        execute(cypher);
+
+        return entityId;
+    }
+
+    @Override
+    public void updateEntity(String entityId, EvrEntity entity) throws DatabaseException, InvalidEntityException {
+        if (!entity.isList() && !entity.isFunction() && !entity.isProcess()) {
+            //entity is a leaf -- base case
+            //create entity and assign it to the parent
+            if (entity.isNode()) {
+                String cypher = "match(n:obligations:entity{evr_id:'" + entityId + "'}) set n.node=" + entity.getNode().getId();
+                execute(cypher);
+            } else if (entity.isEvrNode()) {
+                HashSet<String> propSet = new HashSet<>();
+                for (Property prop : entity.getProperties()) {
+                    propSet.add(prop.toString());
+                }
+
+                String cypher = "match(n:obligations:entity{evr_id:'" + entityId + "'}) set n += " +
+                        "{" +
+                        "name:'" + entity.getName() + "', " +
+                        "type:'" + entity.getType() + "', " +
+                        "properties:" + setToCypherArray(propSet) + ", " +
+                        "complement:" + entity.isCompliment() + "" +
+                        "}";
+                execute(cypher);
+            }
+        }
+    }
+
+    @Override
+    public String createFunction(String parentId, String parentLabel, EvrFunction function) throws DatabaseException {
+        String functionId = getEvrId();
+
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:function]-(:obligations:function{evr_id:'" + functionId + "', name:'" + function.getFunctionName() + "'})";
+        execute(cypher);
+
+        return functionId;
+    }
+
+    @Override
+    public void addFunctionArg(String functionId, EvrArg evrArg) throws DatabaseException {
+        String cypher = "match(n:obligations:function{evr_id:'" + functionId + "'}) " +
+                "create (n)<-[:arg]-(:obligations:arg{evr_id:'" + functionId + "', value:'" + evrArg.getValue() + "', name:'arg'})";
+        execute(cypher);
+    }
+
+    @Override
+    public String createCondition(String ruleId, boolean exists) throws DatabaseException {
+        String conditionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:rule{evr_id:'" + ruleId + "'}) " +
+                "create (n)<-[:condition]-(:obligations:condition{evr_id:'" + conditionId + "', name:'condition', exists:" + exists + "})";
+        execute(cypher);
+
+        return conditionId;
+    }
+
+    @Override
+    public String createAssignAction(String parentId, String parentLabel) throws DatabaseException {
+        String assignActionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:assign_action]-(:obligations:assign_action{evr_id:'" + assignActionId + "', name:'assign_action'})";
+        execute(cypher);
+
+        return assignActionId;
+    }
+
+    @Override
+    public String createAssignActionParam(String assignActionId, String param) throws DatabaseException {
+        String paramId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:assign_action{evr_id:'" + assignActionId + "'}) " +
+                "create (n)<-[:assign_action_" + param + "]-" +
+                "(:obligations:assign_action_" + param + "{evr_id:'" + assignActionId + "', name:'assign_action_" + param + "'})";
+        execute(cypher);
+
+        return paramId;
+    }
+
+    @Override
+    public String createGrantAction(String parentId, String parentLabel) throws DatabaseException {
+        String grantActionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:grant_action]-(:obligations:grant_action{evr_id:'" + grantActionId + "', name:'grant_action'})";
+        execute(cypher);
+
+        return grantActionId;
+    }
+
+    @Override
+    public void createOpSpec(String parentId, String parentType, List<String> ops) throws DatabaseException {
+        HashSet<String> opSet = new HashSet<>(ops);
+
+        String cypher = "match(n:obligations:" + parentType + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:op_spec]-(:obligations:op_spec{evr_id:'" + parentId + "', name:'op_spec', ops:" + setToCypherArray(opSet) + "})";
+        execute(cypher);
+    }
+
+    @Override
+    public String createCreateAction(String parentId, String parentLabel) throws DatabaseException {
+        String createActionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:create_action]-" +
+                "(:obligations:create_action{evr_id:'" + createActionId + "', name:'create_action'})";
+        execute(cypher);
+
+        return createActionId;
+    }
+
+    @Override
+    public String createDenyAction(String parentId, String parentLabel) throws DatabaseException {
+        String denyActionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:deny_action]-" +
+                "(:obligations:deny_action{evr_id:'" + denyActionId + "', name:'deny_action'})";
+        execute(cypher);
+
+        return denyActionId;
+    }
+
+    @Override
+    public String createDeleteAction(String parentId, String parentLabel) throws DatabaseException {
+        String deleteActionId = getEvrId();
+
+        //create the entity node
+        String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + parentId + "'}) " +
+                "create (n)<-[:delete_action]-" +
+                "(:obligations:delete_action{evr_id:'" + deleteActionId + "', name:'delete_action'})";
+        execute(cypher);
+
+        return deleteActionId;
     }
 }

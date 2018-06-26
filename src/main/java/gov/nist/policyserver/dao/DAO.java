@@ -1,8 +1,13 @@
 package gov.nist.policyserver.dao;
 
-import gov.nist.policyserver.access.PmAccess;
+import gov.nist.policyserver.analytics.PmAnalytics;
 import gov.nist.policyserver.common.Constants;
-import gov.nist.policyserver.evr.EvrManager;
+import gov.nist.policyserver.obligations.EvrManager;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.model.EvrArg;
+import gov.nist.policyserver.obligations.model.EvrEntity;
+import gov.nist.policyserver.obligations.model.EvrFunction;
+import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTime;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.graph.PmGraph;
@@ -16,6 +21,7 @@ import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
 import java.io.*;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -37,16 +43,17 @@ public abstract class DAO {
     /**
      * @return The static instance of the DaoHelper
      */
-    public static DAO getDao() throws ConfigurationException {
+    /*public static DAO getDao() throws ConfigurationException {
         if(dao == null){
             throw new ConfigurationException("There is no database connection. Visit /pm/config.jsp to connect to a database.");
         }
         return dao;
-    }
+    }*/
 
     public static String getDatabase(){
         return database;
     }
+
     /**
      * This method is called from the StartupServlet, with the properties being read from pm.conf
      * @param
@@ -77,9 +84,8 @@ public abstract class DAO {
             }else{
                 dao = new SqlDAO();
             }
-            dao.buildScripts();
         }
-        catch (IOException | ClassNotFoundException e) {
+        catch (IOException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
     }
@@ -90,7 +96,7 @@ public abstract class DAO {
      * @param props
      * @throws DatabaseException
      */
-    public static void init(Properties props) throws DatabaseException, ConfigurationException {
+    public static void init(Properties props) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
         //get properties
         database = props.getProperty("database");
         host = props.getProperty("host");
@@ -113,7 +119,6 @@ public abstract class DAO {
         }else{
             dao = new SqlDAO();
         }
-        dao.buildScripts();
     }
 
     public static synchronized void setInterval(int newInterval) throws ConfigurationException {
@@ -150,33 +155,32 @@ public abstract class DAO {
         }
     }
 
-    public  PmGraph    graph;
-    public  PmAccess   access;
-    private EvrManager evrManager;
+    public  PmGraph     graph;
+    public  PmAnalytics access;
+    private EvrManager  evrManager;
 
     public Connection conn;
-    public DAO() throws DatabaseException {
+    public DAO() throws DatabaseException, IOException, ClassNotFoundException, SQLException {
         //connect to database
         connect();
 
-        //if(reinitializing || !deserialize()) {
-            System.out.println("Building nodes...");
-            //build the nodes in memory
-            buildGraph();
+        //build the nodes in memory
+        buildGraph();
 
-            //initialize the access object
-            access = new PmAccess();
+        //initialize the analytics object
+        access = new PmAnalytics();
 
-            //build the prohibitions list
-            buildProhibitions();
+        //build the prohibitions list
+        buildProhibitions();
 
-            reinitializing = false;
-            System.out.println("Finished!");
-        //}
+        evrManager = new EvrManager();
+        buildObligations();
+
+        reinitializing = false;
+        System.out.println("Finished!");
 
         Runnable r = () -> {
             while(true) {
-                //System.out.println("Serializing... " + new Date());
                 serialize();
                 try {
                     Thread.sleep(interval * 1000);
@@ -190,19 +194,50 @@ public abstract class DAO {
         new Thread(r).start();
     }
 
-    public EvrManager getEvrManager() {
-        return evrManager;
+    private void serialize(){
+        try {
+            FileOutputStream fos = new FileOutputStream("graph.conf");
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(graph);
+
+            fos = new FileOutputStream("analytics.conf");
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(access);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void buildScripts() throws ConfigurationException {
-        evrManager = new EvrManager();
+    private boolean deserialize(){
+        try {
+            FileInputStream fis = new FileInputStream("graph.conf");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            graph = (PmGraph) ois.readObject();
+
+            fis = new FileInputStream("analytics.conf");
+            ois = new ObjectInputStream(fis);
+            access = (PmAnalytics) ois.readObject();
+
+            System.out.println("deserialized...");
+            return true;
+        }
+        catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public EvrManager getEvrManager() {
+        return evrManager;
     }
 
     public PmGraph getGraph(){
         return graph;
     }
 
-    public PmAccess getAccess(){
+    public PmAnalytics getAnalytics(){
         return access;
     }
 
@@ -220,54 +255,7 @@ public abstract class DAO {
 
     public abstract void buildProhibitions() throws DatabaseException;
 
-    private void serialize(){
-        try {
-            FileOutputStream fos = new FileOutputStream("graph.conf");
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(graph);
-
-            fos = new FileOutputStream("access.conf");
-            oos = new ObjectOutputStream(fos);
-            oos.writeObject(access);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void serialize(String configName){
-        try {
-            FileOutputStream fos = new FileOutputStream("graph.conf");
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(graph);
-
-            fos = new FileOutputStream("access.conf");
-            oos = new ObjectOutputStream(fos);
-            oos.writeObject(access);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean deserialize(){
-        try {
-            FileInputStream fis = new FileInputStream("graph.conf");
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            graph = (PmGraph) ois.readObject();
-
-            fis = new FileInputStream("access.conf");
-            ois = new ObjectInputStream(fis);
-            access = (PmAccess) ois.readObject();
-
-            System.out.println("deserialized...");
-            return true;
-        }
-        catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
+    public abstract void buildObligations() throws DatabaseException;
 
     public abstract List<Assignment> getAssignments() throws DatabaseException;
 
@@ -311,4 +299,36 @@ public abstract class DAO {
     public abstract void setProhibitionOperations(String prohibitionName, HashSet<String> ops) throws DatabaseException;
 
     public abstract void reset() throws DatabaseException;
+
+    public abstract String createScript(String scriptName) throws DatabaseException, SQLException;
+
+    public abstract String createRule(String parentId, String parentLabel, String label) throws DatabaseException;
+
+    public abstract String createSubject(String ruleId, String parentLabel) throws DatabaseException;
+    public abstract String createPcSpec(String ruleId, String parentLabel) throws DatabaseException;
+    public abstract void createTime(String ruleId, EvrTime evrTime) throws DatabaseException;
+    public abstract String createTarget(String ruleId, String parentLabel) throws DatabaseException;
+
+    public abstract String createEntity(String parentId, String parentLabel, EvrEntity entity) throws DatabaseException, InvalidEntityException;
+    public abstract void updateEntity(String entityId, EvrEntity evrEntity) throws DatabaseException, InvalidEntityException;
+
+    public abstract String createFunction(String parentId, String parentLabel, EvrFunction function) throws DatabaseException;
+
+    public abstract void addFunctionArg(String functionId, EvrArg evrArg) throws DatabaseException;
+
+    public abstract String createCondition(String ruleId, boolean exists) throws DatabaseException;
+
+    public abstract String createAssignAction(String ruleId, String parentLabel) throws DatabaseException;
+
+    public abstract String createAssignActionParam(String assignActionId, String param) throws DatabaseException;
+
+    public abstract String createGrantAction(String ruleId, String parentLabel) throws DatabaseException;
+
+    public abstract void createOpSpec(String parentId, String parentType, List<String> ops) throws DatabaseException;
+
+    public abstract String createCreateAction(String parentId, String parentLabel) throws DatabaseException;
+
+    public abstract String createDenyAction(String parentId, String parentLabel) throws DatabaseException;
+
+    public abstract String createDeleteAction(String parentId, String parentLabel) throws DatabaseException;
 }

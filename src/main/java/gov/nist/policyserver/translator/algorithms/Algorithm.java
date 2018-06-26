@@ -1,6 +1,6 @@
 package gov.nist.policyserver.translator.algorithms;
 
-import gov.nist.policyserver.evr.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
@@ -33,7 +33,7 @@ public abstract class Algorithm {
         return this.id;
     }
 
-    public abstract String run() throws SQLException, IOException, PolicyMachineException, PmException, JSQLParserException, InvalidEntityException;
+    public abstract String run() throws SQLException, IOException, PolicyMachineException, PmException, JSQLParserException, InvalidEntityException, ClassNotFoundException;
 
     protected List<String> getKeys(String tableName) throws SQLException {
         PreparedStatement ps2 = dbManager.getConnection().prepareStatement("SELECT k.COLUMN_NAME\n" +
@@ -107,7 +107,7 @@ public abstract class Algorithm {
         return visitedColumns;
     }
 
-    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws IOException, PolicyMachineException, NodeNotFoundException, NoUserParameterException, InvalidNodeTypeException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException {
+    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws IOException, PolicyMachineException, NodeNotFoundException, NoUserParameterException, InvalidNodeTypeException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, SQLException, ClassNotFoundException {
         List<Node> accChildren = pmManager.getAccessibleChildren(rowPmId, perm);
 
         Node intersection = pmManager.getIntersection(columnPmId, rowPmId);

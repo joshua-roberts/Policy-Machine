@@ -2,7 +2,7 @@ package gov.nist.policyserver.proxy;
 
 import com.google.gson.Gson;
 import gov.nist.policyserver.dao.DAO;
-import gov.nist.policyserver.evr.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.PmException;
 import gov.nist.policyserver.response.ApiResponse;
@@ -10,7 +10,6 @@ import gov.nist.policyserver.translator.TranslateResponse;
 import gov.nist.policyserver.translator.TranslatorService;
 import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
-import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -23,6 +22,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static gov.nist.policyserver.dao.DAOManager.getDaoManager;
 
 @Path("proxy")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -106,7 +107,7 @@ public class PmProxyResource {
             }
             String json = gson.toJson(results);
 
-            DAO.getDao().getEvrManager().removeActiveSql(sqlId);
+            getDaoManager().getObligationsDAO().getEvrManager().removeActiveSql(sqlId);
 
             return new ApiResponse(json).toResponse();
         } else {

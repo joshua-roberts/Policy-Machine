@@ -12,30 +12,58 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
+import static gov.nist.policyserver.common.Constants.COMMA_DELIMETER;
+
 public class JsonHelper {
 
     public static Node getNodeFromJson(String json){
         return new Gson().fromJson(json, Node.class);
     }
 
-    public static HashSet<String> getOpsFromJson(String json) {
+    public static HashSet<String> getStringSetFromJson(String json) {
         HashSet<String> ops = new HashSet<>();
-        String[] opsArr = json.replaceAll("[\\[\\]\"]", "").split(",");
+        String[] opsArr = json.replaceAll("[\\[\\]\"]", "").split(COMMA_DELIMETER);
         if(!opsArr[0].isEmpty()){
             ops.addAll(Arrays.asList(opsArr));
         }
         return ops;
     }
 
-    public static List<Long> toList(String json){
+    public static List<Long> toLongList(String json){
         List<Long> ids = new ArrayList<>();
-        String[] idArr = json.replaceAll("[\\[\\]]", "").split(",");
+        String[] idArr = json.replaceAll("[\\[\\]]", "").split(COMMA_DELIMETER);
         if(!idArr[0].isEmpty()){
             for(String id : idArr) {
                 ids.add(Long.valueOf(id));
             }
         }
         return ids;
+    }
+
+    public static List<Integer> toIntList(String json){
+        List<Integer> ids = new ArrayList<>();
+        String[] idArr = json.replaceAll("[\\[\\]]", "").split(COMMA_DELIMETER);
+        if(!idArr[0].isEmpty()){
+            for(String id : idArr) {
+                ids.add(Integer.valueOf(id));
+            }
+        }
+        return ids;
+    }
+
+    public static List<Property> strToPropertyList(String propArr) throws InvalidPropertyException {
+        List<Property> properties = new ArrayList<>();
+
+        String[] propsStrArr = propArr.replaceAll("[\\[\\]\"]", "").split(COMMA_DELIMETER);
+        if(!propsStrArr[0].isEmpty()){
+            for(String prop : propsStrArr) {
+                String[] split = prop.split("=");
+                Property property = new Property(split[0], split[1]);
+                properties.add(property);
+            }
+        }
+
+        return properties;
     }
 
     public static Association getAssociationFromJson(String json) {

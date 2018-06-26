@@ -1,11 +1,8 @@
 package gov.nist.policyserver.translator;
 
-import gov.nist.policyserver.evr.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.service.AccessService;
-import gov.nist.policyserver.service.NodeService;
 import gov.nist.policyserver.translator.algorithms.*;
-import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
 import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -16,7 +13,6 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.UUID;
 

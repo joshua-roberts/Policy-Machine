@@ -11,6 +11,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 import static gov.nist.policyserver.common.Constants.*;
 
 @Path("/assignments")
@@ -21,14 +24,11 @@ public class AssignmentResource {
     private AssignmentService assignmentService = new AssignmentService();
     private AnalyticsService  analyticsService  = new AnalyticsService();
 
-    public AssignmentResource() throws ConfigurationException {
-    }
-
     @GET
     public Response isAssigned(@QueryParam("childId") long childId,
                                @QueryParam("parentId") long parentId,
                                @QueryParam("session") String session,
-                               @QueryParam("process") long process) throws NodeNotFoundException {
+                               @QueryParam("process") long process) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         return new ApiResponse(assignmentService.isAssigned(childId, parentId)).toResponse();
     }
 
@@ -38,7 +38,7 @@ public class AssignmentResource {
                                      @QueryParam("process") long process)
             throws NodeNotFoundException, AssignmentExistsException, NoSubjectParameterException,
             MissingPermissionException, InvalidProhibitionSubjectTypeException, DatabaseException,
-            ConfigurationException, SessionUserNotFoundException, SessionDoesNotExistException {
+            ConfigurationException, SessionUserNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException {
         Node user = analyticsService.getSessionUser(session);
 
         //check user can assign the child node to the parent node
@@ -57,7 +57,7 @@ public class AssignmentResource {
     public Response deleteAssignment(@QueryParam("childId") long childId,
                                      @QueryParam("parentId") long parentId,
                                      @QueryParam("session") String session,
-                                     @QueryParam("process") long process) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException {
+                                     @QueryParam("process") long process) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException {
         //get user from username
         Node user = analyticsService.getSessionUser(session);
 

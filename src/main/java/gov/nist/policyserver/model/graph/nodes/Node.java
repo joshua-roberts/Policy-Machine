@@ -14,7 +14,9 @@ public class Node implements Serializable{
     private NodeType       type;
     private List<Property> properties;
 
-    public Node(){}
+    public Node(){
+        this.properties = new ArrayList<>();
+    }
 
     public Node (String name, NodeType type){
         if(name == null){
