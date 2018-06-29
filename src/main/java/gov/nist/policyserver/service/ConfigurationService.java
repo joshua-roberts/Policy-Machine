@@ -179,7 +179,7 @@ public class ConfigurationService extends Service{
                         for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
                             //get column
                             String columnName = rs2MetaData.getColumnName(i);
-                            Node columnNode = nodeService.getNodeInNamespace(tableName, columnName);
+                            Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA);
 
 
                             //create data object node
@@ -233,7 +233,7 @@ public class ConfigurationService extends Service{
             Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 
             //get table node
-            Node tableNode = nodeService.getNodeInNamespace(tableName, tableName);
+            Node tableNode = nodeService.getNodeInNamespace(tableName, tableName, NodeType.OA);
 
             Table table = new Table();
             table.setNode(tableNode);
@@ -340,7 +340,7 @@ public class ConfigurationService extends Service{
                     String columnName = rs.getMetaData().getColumnName(i);
 
                     //get columnNode
-                    Node columnNode = nodeService.getNodeInNamespace(tableName, columnName);
+                    Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA);
 
                     HashSet<Node> colChildren = nodeService.getChildrenOfType(columnNode.getId(), NodeType.O.toString());
                     HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowNode.getId(), NodeType.O.toString());
@@ -394,11 +394,11 @@ public class ConfigurationService extends Service{
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName);
+                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OA);
                 }catch (Exception e){}
 
                 try {
-                    node = nodeService.getNodeInNamespace(namespace, fileName);
+                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OA);
                 }catch (Exception e) {}
 
                 if(node == null) {
@@ -489,6 +489,24 @@ public class ConfigurationService extends Service{
 
         public boolean isInherit() {
             return isInherit;
+        }
+    }
+
+    class ConfigAssignNode {
+        String name;
+        String namespace;
+
+        public ConfigAssignNode(String name, String namespace) {
+            this.name = name;
+            this.namespace = namespace;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getNamespace() {
+            return namespace;
         }
     }
 

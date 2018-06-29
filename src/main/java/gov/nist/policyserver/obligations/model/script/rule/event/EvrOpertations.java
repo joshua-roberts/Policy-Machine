@@ -3,10 +3,10 @@ package gov.nist.policyserver.obligations.model.script.rule.event;
 import java.util.HashSet;
 import java.util.List;
 
-public class EvrOpSpec {
+public class EvrOpertations {
     private HashSet<String> ops;
 
-    public EvrOpSpec(HashSet<String> ops) {
+    public EvrOpertations(HashSet<String> ops) {
         this.ops = ops;
     }
 

@@ -77,8 +77,9 @@ public class PmManager {
         return pmUser;
     }
 
-    public long getEntityId(String namespace, String name) throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return nodeService.getNodeInNamespace(namespace, name).getId();
+    public long getEntityId(String namespace, String name, NodeType type) throws InvalidNodeTypeException,
+            NameInNamespaceNotFoundException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+        return nodeService.getNodeInNamespace(namespace, name, type).getId();
     }
 
     public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
@@ -127,7 +128,7 @@ public class PmManager {
     }
 
     public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        Node node = nodeService.getNodeInNamespace(tableName, columnName);
+        Node node = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA);
         if(node == null) {
             throw new NodeNotFoundException("Could not find column object attribute for " + tableName);
         }

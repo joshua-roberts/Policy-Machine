@@ -25,7 +25,7 @@ public interface ObligationsDAO {
 
     String createSubject(String ruleId, String parentLabel) throws DatabaseException;
 
-    String createPcSpec(String ruleId, String parentLabel, boolean isOr) throws DatabaseException;
+    String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException;
 
     void createTime(String ruleId, EvrTime evrTime) throws DatabaseException;
 
@@ -53,7 +53,7 @@ public interface ObligationsDAO {
 
     String createGrantAction(String ruleId, String parentLabel) throws DatabaseException;
 
-    void createOpSpec(String parentId, String parentType, HashSet<String> ops) throws DatabaseException;
+    void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException;
 
     String createCreateAction(String parentId, String parentLabel) throws DatabaseException;
 

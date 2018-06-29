@@ -53,22 +53,22 @@ public class EvrParserTest {
             assertEquals("Subject entity type does not match", "U",  evrEntity.getType());
 
             //test pc spec
-            EvrPcSpec pcSpec = event.getPcSpec();
-            List<EvrEntity> pcs = pcSpec.getPcs();
-            assertTrue("There should only be one policy class in this PcSpec", pcs.size() == 1);
+            EvrPolicies policies = event.getPolicies();
+            List<EvrEntity> pcs = policies.getPcs();
+            assertTrue("There should only be one policy class in this policies", pcs.size() == 1);
 
             evrEntity = pcs.get(0);
-            assertTrue("PcSpec should be a node", evrEntity.isNode());
-            assertEquals("PcSpec entity name does not match", "RBAC", evrEntity.getName());
-            assertEquals("PcSpec entity type does not match", "PC", evrEntity.getType());
+            assertTrue("policies should be a node", evrEntity.isNode());
+            assertEquals("policies entity name does not match", "RBAC", evrEntity.getName());
+            assertEquals("policies entity type does not match", "PC", evrEntity.getType());
 
             //test op spec
-            EvrOpSpec opSpec = event.getOpSpec();
-            HashSet<String> ops = opSpec.getOps();
-            assertTrue("There should only be one op in the OpSpec", ops.size() == 1);
+            EvrOpertations operations = event.getOperations();
+            HashSet<String> ops = operations.getOps();
+            assertTrue("There should only be one op in the operations", ops.size() == 1);
 
             String op = ops.iterator().next();
-            assertEquals("OpSpec op name does not match", "Object read", op);
+            assertEquals("operations op name does not match", "Object read", op);
 
             //test target
             EvrTarget target = event.getTarget();
@@ -127,12 +127,12 @@ public class EvrParserTest {
             assertTrue("The subject should be any user", subject.isAny());
 
             //test pc spec
-            EvrPcSpec pcSpec = event.getPcSpec();
-            assertTrue("The PcSpec should be any pc", pcSpec.isAny());
+            EvrPolicies policies = event.getPolicies();
+            assertTrue("The policies should be any pc", policies.isAny());
 
             //test op spec
-            EvrOpSpec opSpec = event.getOpSpec();
-            assertTrue("OpSpec should be any op", opSpec.isAny());
+            EvrOpertations operations = event.getOperations();
+            assertTrue("operations should be any op", operations.isAny());
 
             //test target
             EvrTarget target = event.getTarget();
@@ -187,26 +187,26 @@ public class EvrParserTest {
             assertEquals("Subject entity type does not match", "UA",  evrEntity.getType());
 
             //test pc spec
-            EvrPcSpec pcSpec = event.getPcSpec();
-            List<EvrEntity> pcs = pcSpec.getPcs();
-            assertTrue("There should only be 4 policy classes in this PcSpec", pcs.size() == 4);
-            assertTrue("The PcSpec should be or", pcSpec.isOr());
+            EvrPolicies policies = event.getPolicies();
+            List<EvrEntity> pcs = policies.getPcs();
+            assertTrue("There should only be 4 policy classes in this policies", pcs.size() == 4);
+            assertTrue("The policies should be or", policies.isOr());
 
             for(EvrEntity entity : pcs) {
-                assertTrue("PcSpec should be a node", entity.isNode());
-                assertNotNull("PcSpec pc name should not be null", entity.getName());
-                assertEquals("PcSpec entity type does not match", "PC", entity.getType());
+                assertTrue("policies should be a node", entity.isNode());
+                assertNotNull("policies pc name should not be null", entity.getName());
+                assertEquals("policies entity type does not match", "PC", entity.getType());
             }
 
             //test op spec
-            EvrOpSpec opSpec = event.getOpSpec();
-            HashSet<String> ops = opSpec.getOps();
-            assertTrue("There should only be two ops in the OpSpec", ops.size() == 2);
+            EvrOpertations operations = event.getOperations();
+            HashSet<String> ops = operations.getOps();
+            assertTrue("There should only be two ops in the operations", ops.size() == 2);
 
             String op = ops.iterator().next();
-            assertEquals("OpSpec op name does not match", "Object read", op);
+            assertEquals("operations op name does not match", "Object read", op);
             op = ops.iterator().next();
-            assertEquals("OpSpec op name does not match", "Object write", op);
+            assertEquals("operations op name does not match", "Object write", op);
 
             //test target
             EvrTarget target = event.getTarget();
@@ -247,21 +247,21 @@ public class EvrParserTest {
             }
 
             //test pc spec
-            EvrPcSpec pcSpec = event.getPcSpec();
-            List<EvrEntity> pcs = pcSpec.getPcs();
-            assertTrue("There should only be 4 policy classes in this PcSpec", pcs.size() == 4);
-            assertFalse("The PcSpec should be or", pcSpec.isOr());
+            EvrPolicies policies = event.getPolicies();
+            List<EvrEntity> pcs = policies.getPcs();
+            assertTrue("There should only be 4 policy classes in this policies", pcs.size() == 4);
+            assertFalse("The policies should be or", policies.isOr());
 
             for(EvrEntity entity : pcs) {
-                assertTrue("PcSpec should be a node", entity.isNode());
-                assertNotNull("PcSpec pc name should not be null", entity.getName());
-                assertEquals("PcSpec entity type does not match", "PC", entity.getType());
+                assertTrue("policies should be a node", entity.isNode());
+                assertNotNull("policies pc name should not be null", entity.getName());
+                assertEquals("policies entity type does not match", "PC", entity.getType());
             }
 
             //test op spec
             //test op spec
-            EvrOpSpec opSpec = event.getOpSpec();
-            assertTrue("OpSpec should be any op", opSpec.isAny());
+            EvrOpertations operations = event.getOperations();
+            assertTrue("operations should be any op", operations.isAny());
 
             //test target
             EvrTarget target = event.getTarget();
@@ -304,21 +304,21 @@ public class EvrParserTest {
             assertEquals("current_process", subjectEntity.getProcess().getFunction().getFunctionName());
 
             //test pc spec
-            EvrPcSpec pcSpec = event.getPcSpec();
-            List<EvrEntity> pcs = pcSpec.getPcs();
-            assertTrue("There should only be 4 policy classes in this PcSpec", pcs.size() == 4);
-            assertTrue("The PcSpec should be or", pcSpec.isOr());
+            EvrPolicies policies = event.getPolicies();
+            List<EvrEntity> pcs = policies.getPcs();
+            assertTrue("There should only be 4 policy classes in this policies", pcs.size() == 4);
+            assertTrue("The policies should be or", policies.isOr());
 
             for(EvrEntity entity : pcs) {
-                assertTrue("PcSpec should be a node", entity.isNode());
-                assertNotNull("PcSpec pc name should not be null", entity.getName());
-                assertEquals("PcSpec entity type does not match", "PC", entity.getType());
+                assertTrue("policies should be a node", entity.isNode());
+                assertNotNull("policies pc name should not be null", entity.getName());
+                assertEquals("policies entity type does not match", "PC", entity.getType());
             }
 
             //test op spec
             //test op spec
-            EvrOpSpec opSpec = event.getOpSpec();
-            assertTrue("OpSpec should be any op", opSpec.isAny());
+            EvrOpertations operations = event.getOperations();
+            assertTrue("operations should be any op", operations.isAny());
 
             //test target
             EvrTarget target = event.getTarget();

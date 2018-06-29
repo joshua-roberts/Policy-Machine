@@ -1,5 +1,6 @@
 package gov.nist.policyserver.translator.algorithms;
 
+import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
@@ -104,11 +105,11 @@ public class UpdateAlgorithm extends Algorithm {
                 Column::getColumnName).collect(Collectors.toList());
 
         for (String rowName : rows) {
-            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName);
+            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName, NodeType.OA);
 
             //iterate through the requested columns and find the intersection of the current row and current column
             for (String columnName : reqColumns) {
-                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName);
+                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName, NodeType.OA);
                 //if the intersection (an object) is in the accessible children add the COLUMN to a list
                 //else if not in accChildren, check if its in where clause
 
@@ -125,7 +126,7 @@ public class UpdateAlgorithm extends Algorithm {
             HashSet<Column> whereColumns = getWhereColumns(update.getWhere());
             for(Column column : whereColumns){
                 if(!reqColumns.contains(column.getColumnName())){
-                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName());
+                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName(), NodeType.OA);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause

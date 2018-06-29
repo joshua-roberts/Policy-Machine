@@ -22,7 +22,7 @@ import java.sql.SQLException;
 public class EvrResource {
     private EvrService evrService = new EvrService();
 
-    public EvrResource() throws DatabaseException, IOException, ClassNotFoundException, SQLException {
+    public EvrResource() {
     }
 
     @POST

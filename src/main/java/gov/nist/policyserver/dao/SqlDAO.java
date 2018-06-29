@@ -561,7 +561,7 @@ public class SqlDAO extends DAO {
     }
 
     @Override
-    public String createPcSpec(String ruleId, String parentLabel) throws DatabaseException {
+    public String createPolicies(String ruleId, String parentLabel) throws DatabaseException {
         return null;
     }
 
@@ -616,7 +616,7 @@ public class SqlDAO extends DAO {
     }
 
     @Override
-    public void createOpSpec(String parentId, String parentType, List<String> ops) throws DatabaseException {
+    public void createOperations(String parentId, String parentType, List<String> ops) throws DatabaseException {
 
     }
 

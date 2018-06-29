@@ -40,7 +40,7 @@ public class SqlObligationsDAO implements ObligationsDAO {
     }
 
     @Override
-    public String createPcSpec(String ruleId, String parentLabel, boolean isOr) throws DatabaseException {
+    public String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException {
         return null;
     }
 
@@ -110,7 +110,7 @@ public class SqlObligationsDAO implements ObligationsDAO {
     }
 
     @Override
-    public void createOpSpec(String parentId, String parentType, HashSet<String> ops) throws DatabaseException {
+    public void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException {
 
     }
 
