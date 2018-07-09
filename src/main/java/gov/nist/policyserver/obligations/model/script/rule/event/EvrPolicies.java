@@ -5,11 +5,11 @@ import gov.nist.policyserver.obligations.model.EvrEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EvrPcSpec {
+public class EvrPolicies {
     private List<EvrEntity> pcs;
     private boolean         or;
 
-    public EvrPcSpec() {
+    public EvrPolicies() {
         pcs = new ArrayList<>();
         or = true;
     }

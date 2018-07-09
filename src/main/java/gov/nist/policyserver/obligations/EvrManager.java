@@ -4,8 +4,8 @@ import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.obligations.exceptions.InvalidEvrException;
 import gov.nist.policyserver.obligations.model.*;
 import gov.nist.policyserver.obligations.model.script.EvrScript;
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpSpec;
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrPcSpec;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpertations;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrPolicies;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrSubject;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrTarget;
 import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrEvent;
@@ -23,7 +23,6 @@ import gov.nist.policyserver.service.ProhibitionsService;
 import gov.nist.policyserver.translator.algorithms.DbManager;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.update.Update;
-import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Has;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -114,7 +113,7 @@ public class EvrManager {
             throw new InvalidEvrException("Invalid event target Node in process Update.");
         }
 
-        processEvent(evrSubject, new EvrPcSpec(), UPDATE_EVENT, node.iterator().next());
+        processEvent(evrSubject, new EvrPolicies(), UPDATE_EVENT, node.iterator().next());
 
         //process updating columns
         List<Column> columns = update.getColumns();
@@ -125,7 +124,7 @@ public class EvrManager {
                 throw new InvalidEvrException("Invalid event target Node in process Update.");
             }
 
-            processEvent(evrSubject, new EvrPcSpec(), UPDATE_EVENT, node.iterator().next());
+            processEvent(evrSubject, new EvrPolicies(), UPDATE_EVENT, node.iterator().next());
         }
 
         //process updating rows
@@ -137,7 +136,7 @@ public class EvrManager {
                 throw new InvalidEvrException("Invalid event target Node in process Update.");
             }
 
-            processEvent(evrSubject, new EvrPcSpec(), UPDATE_EVENT, node.iterator().next());
+            processEvent(evrSubject, new EvrPolicies(), UPDATE_EVENT, node.iterator().next());
         }
     }
 
@@ -161,7 +160,7 @@ public class EvrManager {
                 throw new InvalidEvrException("Invalid event target Node in process Select.");
             }
 
-            processEvent(evrSubject, new EvrPcSpec(), SELECT_EVENT, node.iterator().next());
+            processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, node.iterator().next());
         }
 
         //process select columns
@@ -172,7 +171,7 @@ public class EvrManager {
                 throw new InvalidEvrException("Invalid event target Node in process Select.");
             }
 
-            processEvent(evrSubject, new EvrPcSpec(), SELECT_EVENT, node.iterator().next());
+            processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, node.iterator().next());
         }
 
         //process select rows
@@ -187,17 +186,17 @@ public class EvrManager {
 
                 Node node = nodes.iterator().next();
 
-                processEvent(evrSubject, new EvrPcSpec(), SELECT_EVENT, node);
+                processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, node);
 
                 HashSet<Node> children = nodeService.getChildrenOfType(node.getId(), null);
                 for(Node n : children) {
-                    processEvent(evrSubject, new EvrPcSpec(), SELECT_EVENT, n);
+                    processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, n);
                 }
             }
         }
     }
 
-    public void processEvent(EvrSubject procSubject, EvrPcSpec procPc, String procEvent, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    public void processEvent(EvrSubject procSubject, EvrPolicies procPc, String procEvent, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         //get all rules with the same event
         List<EvrRule> rules = getRules(procEvent);
         for(EvrRule rule : rules) {
@@ -242,10 +241,10 @@ public class EvrManager {
         return false;
     }
 
-    private boolean eventMatches(EvrEvent evrEvent, EvrSubject procSubject, EvrPcSpec procPc, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, IOException, ClassNotFoundException {
+    private boolean eventMatches(EvrEvent evrEvent, EvrSubject procSubject, EvrPolicies procPc, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, IOException, ClassNotFoundException {
         //check subject
         EvrSubject evrSubject = evrEvent.getSubject();
-        EvrPcSpec evrPc = evrEvent.getPcSpec();
+        EvrPolicies evrPc = evrEvent.getPolicies();
         EvrTarget evrTarget = evrEvent.getTarget();
 
         return subjectMatches(procSubject, evrSubject) &&
@@ -308,7 +307,7 @@ public class EvrManager {
         return true;
     }
 
-    private boolean pcMatches(EvrPcSpec procPc, EvrPcSpec evrPc) {
+    private boolean pcMatches(EvrPolicies procPc, EvrPolicies evrPc) {
         if(evrPc == null) {
             return true;
         }
@@ -607,7 +606,7 @@ public class EvrManager {
                     EvrEvent ruleEvent = rule.getEvent();
 
                     //check the event matches
-                    if (ruleEvent.getOpSpec().getOps().contains(event)) {
+                    if (ruleEvent.getOperations().getOps().contains(event)) {
                         retRules.add(rule);
                     }
                 }
@@ -617,7 +616,7 @@ public class EvrManager {
         return retRules;
     }
 
-    private void doActions(List<EvrAction> actions) throws InvalidEntityException, InvalidNodeTypeException, SQLException, InvalidEvrException, InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException, ProhibitionNameExistsException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    private void doActions(List<EvrAction> actions) throws InvalidEntityException, InvalidNodeTypeException, SQLException, InvalidEvrException, InvalidPropertyException, NodeNotFoundException, DatabaseException, ProhibitionNameExistsException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         for(EvrAction action : actions) {
             if(action instanceof EvrGrantAction) {
                 EvrGrantAction grantAction = (EvrGrantAction) action;
@@ -632,12 +631,12 @@ public class EvrManager {
         }
     }
 
-    private void doDeny(EvrDenyAction denyAction) throws DatabaseException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, ProhibitionNameExistsException, InvalidEntityException, InvalidNodeTypeException, SQLException, InvalidEvrException, InvalidPropertyException, NullNameException, IOException, ClassNotFoundException {
+    private void doDeny(EvrDenyAction denyAction) throws DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ProhibitionNameExistsException, InvalidEntityException, InvalidNodeTypeException, SQLException, InvalidEvrException, InvalidPropertyException, NullNameException, IOException, ClassNotFoundException {
         EvrSubject subject = denyAction.getSubject();
-        EvrOpSpec opSpec = denyAction.getOpSpec();
+        EvrOpertations operations = denyAction.getOperations();
         EvrTarget target = denyAction.getTarget();
 
-        HashSet<String> ops = opSpec.getOps();
+        HashSet<String> ops = operations.getOps();
         String[] opsArr = new String[ops.size()];
         opsArr = ops.toArray(opsArr);
 
@@ -743,8 +742,8 @@ public class EvrManager {
         EvrSubject subject = grantAction.getSubject();
         List<EvrEntity> entities = subject.getEntities();
 
-        EvrOpSpec opSpec = grantAction.getOpSpec();
-        HashSet<String> ops = opSpec.getOps();
+        EvrOpertations operations = grantAction.getOperations();
+        HashSet<String> ops = operations.getOps();
 
         EvrTarget target = grantAction.getTarget();
         List<EvrEntity> containers = target.getContainers();

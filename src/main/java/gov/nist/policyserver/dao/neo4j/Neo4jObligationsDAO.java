@@ -8,8 +8,8 @@ import gov.nist.policyserver.obligations.EvrManager;
 import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.obligations.model.*;
 import gov.nist.policyserver.obligations.model.script.EvrScript;
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpSpec;
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrPcSpec;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpertations;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrPolicies;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrSubject;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrTarget;
 import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrEvent;
@@ -111,17 +111,17 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     EvrSubject subject = loadSubject(child.getEvrId());
                     event.setSubject(subject);
                     break;
-                case OP_SPEC_TAG_DB:
-                    EvrOpSpec opSpec = loadOpSpec(child.getEvrId());
-                    event.setOpSpec(opSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations evrOperations = loadEvrOperations(child.getEvrId());
+                    event.setEvrOperations(evrOperations);
                     break;
-                case PC_SPEC_TAG:
-                    EvrPcSpec pcSpec = loadPcSpec(child.getEvrId());
-                    event.setPcSpec(pcSpec);
+                case POLICIES_TAG:
+                    EvrPolicies evrPolicies = loadEvrPolicies(child.getEvrId());
+                    event.setEvrPolicies(evrPolicies);
 
                 case TARGET_TAG:
-                    EvrTarget targetSpec = loadTarget(child.getEvrId());
-                    event.setTarget(targetSpec);
+                    EvrTarget target = loadTarget(child.getEvrId());
+                    event.setTarget(target);
                     break;
                 case TIME_TAG:
                     EvrTime evrTime = loadTime(child.getEvrId());
@@ -227,31 +227,31 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         }
     }
 
-    private EvrOpSpec loadOpSpec(String evrId) throws DatabaseException, SQLException {
-        String cypher = "match(n:obligations:op_spec{evr_id:'" + evrId + "'}) return n.ops";
+    private EvrOpertations loadEvrOperations(String evrId) throws DatabaseException, SQLException {
+        String cypher = "match(n:obligations:operations{evr_id:'" + evrId + "'}) return n.ops";
         ResultSet rs = execute(connection, cypher);
         rs.next();
         HashSet<String> ops = getStringSetFromJson(rs.getString(1));
 
-        return new EvrOpSpec(ops);
+        return new EvrOpertations(ops);
     }
 
-    private EvrPcSpec loadPcSpec(String evrId) throws DatabaseException, SQLException {
-        String cypher = "match(n:obligations:pc_spec{evr_id:'" + evrId + "'}) return n.or";
+    private EvrPolicies loadEvrPolicies(String evrId) throws DatabaseException, SQLException {
+        String cypher = "match(n:obligations:policies{evr_id:'" + evrId + "'}) return n.or";
         ResultSet rs = execute(connection, cypher);
         rs.next();
         boolean isOr = rs.getBoolean(1);
 
-        EvrPcSpec pcSpec = new EvrPcSpec();
-        pcSpec.setOr(isOr);
+        EvrPolicies evrPolicies = new EvrPolicies();
+        evrPolicies.setOr(isOr);
 
-        List<EvrNode> children = getChildren(evrId, PC_SPEC_TAG_DB);
+        List<EvrNode> children = getChildren(evrId, POLICIES_TAG);
         for(EvrNode child : children) {
             EvrEntity evrEntity = loadEntity(child.getEvrId());
-            pcSpec.addEntity(evrEntity);
+            evrPolicies.addEntity(evrEntity);
         }
 
-        return pcSpec;
+        return evrPolicies;
     }
 
     private EvrTarget loadTarget(String evrId) throws DatabaseException, SQLException {
@@ -391,9 +391,9 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     EvrSubject evrSubject = loadSubject(evrId);
                     action.setSubject(evrSubject);
                     break;
-                case OP_SPEC_TAG:
-                    EvrOpSpec evrOpSpec = loadOpSpec(evrId);
-                    action.setOpSpec(evrOpSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations evrOpertations = loadEvrOperations(evrId);
+                    action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
                     EvrTarget evrTarget = loadTarget(evrId);
@@ -439,9 +439,9 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     EvrSubject evrSubject = loadSubject(child.getEvrId());
                     action.setSubject(evrSubject);
                     break;
-                case OP_SPEC_TAG:
-                    EvrOpSpec evrOpSpec = loadOpSpec(child.getEvrId());
-                    action.setOpSpec(evrOpSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations evrOpertations = loadEvrOperations(child.getEvrId());
+                    action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
                     EvrTarget evrTarget = loadTarget(evrId);
@@ -625,14 +625,15 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     }
 
     @Override
-    public String createPcSpec(String ruleId, String parentLabel, boolean isOr) throws DatabaseException {
-        String pcSpecId = getEvrId();
+    public String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException {
+        String policiesId = getEvrId();
 
         String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + ruleId + "'}) " +
-                "create (n)<-[:pc_spec]-(:obligations:pc_spec{evr_id:'" + pcSpecId + "', name:'pc_spec', or:" + isOr + "})";
+                "create (n)<-[:policies]-(:obligations:policies{evr_id:'" + policiesId + "', name:'policies', or:" +
+                isOr + "})";
         execute(connection, cypher);
 
-        return pcSpecId;
+        return policiesId;
     }
 
     @Override
@@ -845,11 +846,13 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     }
 
     @Override
-    public void createOpSpec(String parentId, String parentType, HashSet<String> ops) throws DatabaseException {
+    public void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException {
         HashSet<String> opSet = new HashSet<>(ops);
 
         String cypher = "match(n:obligations:" + parentType + "{evr_id:'" + parentId + "'}) " +
-                "create (n)<-[:op_spec]-(:obligations:op_spec{evr_id:'" + parentId + "', name:'op_spec', ops:" + setToCypherArray(opSet) + "})";
+                "create (n)<-[:operations]-(:obligations:operations{evr_id:'" + parentId + "', name:'operations', " +
+                "ops:" +
+                setToCypherArray(opSet) + "})";
         execute(connection, cypher);
     }
 

@@ -1,16 +1,16 @@
 package gov.nist.policyserver.obligations.model.script.rule.event.time;
 
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpSpec;
-import gov.nist.policyserver.obligations.model.script.rule.event.EvrPcSpec;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrOpertations;
+import gov.nist.policyserver.obligations.model.script.rule.event.EvrPolicies;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrSubject;
 import gov.nist.policyserver.obligations.model.script.rule.event.EvrTarget;
 
 public class EvrEvent {
-    EvrSubject subject;
-    EvrPcSpec  pcSpec;
-    EvrOpSpec  opSpec;
-    EvrTarget  target;
-    EvrTime    time;
+    EvrSubject     subject;
+    EvrPolicies    policies;
+    EvrOpertations operations;
+    EvrTarget      target;
+    EvrTime        time;
 
     public EvrSubject getSubject() {
         return subject;
@@ -20,20 +20,20 @@ public class EvrEvent {
         this.subject = subject;
     }
 
-    public EvrPcSpec getPcSpec() {
-        return pcSpec;
+    public EvrPolicies getPolicies() {
+        return policies;
     }
 
-    public void setPcSpec(EvrPcSpec pcSpec) {
-        this.pcSpec = pcSpec;
+    public void setEvrPolicies(EvrPolicies policies) {
+        this.policies = policies;
     }
 
-    public EvrOpSpec getOpSpec() {
-        return opSpec;
+    public EvrOpertations getOperations() {
+        return operations;
     }
 
-    public void setOpSpec(EvrOpSpec opSpec) {
-        this.opSpec = opSpec;
+    public void setEvrOperations(EvrOpertations operations) {
+        this.operations = operations;
     }
 
     public EvrTarget getTarget() {
@@ -72,8 +72,8 @@ public class EvrEvent {
 
         //if it gets to this point, it is not time
         return this.getSubject().equals(event.getSubject()) &&
-                this.getPcSpec().equals(event.getPcSpec()) &&
-                this.getOpSpec().equals(event.getOpSpec()) &&
+                this.getPolicies().equals(event.getPolicies()) &&
+                this.getOperations().equals(event.getOperations()) &&
                 this.getTarget().equals(event.getTarget());
     }
 }

@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -217,30 +218,9 @@ public class NodeService extends Service{
             catch (NodeNotFoundException e) {/*expected exception*/}
         }
 
-        boolean checkDefault = true;
-        //check this name will be the only one in the namespace
-        if(properties != null) {
-            for (Property property : properties) {
-                //check if namespace property exists
-                if (property.isValid() && property.getKey().equals(NAMESPACE_PROPERTY)) {
-                    HashSet<Node> nodes = getNodes(property.getValue(), name, null, null, null);
-
-                    if (nodes.size() > 0) {
-                        throw new NodeNameExistsInNamespaceException(property.getValue(), name);
-                    }
-
-                    checkDefault = false;
-                    break;
-                }
-            }
-        }
-
-        if(checkDefault){
-            //check if name exists in the default namespace
-            HashSet<Node> nodes = getNodes(null, name, type, null, null);
-            if (!nodes.isEmpty()) {
-                throw new NodeNameExistsException(name);
-            }
+        HashSet<Node> nodes = getNodes(null, name, type, properties != null ? Arrays.asList(properties) : null);
+        if(!nodes.isEmpty()) {
+           throw new NodeNameExistsException(name);
         }
 
         //create node in database
@@ -309,20 +289,20 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node getNodeInNamespace(String namespace, String name)
+    public Node getNodeInNamespace(String namespace, String name, NodeType type)
             throws NameInNamespaceNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         HashSet<Node> nodes = getNodes(namespace, name, null, null, null);
         if(nodes.isEmpty()){
-            throw new NameInNamespaceNotFoundException(namespace, name);
+            throw new NameInNamespaceNotFoundException(namespace, name, type);
         }
 
         return nodes.iterator().next();
     }
 
-    public void deleteNodeInNamespace(String namespace, String nodeName)
-            throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, NodeNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public void deleteNodeInNamespace(String namespace, String nodeName, NodeType type)
+            throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException {
         //get the node in namespace
-        Node node = getNodeInNamespace(namespace, nodeName);
+        Node node = getNodeInNamespace(namespace, nodeName, type);
 
         deleteNode(node.getId());
     }

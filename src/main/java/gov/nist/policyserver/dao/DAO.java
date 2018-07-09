@@ -305,7 +305,7 @@ public abstract class DAO {
     public abstract String createRule(String parentId, String parentLabel, String label) throws DatabaseException;
 
     public abstract String createSubject(String ruleId, String parentLabel) throws DatabaseException;
-    public abstract String createPcSpec(String ruleId, String parentLabel) throws DatabaseException;
+    public abstract String createPolicies(String ruleId, String parentLabel) throws DatabaseException;
     public abstract void createTime(String ruleId, EvrTime evrTime) throws DatabaseException;
     public abstract String createTarget(String ruleId, String parentLabel) throws DatabaseException;
 
@@ -324,7 +324,7 @@ public abstract class DAO {
 
     public abstract String createGrantAction(String ruleId, String parentLabel) throws DatabaseException;
 
-    public abstract void createOpSpec(String parentId, String parentType, List<String> ops) throws DatabaseException;
+    public abstract void createOperations(String parentId, String parentType, List<String> ops) throws DatabaseException;
 
     public abstract String createCreateAction(String parentId, String parentLabel) throws DatabaseException;
 

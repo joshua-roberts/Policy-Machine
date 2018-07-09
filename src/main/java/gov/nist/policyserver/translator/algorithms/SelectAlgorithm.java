@@ -1,6 +1,7 @@
 package gov.nist.policyserver.translator.algorithms;
 
 import gov.nist.policyserver.exceptions.*;
+import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
 import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
 import gov.nist.policyserver.translator.model.row.CompositeRow;
@@ -206,7 +207,7 @@ public class SelectAlgorithm extends Algorithm {
                 if(row.getRowName().equals(ROW_NOT_AVAILABLE)) {
                     continue;
                 }
-                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName());//pmManager.getEntityId(row.getPath(), "b").get(0);
+                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName(), NodeType.OA);
 
                 List<Column> columns = compositeTable.getSimpleTable(row.getTableName()).getColumns();
 
@@ -222,7 +223,7 @@ public class SelectAlgorithm extends Algorithm {
                     }
                     if (skip) continue;
 
-                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName());
+                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause
@@ -239,7 +240,7 @@ public class SelectAlgorithm extends Algorithm {
                 for (Column column : whereColumns) {
                     System.out.println("Checking column " + column + " in where clause");
                     if(columnInList(compositeTable.getSimpleTable(row.getTableName()).getColumns(), column)){
-                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName());
+                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
 
                         if (!checkColumn(columnPmId, rowPmId, FILE_READ)) {
                             throw new PMAccessDeniedException(column.toString());

@@ -473,14 +473,14 @@ public class NeoDAO extends DAO {
     }
 
     @Override
-    public String createPcSpec(String ruleId, String parentLabel) throws DatabaseException {
-        String pcSpecId = getEvrId();
+    public String createPolicies(String ruleId, String parentLabel) throws DatabaseException {
+        String policiesId = getEvrId();
 
         String cypher = "match(n:obligations:" + parentLabel + "{evr_id:'" + ruleId + "'}) " +
-                "create (n)<-[:pc_spec]-(:obligations:pc_spec{evr_id:'" + pcSpecId + "', name:'pc_spec'})";
+                "create (n)<-[:policies]-(:obligations:policies{evr_id:'" + policiesId + "', name:'policies'})";
         execute(cypher);
 
-        return pcSpecId;
+        return policiesId;
     }
 
     @Override
@@ -665,11 +665,11 @@ public class NeoDAO extends DAO {
     }
 
     @Override
-    public void createOpSpec(String parentId, String parentType, List<String> ops) throws DatabaseException {
+    public void createOperations(String parentId, String parentType, List<String> ops) throws DatabaseException {
         HashSet<String> opSet = new HashSet<>(ops);
 
         String cypher = "match(n:obligations:" + parentType + "{evr_id:'" + parentId + "'}) " +
-                "create (n)<-[:op_spec]-(:obligations:op_spec{evr_id:'" + parentId + "', name:'op_spec', ops:" + setToCypherArray(opSet) + "})";
+                "create (n)<-[:operations]-(:obligations:operations{evr_id:'" + parentId + "', name:'operations', ops:" + setToCypherArray(opSet) + "})";
         execute(cypher);
     }
 

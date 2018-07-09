@@ -71,12 +71,12 @@ class EvrService extends Service {
         getDaoManager().getObligationsDAO().updateEntity(entityId, evrEntity);
     }
 
-    String createPcSpec(String ruleId, String parentLabel, boolean isOr) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
-        return getDaoManager().getObligationsDAO().createPcSpec(ruleId, parentLabel, isOr);
+    String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+        return getDaoManager().getObligationsDAO().createPolicies(ruleId, parentLabel, isOr);
     }
 
-    void createOpSpec(String parentId, String parentType, HashSet<String> ops) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
-        getDaoManager().getObligationsDAO().createOpSpec(parentId, parentType, ops);
+    void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+        getDaoManager().getObligationsDAO().createOperations(parentId, parentType, ops);
     }
 
     void createTime(String ruleId, EvrTime evrTime) throws DatabaseException, SQLException, IOException, ClassNotFoundException {

@@ -210,7 +210,7 @@
         <div class=" col-lg-3 tile" style="padding: 10px 10px 10px 10px;">
             <div class="card text-white bg-primary" style="padding: 0">
                 <div class="card-body" style="text-align: center" onclick="showForm('interval')">
-                    <h5 class="card-title">Set Data Dump Interval</h5>
+                    <h5 class="card-title">Data Dump Interval</h5>
                     <img src="images/interval.png" alt="interval" width="150" height="150">
                 </div>
             </div>

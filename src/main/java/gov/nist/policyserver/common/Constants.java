@@ -95,6 +95,9 @@ public class Constants {
     public static final String PASSWORD_PROPERTY        = "password";
     public static final String DESCRIPTION_PROPERTY     = "description";
     public static final String NAMESPACE_PROPERTY       = "namespace";
+    public static final String SOURCE_PROPERTY       = "source";
+    public static final String PATH_PROPERTY       = "path";
+    public static final String BUCKET_PROPERTY       = "bucket";
     public static final String COLUMN_INDEX_PROPERTY    = "column_index";
     public static final String ORDER_BY_PROPERTY        = "order_by";
     public static final String ROW_INDEX_PROPERTY       = "row_index";
@@ -111,5 +114,6 @@ public class Constants {
     public static final boolean INHERIT_DEFAULT          = true;
     public static final String SUPER_USER_NAME           = "super";
     public static final int NEW_NODE_ID                  = 0;
+    public static final int NO_BASE_ID                  = 0;
     public static final String COMMA_DELIMETER = ",\\s*";
 }

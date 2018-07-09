@@ -1,3 +1,4 @@
+/*
 package gov.nist.policyserver.obligations;
 
 import gov.nist.policyserver.obligations.exceptions.InvalidEvrException;
@@ -158,12 +159,14 @@ public class EvrValidator {
         checkInvalidElements(node.getNodeName(), childNodes);
     }
 
-    /**
+    */
+/**
      * Allowed child tags: label, rules
      * Both are optional, so we just need to check if there are any invalid elements
      * @param node
      * @throws InvalidEvrException
-     */
+     *//*
+
     private static void validateScript(Node node) throws InvalidEvrException {
         if(!node.getNodeName().equals(SCRIPT_TAG)) {
             throw new InvalidEvrException("script must be the root tag");
@@ -173,34 +176,40 @@ public class EvrValidator {
         checkInvalidElements(node.getNodeName(), childNodes);
     }
 
-    /**
+    */
+/**
      * Allowed child tags: N/A
      * There are no child tags allowed so we have to check that there are no child elements
      * @param node
      * @throws InvalidEvrException
-     */
+     *//*
+
     private static void validateLabel(Node node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
         checkInvalidElements(node.getNodeName(), childNodes);
     }
 
-    /**
+    */
+/**
      * Allowed child tags: rule
      * Only rule elements are allowed and it is possible to have no elements.
      * @param node
      * @throws InvalidEvrException
-     */
+     *//*
+
     private static void validateRules(Node node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
         checkInvalidElements(node.getNodeName(), childNodes);
     }
 
-    /**
+    */
+/**
      * Allowed child tags: event, response
      * A rule must have one event and one response element
      * @param node
      * @throws InvalidEvrException
-     */
+     *//*
+
     private static void validateRule(Node node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
 
@@ -228,7 +237,8 @@ public class EvrValidator {
         }
     }
 
-    /*private void validateSubject(Node node) throws InvalidEvrException {
+    */
+/*private void validateSubject(Node node) throws InvalidEvrException {
         List<Node> childNodes = getChildNodes(node);
         for(Node child : childNodes) {
             if(!subject.contains(child.getNodeName())) {
@@ -296,7 +306,8 @@ public class EvrValidator {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in process");
             }
         }
-    }*/
+    }*//*
+
 
 
 
@@ -376,3 +387,4 @@ public class EvrValidator {
         }
     }
 }
+*/

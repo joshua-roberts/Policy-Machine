@@ -35,7 +35,7 @@ public class EvrParser {
     private Element    root;
     private EvrService evrService;
 
-    EvrParser() throws DatabaseException, IOException, ClassNotFoundException, SQLException {
+    EvrParser() {
         evrService = new EvrService();
     }
 
@@ -66,6 +66,19 @@ public class EvrParser {
         root = doc.getDocumentElement();
     }
 
+    /**
+     * Parse the root node of the xml script
+     * Allowed child tags: label, rules
+     * @return
+     * @throws InvalidEvrException
+     * @throws InvalidPropertyException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws SQLException
+     * @throws InvalidEntityException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrScript parseScript() throws InvalidEvrException, InvalidPropertyException, DatabaseException, ConfigurationException, SQLException, InvalidEntityException, IOException, ClassNotFoundException {
         System.out.println("parsing script");
 
@@ -86,6 +99,11 @@ public class EvrParser {
         return script;
     }
 
+    /**
+     * Get the label for this script.
+     * @param node
+     * @return
+     */
     private String getLabel(Node node) {
         String name = null;
 
@@ -106,6 +124,20 @@ public class EvrParser {
         return name;
     }
 
+    /**
+     * Parse the rules for this script
+     * Allowed child tags: rule
+     * @param scriptId
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private List<EvrRule> parseRules(String scriptId) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing rules...");
         List<EvrRule> rules = new ArrayList<>();
@@ -137,6 +169,22 @@ public class EvrParser {
         return rules;
     }
 
+    /**
+     * Parse a rule
+     * Allowed child tags: event, response
+     * @param parentId
+     * @param parentLabel
+     * @param ruleNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrRule parseRule(String parentId, String parentLabel, Node ruleNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing rule...");
         EvrRule rule = new EvrRule();
@@ -165,6 +213,21 @@ public class EvrParser {
         return rule;
     }
 
+    /**
+     * Parse an event
+     * Allowed child tags: subject, operations, policies, target, time
+     * @param ruleId
+     * @param eventNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrEvent parseEvent(String ruleId, Node eventNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing event...");
         EvrEvent event = new EvrEvent();
@@ -176,17 +239,17 @@ public class EvrParser {
                     EvrSubject subject = parseSubject(ruleId, "event", childNode);
                     event.setSubject(subject);
                     break;
-                case OP_SPEC_TAG:
-                    EvrOpSpec opSpec = parseOpSpec(ruleId, "event", childNode);
-                    event.setOpSpec(opSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations operations = parseOperations(ruleId, "event", childNode);
+                    event.setEvrOperations(operations);
                     break;
-                case PC_SPEC_TAG:
-                    EvrPcSpec pcSpec = parsePcSpec(ruleId, "event", childNode);
-                    event.setPcSpec(pcSpec);
+                case POLICIES_TAG:
+                    EvrPolicies policies = parsePolicies(ruleId, "event", childNode);
+                    event.setEvrPolicies(policies);
                     break;
                 case TARGET_TAG:
-                    EvrTarget targetSpec = parseTarget(ruleId, "event", childNode);
-                    event.setTarget(targetSpec);
+                    EvrTarget target = parseTarget(ruleId, "event", childNode);
+                    event.setTarget(target);
                     break;
                 case TIME_TAG:
                     EvrTime evrTime = parseTime(ruleId, childNode);
@@ -198,6 +261,17 @@ public class EvrParser {
         return event;
     }
 
+    /**
+     * Parse a time event.
+     * Allowed child tags: dow, day, month, year, hour
+     * @param ruleId
+     * @param timeNode
+     * @return
+     * @throws DatabaseException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrTime parseTime(String ruleId, Node timeNode) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing time event...");
 
@@ -231,6 +305,12 @@ public class EvrParser {
         return evrTime;
     }
 
+    /**
+     * Parse a time element. Day of the week (dow) is numbered 1-7 (1 = monday, 7 = sunday).  Each element can be a
+     * list of values or a range
+     * @param node
+     * @return
+     */
     private EvrTimeElement parseTimeElement(Node node) {
         System.out.println("parsing time element...");
 
@@ -266,9 +346,26 @@ public class EvrParser {
         return element;
     }
 
+    /**
+     * Parse a target.  This can be in an event or actions. The entity tag are the objects
+     * (i.e. 'any object' = <entity/). The containers tag, contains one or more entities.
+     * Allowed child tags: entity, containers
+     * @param parentId
+     * @param parentLabel
+     * @param targetNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrTarget parseTarget(String parentId, String parentLabel, Node targetNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
-        System.out.println("parsing target spec...");
-        EvrTarget targetSpec = new EvrTarget();
+        System.out.println("parsing target...");
+        EvrTarget target = new EvrTarget();
 
         //check if intersection
         NamedNodeMap attributes = targetNode.getAttributes();
@@ -277,7 +374,7 @@ public class EvrParser {
         if(interNode != null) {
             intersection = Boolean.valueOf(interNode.getNodeValue());
         }
-        targetSpec.setIntersection(intersection);
+        target.setIntersection(intersection);
 
         //create target
         String targetId = evrService.createTarget(parentId, parentLabel);
@@ -286,81 +383,130 @@ public class EvrParser {
         for(Node node : childNodes) {
             switch (node.getNodeName()) {
                 case ENTITY_TAG:
-                    System.out.println("target spec entity...");
+                    System.out.println("target entity...");
                     EvrEntity evrEntity = parseEntity(targetId, "target_object", node);
-                    targetSpec.setEntity(evrEntity);
+                    target.setEntity(evrEntity);
                     break;
-                case CONTAINER_TAG:
+                case CONTAINERS_TAG:
                     List<Node> contChildNodes = getChildNodes(node);
                     for (Node contChildNode : contChildNodes) {
                         switch (contChildNode.getNodeName()) {
                             case ENTITY_TAG:
-                                System.out.println("target spec container...");
+                                System.out.println("target container...");
                                 evrEntity = parseEntity(targetId, "target_containers", contChildNode);
-                                targetSpec.addContainer(evrEntity);
+                                target.addContainer(evrEntity);
                                 break;
                         }
                     }
                     break;
             }
         }
-        return targetSpec;
+        return target;
     }
 
-    private EvrPcSpec parsePcSpec(String parentId, String parentLabel, Node pcSpecNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
-        System.out.println("parsing pc spec...");
+    /**
+     * Parse the policies tag.  There can be one or more entity tags under the policies tag.  The default behavior is
+     * to apply an OR operation to the set of policies.  This can be set by surrounding the set of entities in an
+     * AND or OR tag.
+     * Allowed child tags: and, or, entity
+     * @param parentId
+     * @param parentLabel
+     * @param policyNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private EvrPolicies parsePolicies(String parentId, String parentLabel, Node policyNode) throws 
+            InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
+        System.out.println("parsing pc...");
 
-        EvrPcSpec pcSpec = new EvrPcSpec();
+        EvrPolicies policies = new EvrPolicies();
 
         //child tags are either OR or AND.  If there are no child nodes
         //the default is OR
-        List<Node> childNodes = getChildNodes(pcSpecNode);
+        List<Node> childNodes = getChildNodes(policyNode);
         for(Node node : childNodes) {
             if(node.getNodeName().equals(AND_TAG)) {
-                pcSpec.setOr(false);
-                pcSpecNode = node;
+                policies.setOr(false);
+                policyNode = node;
             } else if(node.getNodeName().equals(OR_TAG)) {
-                pcSpecNode = node;
+                policyNode = node;
             }
         }
 
         //create subject node
-        String pcSpecId = evrService.createPcSpec(parentId, parentLabel, pcSpec.isOr());
+        String policiesId = evrService.createPolicies(parentId, parentLabel, policies.isOr());
 
         //get actual entity nodes
-        childNodes = getChildNodes(pcSpecNode);
+        childNodes = getChildNodes(policyNode);
         for(Node child : childNodes) {
             if(child.getNodeName().equals(ENTITY_TAG)) {
-                EvrEntity evrEntity = parseEntity(pcSpecId, "pc_spec", child);
-                pcSpec.addEntity(evrEntity);
+                EvrEntity evrEntity = parseEntity(policiesId, POLICIES_TAG, child);
+                policies.addEntity(evrEntity);
             }
         }
 
-        return pcSpec;
+        return policies;
     }
 
-    private EvrOpSpec parseOpSpec(String parentId, String parentLabel, Node opSpecNode) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
-        System.out.println("parsing op spec...");
+    /**
+     * Parse operations.  This is just a set of operation tags
+     * Allowed child tags: operation
+     * @param parentId
+     * @param parentLabel
+     * @param operationsNode
+     * @return
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private EvrOpertations parseOperations(String parentId, String parentLabel, Node operationsNode) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+        System.out.println("parsing op...");
 
         HashSet<String> ops = new HashSet<>();
 
-        List<Node> childNodes = getChildNodes(opSpecNode);
+        List<Node> childNodes = getChildNodes(operationsNode);
         for(Node node : childNodes) {
-            if(node.getNodeName().equals(OP_TAG)) {
-                if(node.getTextContent().length() > 0) {
-                    ops.add(node.getTextContent());
-                }
+            switch (node.getNodeName()) {
+                case OPERATION_TAG:
+                    if(node.getTextContent().length() > 0) {
+                        ops.add(node.getTextContent());
+                    }
             }
         }
 
         System.out.println("\tops: " + ops);
 
         //create opspec in db
-        evrService.createOpSpec(parentId, parentLabel, ops);
+        evrService.createOperations(parentId, parentLabel, ops);
 
-        return new EvrOpSpec(ops);
+        return new EvrOpertations(ops);
     }
 
+    /**
+     * Parse a subject. The subject can be an entity (user or user attribute), a function, or a process
+     * Allowed child tags: entity, function, process
+     * @param parentId
+     * @param parentLabel
+     * @param subjectNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrSubject parseSubject(String parentId, String parentLabel, Node subjectNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing subject...");
 
@@ -392,6 +538,21 @@ public class EvrParser {
         return subject;
     }
 
+    /**
+     * Parse a process. The process can be explicitly set or the result of calling a function
+     * Allowed child tags: function
+     * @param parentId
+     * @param processNode
+     * @return
+     * @throws InvalidEvrException
+     * @throws InvalidPropertyException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrProcess parseProcess(String parentId, Node processNode) throws InvalidEvrException, InvalidPropertyException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing process...");
 
@@ -417,6 +578,23 @@ public class EvrParser {
         return evrProcess;
     }
 
+    /**
+     * Parse a function.  A function takes zero or more arguments. An argument could either be text, a function, or
+     * an entity
+     * Allowed child tags: arg
+     * @param parentId
+     * @param parentLabel
+     * @param functionNode
+     * @return
+     * @throws InvalidEvrException
+     * @throws InvalidPropertyException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrFunction parseFunction(String parentId, String parentLabel, Node functionNode) throws InvalidEvrException, InvalidPropertyException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         NamedNodeMap attributes = functionNode.getAttributes();
         Node name = attributes.getNamedItem(NAME_ATTRIBUTE);
@@ -462,6 +640,23 @@ public class EvrParser {
         return evrFunction;
     }
 
+    /**
+     * Parse an entity.  Each entity can have a name, type, properties, and complement tags.  An entity can also be a
+     * function.
+     * Allowed child tags: function
+     * @param parentId
+     * @param parentLabel
+     * @param entityNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrEntity parseEntity(String parentId, String parentLabel, Node entityNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing entity...");
 
@@ -522,6 +717,21 @@ public class EvrParser {
         return evrEntity;
     }
 
+    /**
+     * Parse the response of a rule.  Each response can have a condition, and one or more actions
+     * Allowed child tags: condition, assign, grant, create, deny, delete
+     * @param ruleId
+     * @param responseNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrResponse parseResponse(String ruleId, Node responseNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing response...");
 
@@ -559,6 +769,22 @@ public class EvrParser {
         return response;
     }
 
+    /**
+     * Parse a delete action. A delete action can delete an assignment, deny, or rule
+     * Allowed child tags: assign, deny, rule
+     * @param parentId
+     * @param parentLabel
+     * @param deleteNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrDeleteAction parseDelete(String parentId, String parentLabel, Node deleteNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing deny action...");
 
@@ -588,6 +814,22 @@ public class EvrParser {
         return action;
     }
 
+    /**
+     * Parse a deny action. Deny the operations for the subject on the target
+     * Allowed child tags: subject, operations, target
+     * @param parentId
+     * @param parentLabel
+     * @param denyNode
+     * @return
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidPropertyException
+     * @throws InvalidEntityException
+     * @throws InvalidEvrException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrDenyAction parseDeny(String parentId, String parentLabel, Node denyNode) throws DatabaseException, ConfigurationException, InvalidPropertyException, InvalidEntityException, InvalidEvrException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing deny action...");
 
@@ -603,9 +845,9 @@ public class EvrParser {
                     EvrSubject evrSubject = parseSubject(denyActionId, "deny_action", node);
                     action.setSubject(evrSubject);
                     break;
-                case OP_SPEC_TAG:
-                    EvrOpSpec evrOpSpec = parseOpSpec(denyActionId, "deny_action", node);
-                    action.setOpSpec(evrOpSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations evrOpertations = parseOperations(denyActionId, "deny_action", node);
+                    action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
                     EvrTarget evrTarget = parseTarget(denyActionId, "deny_action", node);
@@ -617,6 +859,22 @@ public class EvrParser {
         return action;
     }
 
+    /**
+     * Parse create action, which can create an entity, a target, or another rule.
+     * Allowed child tags: entity, target, rule
+     * @param parentId
+     * @param parentLabel
+     * @param createNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrCreateAction parseCreate(String parentId, String parentLabel, Node createNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing create action...");
 
@@ -646,6 +904,21 @@ public class EvrParser {
         return action;
     }
 
+    /**
+     * Parse a grant action.  Grant the subject the operations on the target
+     * @param parentId
+     * @param parentLabel
+     * @param grantNode
+     * @return
+     * @throws InvalidEvrException
+     * @throws InvalidPropertyException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrGrantAction parseGrant(String parentId, String parentLabel, Node grantNode) throws InvalidEvrException, InvalidPropertyException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing grant action...");
 
@@ -661,9 +934,9 @@ public class EvrParser {
                     EvrSubject evrSubject = parseSubject(grantActionId, "grant_action", node);
                     action.setSubject(evrSubject);
                     break;
-                case OP_SPEC_TAG:
-                    EvrOpSpec evrOpSpec = parseOpSpec(grantActionId, "grant_action", node);
-                    action.setOpSpec(evrOpSpec);
+                case OPERATIONS_TAG:
+                    EvrOpertations evrOpertations = parseOperations(grantActionId, "grant_action", node);
+                    action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
                     EvrTarget evrTarget = parseTarget(grantActionId, "grant_action", node);
@@ -675,6 +948,22 @@ public class EvrParser {
         return action;
     }
 
+    /**
+     * Parse an assign action. Assign the child to the parent.  Either can be an entity or a function.
+     * Allowed child tags: child, parent
+     * @param parentId
+     * @param parentLabel
+     * @param assignNode
+     * @return
+     * @throws InvalidPropertyException
+     * @throws InvalidEvrException
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidEntityException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrAssignAction parseAssign(String parentId, String parentLabel, Node assignNode) throws InvalidPropertyException, InvalidEvrException, DatabaseException, ConfigurationException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
         System.out.println("parsing assign action...");
 
@@ -726,6 +1015,21 @@ public class EvrParser {
         return action;
     }
 
+    /**
+     * Parse the condition for the response.  The condition is optional, but if present and returns true, the
+     * response actions will be executed.
+     * @param ruleId
+     * @param conditionNode
+     * @return
+     * @throws DatabaseException
+     * @throws ConfigurationException
+     * @throws InvalidPropertyException
+     * @throws InvalidEntityException
+     * @throws InvalidEvrException
+     * @throws SQLException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private EvrCondition parseCondition(String ruleId, Node conditionNode) throws DatabaseException, ConfigurationException, InvalidPropertyException, InvalidEntityException, InvalidEvrException, SQLException, IOException, ClassNotFoundException {
         NamedNodeMap attributes = conditionNode.getAttributes();
         Node existsNode = attributes.getNamedItem(EXISTS_ATTRIBUTE);
