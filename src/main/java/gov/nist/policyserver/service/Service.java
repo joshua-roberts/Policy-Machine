@@ -5,7 +5,6 @@ import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
 
 import javax.crypto.SecretKeyFactory;
@@ -21,20 +20,22 @@ import java.util.HashSet;
 import static gov.nist.policyserver.common.Constants.*;
 
 public class Service {
-    public PmGraph getGraph() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
-        return getDaoManager().getGraphDAO().getGraph();
+//    private DAOManager daoManager = DAOManager.instance;
+
+    public PmGraph getGraph() { //throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+        return DAOManager.instance.graphDAO.getGraph();
     }
 
-    public PmAnalytics getAnalytics() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
-        return getDaoManager().getGraphDAO().getAnalytics();
+    public PmAnalytics getAnalytics() { //throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+        return DAOManager.instance.getGraphDAO().getAnalytics();
     }
 
-    public DAOManager getDaoManager() throws ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return DAOManager.getDaoManager();
+    public DAOManager getDaoManager() { // throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+        return DAOManager.instance;
     }
 
     public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        long sessionUserId = getDaoManager().getSessionsDAO().getSessionUserId(session);
+        long sessionUserId = DAOManager.getSessionsDAO().getSessionUserId(session);
         Node node = getGraph().getNode(sessionUserId);
         if(node == null) {
             throw new SessionUserNotFoundException(session);

@@ -9,11 +9,18 @@ import gov.nist.policyserver.obligations.model.EvrEntity;
 import gov.nist.policyserver.obligations.model.EvrFunction;
 import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTime;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 
 public class SqlObligationsDAO implements ObligationsDAO {
+    private Connection conn;
+
+    public SqlObligationsDAO(Connection connection) {
+        this.conn = connection;
+    }
+
     @Override
     public EvrManager getEvrManager() {
         return null;

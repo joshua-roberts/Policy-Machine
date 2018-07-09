@@ -49,7 +49,7 @@ public class AnalyticsResource {
                     usersWithPerms.add(entry);
                 }
             }
-
+;
             return new ApiResponse(usersWithPerms).toResponse();
         }
 

@@ -9,7 +9,7 @@ public interface SessionsDAO {
 
     void createSession(String sessionId, long userId) throws DatabaseException, SQLException;
 
-    void deleteSession(String sessionId) throws DatabaseException;
+    void deleteSession(String sessionId) throws DatabaseException, SQLException;
 
     long getSessionUserId(String sessionId) throws SessionDoesNotExistException;
 }

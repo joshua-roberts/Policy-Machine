@@ -11,8 +11,10 @@ public class StartupServlet extends HttpServlet {
 
     @Override
     public void init() {
+        DAOManager daoManager = null;
         try {
-            DAOManager.getDaoManager();
+          daoManager = DAOManager.getDaoManager();
+          daoManager.Initialize();
         }
         catch (DatabaseException | IOException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();

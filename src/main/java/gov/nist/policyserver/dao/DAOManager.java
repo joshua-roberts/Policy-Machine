@@ -3,7 +3,6 @@ package gov.nist.policyserver.dao;
 import gov.nist.policyserver.dao.neo4j.*;
 import gov.nist.policyserver.dao.sql.*;
 import gov.nist.policyserver.exceptions.DatabaseException;
-import gov.nist.policyserver.graph.PmGraph;
 
 import java.io.*;
 import java.sql.Connection;
@@ -16,68 +15,71 @@ import static gov.nist.policyserver.common.Constants.ERR_NEO;
 
 public class DAOManager {
 
-    private GraphDAO        graphDAO;
-    private NodesDAO        nodesDAO;
-    private AssignmentsDAO  assignmentsDAO;
-    private AssociationsDAO associationsDAO;
-    private ObligationsDAO  obligationsDAO;
-    private ProhibitionsDAO prohibitionsDAO;
-    private SessionsDAO     sessionsDAO;
+    public static GraphDAO graphDAO;
+    public static NodesDAO nodesDAO;
+    public static AssignmentsDAO assignmentsDAO;
+    public static AssociationsDAO associationsDAO;
+    public static ObligationsDAO obligationsDAO;
+    public static ProhibitionsDAO prohibitionsDAO;
+    public static SessionsDAO sessionsDAO;
 
-    String database;
-    String host;
-    int    port;
-    String username;
-    String password;
-    String schema;
-    int interval = 30;
+    private String database;
+    private String host;
+    private int port;
+    private String username;
+    private String password;
+    private String schema;
+    private int interval = 30;
 
-    private Connection connection;
+    public Connection connection;
+    public static DAOManager instance = new DAOManager();
 
-    public DAOManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException {
-        //deserialize
-        FileInputStream fis = new FileInputStream("pm.conf");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        Properties props = (Properties) ois.readObject();
-
-        //get properties
-        database = props.getProperty("database");
-        host = props.getProperty("host");
-        port = Integer.parseInt(props.getProperty("port"));
-        schema = props.getProperty("schema");
-        username = props.getProperty("username");
-        password = props.getProperty("password");
-        String inter = props.getProperty("interval");
-        if(inter != null) {
-            interval = Integer.parseInt(inter);
-        }
-
-        if(database.equalsIgnoreCase("neo4j")) {
-            neo4jConnect();
-
-            graphDAO = new Neo4jGraphDAO(connection);
-            nodesDAO = new Neo4jNodesDAO(connection);
-            assignmentsDAO = new Neo4jAssignmentsDAO(connection);
-            associationsDAO = new Neo4jAssociationsDAO(connection);
-            obligationsDAO = new Neo4jObligationsDAO(connection);
-            prohibitionsDAO = new Neo4jProhibitionsDAO(connection);
-            sessionsDAO = new Neo4jSessionsDAO(connection);
-        } else {
-            sqlConnect();
-
-            graphDAO = new SqlGraphDAO();
-            nodesDAO = new SqlNodesDAO();
-            assignmentsDAO = new SqlAssignmentsDAO();
-            associationsDAO = new SqlAssociationsDAO();
-            obligationsDAO = new SqlObligationsDAO();
-            prohibitionsDAO = new SqlProhibitionsDAO();
-            sessionsDAO = new SqlSessionsDAO();
-        }
-
-        System.out.println("DAO initialized");
+    public DAOManager(){
     }
 
-    public DAOManager(String database, String host, int port, String username, String password, String schema, int interval) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public void Initialize() throws IOException, ClassNotFoundException, DatabaseException, SQLException {
+        //deserialize
+            FileInputStream fis = new FileInputStream("pm.conf");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Properties props = (Properties) ois.readObject();
+            System.out.println("Getting properties ");
+            //get properties
+            database = props.getProperty("database");
+            host = props.getProperty("host");
+            port = Integer.parseInt(props.getProperty("port"));
+            schema = props.getProperty("schema");
+            username = props.getProperty("username");
+            password = props.getProperty("password");
+            System.out.println("Got properties ");
+            String inter = props.getProperty("interval");
+            if (inter != null) {
+                interval = Integer.parseInt(inter);
+            }
+            System.out.println("database is " + database);
+
+            if (database.equalsIgnoreCase("neo4j")) {
+                neo4jConnect();
+
+                graphDAO = new Neo4jGraphDAO(connection);
+                nodesDAO = new Neo4jNodesDAO(connection);
+                assignmentsDAO = new Neo4jAssignmentsDAO(connection);
+                associationsDAO = new Neo4jAssociationsDAO(connection);
+                obligationsDAO = new Neo4jObligationsDAO(connection);
+                prohibitionsDAO = new Neo4jProhibitionsDAO(connection);
+                sessionsDAO = new Neo4jSessionsDAO(connection);
+            } else {
+                sqlConnect();
+                nodesDAO = new SqlNodesDAO(connection);
+                assignmentsDAO = new SqlAssignmentsDAO(connection);
+                associationsDAO = new SqlAssociationsDAO(connection);
+                obligationsDAO = new SqlObligationsDAO(connection);
+                prohibitionsDAO = new SqlProhibitionsDAO(connection);
+                sessionsDAO = new SqlSessionsDAO(connection);
+                graphDAO = new SqlGraphDAO(connection);
+            }
+    }
+
+    private DAOManager(String database, String host, int port, String username, String password, String schema, int interval) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
         this.database = database;
         this.host = host;
         this.port = port;
@@ -101,13 +103,15 @@ public class DAOManager {
         } else {
             sqlConnect();
 
-            graphDAO = new SqlGraphDAO();
-            nodesDAO = new SqlNodesDAO();
-            assignmentsDAO = new SqlAssignmentsDAO();
-            associationsDAO = new SqlAssociationsDAO();
-            obligationsDAO = new SqlObligationsDAO();
-            prohibitionsDAO = new SqlProhibitionsDAO();
-            sessionsDAO = new SqlSessionsDAO();
+            graphDAO = new SqlGraphDAO(connection);
+            nodesDAO = new SqlNodesDAO(connection);
+            assignmentsDAO = new SqlAssignmentsDAO(connection);
+            associationsDAO = new SqlAssociationsDAO(connection);
+            obligationsDAO = new SqlObligationsDAO(connection);
+            prohibitionsDAO = new SqlProhibitionsDAO(connection);
+            sessionsDAO = new SqlSessionsDAO(connection);
+
+            System.out.println("DAO initialized");
         }
     }
 
@@ -127,7 +131,7 @@ public class DAOManager {
         }
     }
 
-    public void sqlConnect() throws DatabaseException {
+    private void sqlConnect() throws DatabaseException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + schema, username, password);
@@ -137,40 +141,38 @@ public class DAOManager {
         }
     }
 
-    public GraphDAO getGraphDAO() {
+    public static GraphDAO getGraphDAO() {
         return graphDAO;
     }
 
-    public NodesDAO getNodesDAO() {
+    public static NodesDAO getNodesDAO() {
         return nodesDAO;
     }
 
-    public AssignmentsDAO getAssignmentsDAO() {
+    public static AssignmentsDAO getAssignmentsDAO() {
         return assignmentsDAO;
     }
 
-    public AssociationsDAO getAssociationsDAO() {
+    public static AssociationsDAO getAssociationsDAO() {
         return associationsDAO;
     }
 
-    public ObligationsDAO getObligationsDAO() {
+    public static ObligationsDAO getObligationsDAO() {
         return obligationsDAO;
     }
 
-    public ProhibitionsDAO getProhibitionsDAO() {
+    public static ProhibitionsDAO getProhibitionsDAO() {
         return prohibitionsDAO;
     }
 
-    public SessionsDAO getSessionsDAO() {
+    public static SessionsDAO getSessionsDAO() {
         return sessionsDAO;
     }
 
-    private static DAOManager daoManager;
-    public static DAOManager getDaoManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException {
-        if(daoManager == null) {
-            daoManager = new DAOManager();
-        }
-        return daoManager;
+//    public static DAOManager daoManager;
+
+    public static DAOManager getDaoManager() {
+        return instance;
     }
 
     public static void init(Properties props) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
@@ -190,7 +192,10 @@ public class DAOManager {
         //serialize thr properties
         saveProperties(props);
 
-        daoManager = new DAOManager(database, host, port, username, password, schema, interval);
+        if(instance == null) {
+            instance = new DAOManager(database, host, port, username, password, schema, interval);
+        }
+
     }
 
     private static void saveProperties(Properties props) {
@@ -203,6 +208,4 @@ public class DAOManager {
             e.printStackTrace();
         }
     }
-
-
 }

@@ -2,6 +2,7 @@ package gov.nist.policyserver.dao.neo4j;
 
 import gov.nist.policyserver.dao.NodesDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.helpers.JsonHelper;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
@@ -9,9 +10,12 @@ import gov.nist.policyserver.model.graph.nodes.Property;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static gov.nist.policyserver.common.Constants.ERR_NEO;
 import static gov.nist.policyserver.dao.neo4j.Neo4jHelper.execute;
+import static gov.nist.policyserver.dao.neo4j.Neo4jHelper.getNodesFromResultSet;
 
 public class Neo4jNodesDAO implements NodesDAO {
 
@@ -86,4 +90,32 @@ public class Neo4jNodesDAO implements NodesDAO {
         String cypher = "match(n{id:" + nodeId + "}) set n." + key + " = '" + value + "'";
         execute(connection, cypher);
     }
+
+    public List<Node> getNodes() throws DatabaseException {
+        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
+        ResultSet rs = execute(connection, cypher);
+        List<Node> nodes = getNodesFromResultSet(rs);
+        for(Node node : nodes){
+            node.setProperties(getNodeProps(node));
+        }
+
+        return nodes;
+    }
+
+    public List<Property> getNodeProps(Node node) throws DatabaseException {
+        String cypher = "match(n:" + node.getType() + "{id:" + node.getId() + "}) return n";
+        ResultSet rs = execute(connection, cypher);
+        try {
+            List<Property> props = new ArrayList<>();
+            while(rs.next()){
+                String json = rs.getString(1);
+                props.addAll(JsonHelper.getPropertiesFromJson(json));
+            }
+            return props;
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }
+    }
+
 }

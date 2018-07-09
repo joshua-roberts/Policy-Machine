@@ -1,6 +1,7 @@
 package gov.nist.policyserver.dao.neo4j;
 
 import gov.nist.policyserver.analytics.PmAnalytics;
+import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.dao.GraphDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.graph.PmGraph;
@@ -10,6 +11,7 @@ import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,8 +27,9 @@ public class Neo4jGraphDAO implements GraphDAO {
     private PmGraph    graph;
     private PmAnalytics analytics;
     private Connection connection;
+    private DAOManager daoManager = DAOManager.instance;
 
-    public Neo4jGraphDAO(Connection connection) throws DatabaseException {
+    public Neo4jGraphDAO(Connection connection) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
         this.connection = connection;
         System.out.println("in constructor");
         buildGraph();
@@ -43,13 +46,14 @@ public class Neo4jGraphDAO implements GraphDAO {
     }
 
     @Override
-    public PmGraph buildGraph() throws DatabaseException {
+    public PmGraph buildGraph() throws DatabaseException, SQLException, IOException, ClassNotFoundException {
         System.out.println("Building graph...");
 
         graph = new PmGraph();
 
         System.out.print("Getting nodes...");
-        List<Node> nodes = getNodes();
+        List<Node> nodes = null;
+        nodes = daoManager.getNodesDAO().getNodes();
         for(Node node : nodes){
             graph.addNode(node);
         }
@@ -57,7 +61,7 @@ public class Neo4jGraphDAO implements GraphDAO {
 
 
         System.out.print("Getting assignments...");
-        List<Assignment> assignments = getAssignments();
+        List<Assignment> assignments = daoManager.getAssignmentsDAO().getAssignments();
         for(Assignment assignment : assignments){
             System.out.println(assignment.getChild() + "-->" + assignment.getParent());
             graph.createAssignment(graph.getNode(assignment.getChild().getId()), graph.getNode(assignment.getParent().getId()));
@@ -65,79 +69,13 @@ public class Neo4jGraphDAO implements GraphDAO {
         System.out.println("DONE");
 
         System.out.print("Getting associations...");
-        List<Association> associations = getAssociations();
+        List<Association> associations = daoManager.getAssociationsDAO().getAssociations();
         for(Association assoc : associations){
             graph.createAssociation(assoc.getChild(), assoc.getParent(), assoc.getOps(), assoc.isInherit());
         }
         System.out.println("DONE");
 
         return graph;
-    }
-
-    private List<Node> getNodes() throws DatabaseException {
-        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
-        ResultSet rs = execute(connection, cypher);
-        List<Node> nodes = getNodesFromResultSet(rs);
-        for(Node node : nodes){
-            node.setProperties(getNodeProps(node));
-        }
-
-        return nodes;
-    }
-
-    private List<Property> getNodeProps(Node node) throws DatabaseException {
-        String cypher = "match(n:" + node.getType() + "{id:" + node.getId() + "}) return n";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            List<Property> props = new ArrayList<>();
-            while(rs.next()){
-                String json = rs.getString(1);
-                props.addAll(JsonHelper.getPropertiesFromJson(json));
-            }
-            return props;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
-    }
-
-    private List<Association> getAssociations() throws DatabaseException {
-        List<Association> associations = new ArrayList<>();
-
-        String cypher = "match(ua:UA)-[a:association]->(oa:OA) return ua,oa,a.operations,a.inherit;";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            while (rs.next()) {
-                Node startNode = JsonHelper.getNodeFromJson(rs.getString(1));
-                Node endNode = JsonHelper.getNodeFromJson(rs.getString(2));
-                HashSet<String> ops = JsonHelper.getStringSetFromJson(rs.getString(3));
-                boolean inherit = Boolean.valueOf(rs.getString(4));
-                Association assoc = new Association(startNode, endNode, ops, inherit);
-                associations.add(assoc);
-            }
-            return associations;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
-    }
-
-    private List<Assignment> getAssignments() throws DatabaseException {
-        List<Assignment> assignments = new ArrayList<>();
-
-        String cypher = "match(n)-[r:assigned_to]->(m) return n, r, m";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            while (rs.next()) {
-                Node startNode = JsonHelper.getNodeFromJson(rs.getString(1));
-                Node endNode = JsonHelper.getNodeFromJson(rs.getString(3));
-                assignments.add(new Assignment(startNode, endNode));
-            }
-            return assignments;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
     }
 
     @Override
