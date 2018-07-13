@@ -4,6 +4,7 @@ import gov.nist.policyserver.common.Constants;
 import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.exceptions.InvalidPropertyException;
 import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
@@ -26,7 +27,7 @@ public class PmAnalytics implements Serializable{
         prohibitions = new ArrayList<>();
     }
 
-    private PmGraph getGraph() throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+    private PmGraph getGraph() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         return DAOManager.getDaoManager().getGraphDAO().getGraph();
     }
 
@@ -36,16 +37,12 @@ public class PmAnalytics implements Serializable{
      * @param target The node to get the access1 rights for
      * @return a HashSet of operations
      */
-    public PmAnalyticsEntry getUserAccessOn(Node user, Node target) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        if(user.getName().equals(Constants.SUPER_USER_NAME)) {
-            return getSuperUserAccessOn(user, target);
-        }
-
+    public PmAnalyticsEntry getUserAccessOn(Node user, Node target) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         PmAnalyticsEntry entry = new PmAnalyticsEntry(target);
         HashSet<String> ops = new HashSet<>();
 
         //get policy classes
-        HashSet<Node> pcs = getNonSuperPolicyClasses();
+        HashSet<Node> pcs = getPolicyClasses();
 
         //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
         HashMap<Node, HashSet<String>> dc = getBorderOas(user);
@@ -81,7 +78,7 @@ public class PmAnalytics implements Serializable{
         return entry;
     }
 
-    public PmAnalyticsEntry getUserAccessOn(Node user, Node target, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public PmAnalyticsEntry getUserAccessOn(Node user, Node target, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         PmAnalyticsEntry entry = new PmAnalyticsEntry(target);
         HashSet<String> ops = new HashSet<>();
 
@@ -105,12 +102,6 @@ public class PmAnalytics implements Serializable{
         HashMap<Node, HashSet<String>> pcMap = D.get(target);
         boolean addOps = true;
         for(Node pc : pcMap.keySet()){
-            //if there are permissions in the super pc then they apply to all pcs
-            if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                ops.addAll(pcMap.get(pc));
-                break;
-            }
-
             if(addOps){
                 ops.addAll(pcMap.get(pc));
                 addOps = false;
@@ -123,10 +114,6 @@ public class PmAnalytics implements Serializable{
         entry = new PmAnalyticsEntry(user, ops);
 
         return entry;
-    }
-
-    private PmAnalyticsEntry getSuperUserAccessOn(Node user, Node target) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        return getUserAccessOn(user, target, new HashSet<>(Collections.singletonList(getSuperPc())));
     }
 
     /**
@@ -134,16 +121,12 @@ public class PmAnalytics implements Serializable{
      * @param user The user
      * @return A Map with Nodes as the keys and a HashSets of access1 rights as the values
      */
-    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        if(user.getName().equals(Constants.SUPER_USER_NAME)) {
-            return getSuperAccessibleNodes(user);
-        }
-
+    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //Node->{ops}
         List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
 
         //get policy classes
-        HashSet<Node> pcs = getNonSuperPolicyClasses();
+        HashSet<Node> pcs = getPolicyClasses();
 
         //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
         HashMap<Node, HashSet<String>> dc = getBorderOas(user);
@@ -171,12 +154,6 @@ public class PmAnalytics implements Serializable{
             HashMap<Node, HashSet<String>> pcMap = D.get(v);
             boolean addOps = true;
             for(Node pc : pcMap.keySet()){
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    finalOps.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if(addOps){
                     finalOps.addAll(pcMap.get(pc));
                     addOps = false;
@@ -194,7 +171,7 @@ public class PmAnalytics implements Serializable{
         return accessibleObjects;
     }
 
-    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //Node->{ops}
         List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
 
@@ -224,12 +201,6 @@ public class PmAnalytics implements Serializable{
             HashMap<Node, HashSet<String>> pcMap = D.get(v);
             boolean addOps = true;
             for(Node pc : pcMap.keySet()){
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    finalOps.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if(addOps){
                     finalOps.addAll(pcMap.get(pc));
                     addOps = false;
@@ -246,25 +217,20 @@ public class PmAnalytics implements Serializable{
 
         return accessibleObjects;
     }
-
-    private List<PmAnalyticsEntry> getSuperAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return getAccessibleNodes(user, new HashSet<>(Collections.singletonList(getSuperPc())));
-    }
-
 
     /**
      * Get the Users and their access1 rights for a specific node
      * @param target The node to get the Users and their access1 rights for
      * @return A Map with User Nodes as the keys and HashSets of access1 rights as the values
      */
-    public List<PmAnalyticsEntry> getUsersWithAccessOn(Node target) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<PmAnalyticsEntry> getUsersWithAccessOn(Node target) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //user->ops
         List<PmAnalyticsEntry> entries = new ArrayList<>();
 
         HashSet<Node> users = getUsers();
 
         //get policy classes
-        HashSet<Node> pcs = getNonSuperPolicyClasses();
+        HashSet<Node> pcs = getPolicyClasses();
 
         for(Node user : users) {
             //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
@@ -288,12 +254,6 @@ public class PmAnalytics implements Serializable{
             HashSet<String> ops = new HashSet<>();
             boolean addOps = true;
             for (Node pc : pcMap.keySet()) {
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    ops.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if (addOps) {
                     ops.addAll(pcMap.get(pc));
                     addOps = false;
@@ -310,7 +270,7 @@ public class PmAnalytics implements Serializable{
         return entries;
     }
 
-    public List<PmAnalyticsEntry> getUsersWithAccessOn(Node target, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<PmAnalyticsEntry> getUsersWithAccessOn(Node target, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //user->ops
         List<PmAnalyticsEntry> entries = new ArrayList<>();
 
@@ -338,12 +298,6 @@ public class PmAnalytics implements Serializable{
             HashSet<String> ops = new HashSet<>();
             boolean addOps = true;
             for (Node pc : pcMap.keySet()) {
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    ops.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if (addOps) {
                     ops.addAll(pcMap.get(pc));
                     addOps = false;
@@ -366,16 +320,12 @@ public class PmAnalytics implements Serializable{
      * @param target The Node to get the accessible children for
      * @return a map with the child Nodes as the keys and the HashSets of access1 rights as the values
      */
-    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(Node target, Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        if(user.getName().equals(Constants.SUPER_USER_NAME)) {
-            return getSuperAccessibleChildrenOf(target, user);
-        }
-
+    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(Node target, Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //Node->{ops}
         List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
 
         //get policy classes
-        HashSet<Node> pcs = getNonSuperPolicyClasses();
+        HashSet<Node> pcs = getPolicyClasses();
 
         //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
         HashMap<Node, HashSet<String>> dc = getBorderOas(user);
@@ -402,12 +352,6 @@ public class PmAnalytics implements Serializable{
             HashMap<Node, HashSet<String>> pcMap = D.get(v);
             boolean addOps = true;
             for(Node pc : pcMap.keySet()){
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    finalOps.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if(addOps){
                     finalOps.addAll(pcMap.get(pc));
                     addOps = false;
@@ -425,7 +369,7 @@ public class PmAnalytics implements Serializable{
         return accessibleObjects;
     }
 
-    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(Node target, Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(Node target, Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //Node->{ops}
         List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
 
@@ -454,12 +398,6 @@ public class PmAnalytics implements Serializable{
             HashMap<Node, HashSet<String>> pcMap = D.get(v);
             boolean addOps = true;
             for(Node pc : pcMap.keySet()){
-                //if there are permissions in the super pc then they apply to all pcs
-                if(pc.getName().equals(Constants.SUPER_PC_NAME)) {
-                    finalOps.addAll(pcMap.get(pc));
-                    break;
-                }
-
                 if(addOps){
                     finalOps.addAll(pcMap.get(pc));
                     addOps = false;
@@ -477,13 +415,8 @@ public class PmAnalytics implements Serializable{
         return accessibleObjects;
     }
 
-    private List<PmAnalyticsEntry> getSuperAccessibleChildrenOf(Node target, Node user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return getAccessibleChildrenOf(target, user, new HashSet<>(Collections.singletonList(getSuperPc())));
-    }
-
-
     //Utility Methods
-    private synchronized HashMap<Node, HashSet<String>> getBorderOas(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private synchronized HashMap<Node, HashSet<String>> getBorderOas(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashMap<Node, HashSet<String>> d = new HashMap<>();
         HashSet<Assignment> uaEdges = new HashSet<>();
         Set<Assignment> edges = getGraph().outgoingEdgesOf(user);
@@ -511,7 +444,7 @@ public class PmAnalytics implements Serializable{
         return d;
     }
 
-    private synchronized void dfs(Node w, HashMap<Node, HashMap<Node, HashSet<String>>> D, HashMap<Node, HashSet<String>> dc) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private synchronized void dfs(Node w, HashMap<Node, HashMap<Node, HashSet<String>>> D, HashMap<Node, HashSet<String>> dc) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         D.put(w, new HashMap<>());
         //for loop through nodes
         //if node is not in D, recrusive call to dfs
@@ -546,18 +479,7 @@ public class PmAnalytics implements Serializable{
 
     }
 
-    private Node getSuperPc() throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        HashSet<Node> policyClasses = getPolicyClasses();
-        for(Node node : policyClasses) {
-            if(node.getName().equals(Constants.SUPER_PC_NAME)) {
-                return node;
-            }
-        }
-
-        throw new ConfigurationException("There is no Super Policy Class called 'Super PC'.  Please load super.pm.");
-    }
-
-    private synchronized Node createVNode(HashMap<Node, HashSet<String>> dc) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private synchronized Node createVNode(HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         long id = new Random().nextLong();
         Node vNode = new Node(id, "VNODE", NodeType.OA);
         getGraph().addNode(vNode);
@@ -567,17 +489,11 @@ public class PmAnalytics implements Serializable{
         return vNode;
     }
 
-    private synchronized HashSet<Node> getPolicyClasses() throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private synchronized HashSet<Node> getPolicyClasses() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         return new HashSet<>(getGraph().getNodesOfType(NodeType.PC));
     }
 
-    private synchronized HashSet<Node> getNonSuperPolicyClasses() throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        HashSet<Node> policyClasses = getPolicyClasses();
-        policyClasses.removeIf(node -> node.getName().equals(Constants.SUPER_PC_NAME));
-        return policyClasses;
-    }
-
-    private synchronized HashSet<Node> getUsers() throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private synchronized HashSet<Node> getUsers() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         return new HashSet<>(getGraph().getNodesOfType(NodeType.U));
     }
 
@@ -626,7 +542,7 @@ public class PmAnalytics implements Serializable{
      * @param subjectId the ID of the user/user attribute/process
      * @return The set of prohibited operations for the subject on the resource
      */
-    public HashSet<String> getProhibitedOps(long targetId, long subjectId) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public HashSet<String> getProhibitedOps(long targetId, long subjectId) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashSet<String> prohibitedOps = new HashSet<>();
         for(Prohibition prohibition : prohibitions){
             boolean subjectInDeny = (prohibition.getSubject().getSubjectId()==subjectId) ||

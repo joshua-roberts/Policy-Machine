@@ -1,7 +1,6 @@
 package gov.nist.policyserver.obligations;
 
 public class EvrRequest {
-    private String scriptName;
     private String source;
 
     public EvrRequest() {
@@ -9,16 +8,7 @@ public class EvrRequest {
     }
 
     public EvrRequest(String scriptName, String source) {
-        this.scriptName = scriptName;
         this.source = source;
-    }
-
-    public String getScriptName() {
-        return scriptName;
-    }
-
-    public void setScriptName(String scriptName) {
-        this.scriptName = scriptName;
     }
 
     public String getSource() {

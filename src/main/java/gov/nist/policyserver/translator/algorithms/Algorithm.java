@@ -107,7 +107,7 @@ public abstract class Algorithm {
         return visitedColumns;
     }
 
-    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws IOException, PolicyMachineException, NodeNotFoundException, NoUserParameterException, InvalidNodeTypeException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, SQLException, ClassNotFoundException {
+    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws IOException, NodeNotFoundException, NoUserParameterException, InvalidNodeTypeException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, SQLException, ClassNotFoundException, InvalidPropertyException {
         List<Node> accChildren = pmManager.getAccessibleChildren(rowPmId, perm);
 
         Node intersection = pmManager.getIntersection(columnPmId, rowPmId);

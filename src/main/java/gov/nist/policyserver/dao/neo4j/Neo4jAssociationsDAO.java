@@ -25,26 +25,6 @@ public class Neo4jAssociationsDAO implements AssociationsDAO {
         this.connection = connection;
     }
 
-    public List<Association> getAssociations() throws DatabaseException {
-        List<Association> associations = new ArrayList<>();
-
-        String cypher = "match(ua:UA)-[a:association]->(oa:OA) return ua,oa,a.operations,a.inherit;";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            while (rs.next()) {
-                Node startNode = JsonHelper.getNodeFromJson(rs.getString(1));
-                Node endNode = JsonHelper.getNodeFromJson(rs.getString(2));
-                HashSet<String> ops = JsonHelper.getStringSetFromJson(rs.getString(3));
-                boolean inherit = Boolean.valueOf(rs.getString(4));
-                Association assoc = new Association(startNode, endNode, ops, inherit);
-                associations.add(assoc);
-            }
-            return associations;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
-    }
     @Override
     public void createAssociation(long uaId, long targetId, HashSet<String> operations, boolean inherit) throws DatabaseException {
         String ops = setToCypherArray(operations);

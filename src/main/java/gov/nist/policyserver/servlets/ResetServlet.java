@@ -19,7 +19,7 @@ public class ResetServlet extends HttpServlet {
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Data+reset+successfully").forward(request, response);
         }
-        catch (DatabaseException | SQLException | ClassNotFoundException e) {
+        catch (DatabaseException | SQLException | ClassNotFoundException | InvalidPropertyException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

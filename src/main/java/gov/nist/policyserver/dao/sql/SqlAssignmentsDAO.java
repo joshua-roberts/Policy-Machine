@@ -22,35 +22,6 @@ public class SqlAssignmentsDAO implements AssignmentsDAO {
     }
 
     @Override
-    public List<Assignment> getAssignments() throws DatabaseException {
-        try{
-            List<Assignment> relationships = new ArrayList<>();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT start_node_id,a.name,a.node_type_id,end_node_id,b.name,b.node_type_id FROM assignment join node a on start_node_id = a.node_id join node b on end_node_id=b.node_id where assignment.depth=1;");
-            while(rs.next()){
-                long id = rs.getInt(1);
-                String name = rs.getString(2);
-                NodeType type = NodeType.toNodeType(rs.getInt(3));
-                Node endNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
-
-                id = rs.getInt(4);
-                name = rs.getString(5);
-                type = NodeType.toNodeType(rs.getInt(6));
-                Node startNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
-
-                relationships.add(new Assignment(startNode, endNode));
-            }
-            return relationships;
-        }catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }catch(InvalidNodeTypeException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }
-    }
-
-    @Override
     public synchronized void createAssignment(long childId, long parentId) throws DatabaseException {
         boolean result;
         try {

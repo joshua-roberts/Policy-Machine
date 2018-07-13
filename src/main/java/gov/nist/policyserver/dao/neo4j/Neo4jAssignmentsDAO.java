@@ -19,24 +19,6 @@ public class Neo4jAssignmentsDAO implements AssignmentsDAO {
 
     private Connection connection;
 
-    public List<Assignment> getAssignments() throws DatabaseException {
-        List<Assignment> assignments = new ArrayList<>();
-
-        String cypher = "match(n)-[r:assigned_to]->(m) return n, r, m";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            while (rs.next()) {
-                Node startNode = JsonHelper.getNodeFromJson(rs.getString(1));
-                Node endNode = JsonHelper.getNodeFromJson(rs.getString(3));
-                assignments.add(new Assignment(startNode, endNode));
-            }
-            return assignments;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
-    }
-
     public Neo4jAssignmentsDAO(Connection connection) {
         this.connection = connection;
     }

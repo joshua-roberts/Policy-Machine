@@ -2,6 +2,7 @@ package gov.nist.policyserver.servlets;
 
 import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.exceptions.InvalidPropertyException;
 
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
@@ -11,12 +12,10 @@ public class StartupServlet extends HttpServlet {
 
     @Override
     public void init() {
-        DAOManager daoManager = null;
         try {
-          daoManager = DAOManager.getDaoManager();
-          daoManager.Initialize();
+            DAOManager.getDaoManager();
         }
-        catch (DatabaseException | IOException | ClassNotFoundException | SQLException e) {
+        catch (DatabaseException | IOException | ClassNotFoundException | SQLException | InvalidPropertyException e) {
             e.printStackTrace();
         }
     }

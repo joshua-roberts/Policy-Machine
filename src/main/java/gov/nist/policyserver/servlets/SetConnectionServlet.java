@@ -37,12 +37,11 @@ public class SetConnectionServlet extends HttpServlet {
         props.put("schema", schema == null ? "" : schema);
 
         try {
-            DAO.init(props);
             DAOManager.init(props);
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
-        catch (DatabaseException | ConfigurationException | ClassNotFoundException | SQLException e) {
+        catch (DatabaseException | ClassNotFoundException | SQLException | InvalidPropertyException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

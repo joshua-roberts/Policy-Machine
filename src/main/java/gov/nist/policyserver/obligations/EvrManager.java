@@ -72,9 +72,6 @@ public class EvrManager {
 
         //parse script
         EvrScript script = parser.parse(xml);
-
-        script.setEnabled(true);
-        scripts.add(script);
     }
 
     public void addScript(EvrScript script) {
@@ -320,7 +317,7 @@ public class EvrManager {
         return true;
     }
 
-    private boolean targetMatches(Node procTarget, EvrTarget evrTarget) throws InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private boolean targetMatches(Node procTarget, EvrTarget evrTarget) throws InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         EvrEntity evrTargetEntity = evrTarget.getEntity();
         List<EvrEntity> evrTargetContainers = evrTarget.getContainers();
 
@@ -505,7 +502,7 @@ public class EvrManager {
      * @param evrEntity
      * @return
      */
-    private boolean checkNode(EvrEntity procEntity, EvrEntity evrEntity) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private boolean checkNode(EvrEntity procEntity, EvrEntity evrEntity) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashSet<Node> nodes =
                 nodeService.getNodes(null, evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
         if(nodes.size() != 1) {
@@ -711,7 +708,7 @@ public class EvrManager {
         }
     }
 
-    private HashSet<Node> getNodes(EvrEntity evrEntity) throws InvalidEntityException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private HashSet<Node> getNodes(EvrEntity evrEntity) throws InvalidEntityException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashSet<Node> nodes = new HashSet<>();
         if(evrEntity.isList()) {
             List<EvrEntity> entityList = evrEntity.getEntityList();
@@ -775,5 +772,9 @@ public class EvrManager {
                 }
             }
         }
+    }
+
+    public void deleteScripts() {
+        scripts.clear();
     }
 }

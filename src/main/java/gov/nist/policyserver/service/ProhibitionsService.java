@@ -15,7 +15,7 @@ public class ProhibitionsService extends Service{
 
     public Prohibition createProhibition(String name, String[] operations, boolean intersection,
                                          ProhibitionResource[] resources, ProhibitionSubject denySubject)
-            throws ProhibitionNameExistsException, DatabaseException, NullNameException, SQLException, IOException, ClassNotFoundException {
+            throws ProhibitionNameExistsException, DatabaseException, NullNameException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         if(name == null || name.isEmpty()) {
             throw new NullNameException();
         }
@@ -42,7 +42,7 @@ public class ProhibitionsService extends Service{
     }
 
     public Prohibition getProhibition(String prohibitionName)
-            throws ProhibitionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+            throws ProhibitionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Prohibition prohibition = getAnalytics().getProhibition(prohibitionName);
         if(prohibition == null){
             throw new ProhibitionDoesNotExistException(prohibitionName);
@@ -52,7 +52,7 @@ public class ProhibitionsService extends Service{
     }
 
     public void deleteProhibition(String prohibitionName)
-            throws ProhibitionDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException {
+            throws ProhibitionDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check that the prohibition exists
         getProhibition(prohibitionName);
 
@@ -64,7 +64,7 @@ public class ProhibitionsService extends Service{
     }
 
     private void addResourceToProhibition(String prohibitionName, long resourceId, boolean complement)
-            throws DatabaseException, ProhibitionDoesNotExistException, NodeNotFoundException, ProhibitionResourceExistsException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+            throws DatabaseException, ProhibitionDoesNotExistException, NodeNotFoundException, ProhibitionResourceExistsException, ConfigurationException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check if the prohibition exists
         Prohibition prohibition = getProhibition(prohibitionName);
 
@@ -88,7 +88,7 @@ public class ProhibitionsService extends Service{
     }
 
     private void setProhibitionSubject(String prohibitionName, long subjectId, String subjectType)
-            throws InvalidProhibitionSubjectTypeException, DatabaseException, ProhibitionDoesNotExistException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+            throws InvalidProhibitionSubjectTypeException, DatabaseException, ProhibitionDoesNotExistException, ConfigurationException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         ProhibitionSubjectType subType = ProhibitionSubjectType.toProhibitionSubjectType(subjectType);
 
         //check if prohibition exists
@@ -101,7 +101,7 @@ public class ProhibitionsService extends Service{
         prohibition.setSubject(new ProhibitionSubject(subjectId, subType));
     }
 
-    public Prohibition updateProhibition(String name, boolean intersection, String[] operations, ProhibitionResource[] resources, ProhibitionSubject subject) throws ProhibitionDoesNotExistException, ConfigurationException, DatabaseException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, ProhibitionResourceExistsException, SQLException, IOException, ClassNotFoundException {
+    public Prohibition updateProhibition(String name, boolean intersection, String[] operations, ProhibitionResource[] resources, ProhibitionSubject subject) throws ProhibitionDoesNotExistException, ConfigurationException, DatabaseException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, ProhibitionResourceExistsException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check the prohibition exists
         Prohibition prohibition = getProhibition(name);
 
@@ -136,7 +136,7 @@ public class ProhibitionsService extends Service{
         return getProhibition(name);
     }
 
-    public List<Prohibition> getProhibitions(long subjectId, long resourceId) throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<Prohibition> getProhibitions(long subjectId, long resourceId) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         List<Prohibition> prohibitions = getAnalytics().getProhibitions();
         if(subjectId != 0) {
             prohibitions.removeIf(prohibition -> prohibition.getSubject().getSubjectId() != subjectId);

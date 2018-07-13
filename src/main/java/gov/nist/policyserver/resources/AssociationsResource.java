@@ -28,7 +28,7 @@ public class AssociationsResource {
     public Response createAssociation(AssociationRequest request,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process)
-            throws NodeNotFoundException, AssociationExistsException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException {
+            throws NodeNotFoundException, AssociationExistsException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
         Node user = permissionsService.getSessionUser(session);
@@ -50,16 +50,6 @@ public class AssociationsResource {
     public Response getAssociations(@QueryParam("targetId") long targetId,
                                     @QueryParam("session") String session,
                                     @QueryParam("process") long process) throws NodeNotFoundException, InvalidPropertyException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        //PERMISSION CHECK
-        //get user from username
-        Node user = permissionsService.getSessionUser(session);
-
-        //get the connector node
-        Node connector = permissionsService.getConnector();
-
-        //check user can get associations
-        permissionsService.checkPermissions(user, process, connector.getId(), GET_ASSOCIATIONS);
-
         if(targetId != 0) {
             return new ApiResponse(associationsService.getTargetAssociations(targetId)).toResponse();
         } else {
@@ -73,7 +63,7 @@ public class AssociationsResource {
                                       AssociationRequest request,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process)
-            throws NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException {
+            throws NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
         Node user = permissionsService.getSessionUser(session);
@@ -95,7 +85,7 @@ public class AssociationsResource {
     public Response deleteAssociation(@PathParam("targetId") long targetId,
                                       @PathParam("subjectId") long uaId,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException {
+                                      @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
         Node user = permissionsService.getSessionUser(session);
@@ -118,7 +108,7 @@ public class AssociationsResource {
     public Response getSubjectAssociations(@PathParam("subjectId") long subjectId,
                                            @QueryParam("session") String session,
                                            @QueryParam("process") long process)
-            throws NodeNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+            throws NodeNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
         Node user = permissionsService.getSessionUser(session);

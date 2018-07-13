@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AssociationsService extends Service{
 
-    public void createAssociation(long uaId, long targetId, HashSet<String> ops, boolean inherit) throws NodeNotFoundException, DatabaseException, AssociationExistsException, SQLException, IOException, ClassNotFoundException {
+    public void createAssociation(long uaId, long targetId, HashSet<String> ops, boolean inherit) throws NodeNotFoundException, DatabaseException, AssociationExistsException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         // TODO check types are valid for association
 
         //check that the target and user attribute nodes exist
@@ -37,7 +37,7 @@ public class AssociationsService extends Service{
         getGraph().createAssociation(uaId, targetId, ops, inherit);
     }
 
-    public void updateAssociation(long targetId, long uaId, HashSet<String> ops, boolean inherit) throws NodeNotFoundException, AssociationDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public void updateAssociation(long targetId, long uaId, HashSet<String> ops, boolean inherit) throws NodeNotFoundException, AssociationDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check that the target and user attribute nodes exist
         Node target = getGraph().getNode(targetId);
         if(target == null){
@@ -61,7 +61,7 @@ public class AssociationsService extends Service{
         getGraph().updateAssociation(uaId, targetId, ops, inherit);
     }
 
-    private Association getAssociation(long uaId, long targetId) throws AssociationDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    private Association getAssociation(long uaId, long targetId) throws AssociationDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Association association = getGraph().getAssociation(uaId, targetId);
         if(association == null){
             throw new AssociationDoesNotExistException(uaId, targetId);
@@ -70,7 +70,7 @@ public class AssociationsService extends Service{
         return association;
     }
 
-    public void deleteAssociation(long targetId, long uaId) throws NoUserParameterException, NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public void deleteAssociation(long targetId, long uaId) throws NoUserParameterException, NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check the user attribute id is present
         if(uaId == 0){
             throw new NoUserParameterException();
@@ -99,7 +99,7 @@ public class AssociationsService extends Service{
         getGraph().deleteAssociation(uaId, targetId);
     }
 
-    public List<Association> getTargetAssociations(long targetId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<Association> getTargetAssociations(long targetId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Node target = getGraph().getNode(targetId);
         if(target == null){
             throw new NodeNotFoundException(targetId);
@@ -107,7 +107,7 @@ public class AssociationsService extends Service{
         return getGraph().getTargetAssociations(targetId);
     }
 
-    public List<Association> getSubjectAssociations(long subjectId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<Association> getSubjectAssociations(long subjectId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Node target = getGraph().getNode(subjectId);
         if(target == null){
             throw new NodeNotFoundException(subjectId);
@@ -115,7 +115,7 @@ public class AssociationsService extends Service{
         return getGraph().getUattrAssociations(subjectId);
     }
 
-    public List<Association> getAssociations() throws ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<Association> getAssociations() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         return getGraph().getAssociations();
     }
 }

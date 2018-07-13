@@ -61,7 +61,7 @@ public class SessionService extends Service{
         return sessionId;
     }
 
-    public void deleteSession(String sessionId) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public void deleteSession(String sessionId) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
        getDaoManager().getSessionsDAO().deleteSession(sessionId);
     }
 

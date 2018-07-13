@@ -24,54 +24,6 @@ public class SqlNodesDAO implements NodesDAO {
         this.conn = connection;
     }
 
-    public List<Node> getNodes() throws DatabaseException {
-        try {
-            List<Node> nodes = new ArrayList<>();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id,description from node");
-            while (rs.next()) {
-                long id = rs.getInt(1);
-                String name = rs.getString(2);
-                NodeType type = NodeType.toNodeType(rs.getInt(3));
-                String description = rs.getString(4);
-                Node node = new Node(id, name, type, description);
-
-                Statement propStmt = conn.createStatement();
-                List<Property> props = getNodeProps(node);
-                for(int i=0; i < props.size();i++){
-                    node.addProperty(props.get(i));
-                }
-
-                nodes.add(node);
-            }
-            return nodes;
-        }catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }catch(InvalidNodeTypeException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }
-    }
-
-    public List<Property> getNodeProps(Node node) throws DatabaseException {
-        try {
-            List<Property> props = new ArrayList<>();
-            Statement stmt = conn.createStatement();
-            ResultSet propRs = stmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + node.getId());
-            while(propRs.next()){
-                String key = propRs.getString(1);
-                String value = propRs.getString(2);
-                Property prop = new Property(key, value);
-                props.add(prop);
-            }
-            return props;
-
-    }catch(SQLException e){
-        throw new DatabaseException(e.getErrorCode(), e.getMessage());
-    }catch(InvalidPropertyException e){
-        throw new DatabaseException(e.getErrorCode(), e.getMessage());
-    }
-    }
-
     @Override
     public Node createNode(long id, String name, NodeType type) throws DatabaseException {
         try{

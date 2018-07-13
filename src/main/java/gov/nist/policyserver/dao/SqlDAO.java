@@ -30,7 +30,7 @@ import static gov.nist.policyserver.common.Utility.setToString;
 
 public class SqlDAO extends DAO {
 
-    public SqlDAO() throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public SqlDAO() throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         super();
     }
 

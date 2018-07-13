@@ -4,13 +4,18 @@ public class Constants {
     //operations
     public static final String FILE_WRITE = "file write";
     public static final String FILE_READ = "file read";
-    public static final String CREATE_OBJECT_ATTRIBUTE = "create object attribute";
     public static final String ASSIGN_OBJECT_ATTRIBUTE = "assign object attribute";
+    public static final String ASSIGN_OBJECT_ATTRIBUTE_TO = "assign object attribute to";
+    public static final String ASSIGN_OBJECT = "assign object";
+    public static final String ASSIGN_OBJECT_TO = "assign object to";
     public static final String CREATE_NODE = "create node";
     public static final String DELETE_NODE = "delete node";
     public static final String UPDATE_NODE = "update node";
     public static final String ASSIGN_TO = "assign to";
     public static final String ASSIGN = "assign";
+    public static final String CREATE_OBJECT = "create object";
+    public static final String CREATE_OBJECT_ATTRIBUTE = "create object attribute";
+    public static final String CREATE_USER_ATTRIBUTE = "create user attribute";
     public static final String DEASSIGN = "deassign";
     public static final String DEASSIGN_FROM = "deassign from";
     public static final String CREATE_ASSOCIATION = "create association";
@@ -63,6 +68,7 @@ public class Constants {
     public static final int ERR_SESSION_USER_NOT_FOUND     = 6028;
     public static final int ERR_UNEXPECTED_NUMBER_OF_NODES = 6029;
     public static final int ERR_INVALID_ASSIGNMENT       = 6030;
+    public static final int ERR_NO_BASE_ID       = 6031;
 
     public static final int ERR_NEO                                 = 7000;
 
@@ -92,10 +98,18 @@ public class Constants {
     public static final String PM_EVENT_OBJECT_SEND    = "object send";
 
     public static final int HASH_LENGTH = 163;
+    public static final String SUPER_KEYWORD      = "super";
+    public static final String ALL_OPS      = "*";
     public static final String PASSWORD_PROPERTY        = "password";
     public static final String DESCRIPTION_PROPERTY     = "description";
     public static final String NAMESPACE_PROPERTY       = "namespace";
     public static final String SOURCE_PROPERTY       = "source";
+    public static final String STORAGE_PROPERTY       = "storage";
+    public static final String GCS_STORAGE       = "google";
+    public static final String AWS_STORAGE       = "amazon";
+    public static final String LOCAL_STORAGE       = "local";
+    public static final String CONTENT_TYPE_PROPERTY       = "content_type";
+    public static final String SIZE_PROPERTY       = "size";
     public static final String PATH_PROPERTY       = "path";
     public static final String BUCKET_PROPERTY       = "bucket";
     public static final String COLUMN_INDEX_PROPERTY    = "column_index";

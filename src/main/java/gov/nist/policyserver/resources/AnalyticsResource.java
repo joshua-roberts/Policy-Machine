@@ -139,7 +139,7 @@ public class AnalyticsResource {
     @Path("/sessions")
     @GET
     public Response getAccessibleNodes(@QueryParam("session") String session,
-                                       @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+                                       @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
 
         Node user = analyticsService.getSessionUser(session);
 

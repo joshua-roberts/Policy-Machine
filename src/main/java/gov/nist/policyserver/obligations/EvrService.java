@@ -19,7 +19,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 
 class EvrService extends Service {
-    private EvrManager getEvrManager() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private EvrManager getEvrManager() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().getEvrManager();
     }
 
@@ -27,91 +27,98 @@ class EvrService extends Service {
         getEvrManager().evr(source);
     }
 
-    String createScript(EvrScript script) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createScript(EvrScript script) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //add script to memory
+        script.setEnabled(true);
         getEvrManager().addScript(script);
 
         return getDaoManager().getObligationsDAO().createScript(script.getScriptName());
     }
 
-    String createRule(String parentId, String parentLabel, String label) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createRule(String parentId, String parentLabel, String label) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //create rule node
         return getDaoManager().getObligationsDAO().createRule(parentId, parentLabel, label);
     }
 
-    String createSubject(String ruleId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createSubject(String ruleId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createSubject(ruleId, parentLabel);
     }
 
-    String createEntity(String parentId, String parentLabel, EvrEntity evrEntity) throws DatabaseException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
+    String createEntity(String parentId, String parentLabel, EvrEntity evrEntity) throws DatabaseException, InvalidEntityException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createEntity(parentId, parentLabel, evrEntity);
     }
 
-    String createFunction(String parentId, String parentLabel, EvrFunction function) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createFunction(String parentId, String parentLabel, EvrFunction function) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createFunction(parentId, parentLabel, function);
     }
 
-    String createProcess(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createProcess(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createProcess(parentId, parentLabel);
     }
 
-    void updateProcess(String parentId, String process) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    void updateProcess(String parentId, String process) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         getDaoManager().getObligationsDAO().createProcess(parentId, process);
     }
 
-    String addFuntionArg(String functionId) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String addFuntionArg(String functionId) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().addFunctionArg(functionId);
     }
 
-    void addFuntionArgValue(String functionId, EvrArg evrArg) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    void addFuntionArgValue(String functionId, EvrArg evrArg) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         getDaoManager().getObligationsDAO().addFunctionArgValue(functionId, evrArg);
     }
 
-    void updateEntity(String entityId, EvrEntity evrEntity) throws DatabaseException, InvalidEntityException, SQLException, IOException, ClassNotFoundException {
+    void updateEntity(String entityId, EvrEntity evrEntity) throws DatabaseException, InvalidEntityException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         getDaoManager().getObligationsDAO().updateEntity(entityId, evrEntity);
     }
 
-    String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createPolicies(ruleId, parentLabel, isOr);
     }
 
-    void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         getDaoManager().getObligationsDAO().createOperations(parentId, parentType, ops);
     }
 
-    void createTime(String ruleId, EvrTime evrTime) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    void createTime(String ruleId, EvrTime evrTime) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         getDaoManager().getObligationsDAO().createTime(ruleId, evrTime);
     }
 
-    String createTarget(String ruleId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createTarget(String ruleId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createTarget(ruleId, parentLabel);
     }
 
-    String createCondition(String ruleId, boolean exists) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createCondition(String ruleId, boolean exists) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createCondition(ruleId, exists);
     }
 
-    String createAssignAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createAssignAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createAssignAction(parentId, parentLabel);
     }
 
-    String createAssignActionParam(String assignActionId, String param) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createAssignActionParam(String assignActionId, String param) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createAssignActionParam(assignActionId, param);
     }
 
-    String createGrantAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createGrantAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createGrantAction(parentId, parentLabel);
     }
 
-    String createCreateAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createCreateAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createCreateAction(parentId, parentLabel);
     }
 
-    String createDenyAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createDenyAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createDenyAction(parentId, parentLabel);
     }
 
-    String createDeleteAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    String createDeleteAction(String parentId, String parentLabel) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         return getDaoManager().getObligationsDAO().createDeleteAction(parentId, parentLabel);
+    }
+
+    public void deleteObligations() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        getDaoManager().getObligationsDAO().deleteObligations();
+
+        getEvrManager().deleteScripts();
     }
 }

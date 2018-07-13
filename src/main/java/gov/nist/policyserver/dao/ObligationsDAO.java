@@ -60,4 +60,6 @@ public interface ObligationsDAO {
     String createDenyAction(String parentId, String parentLabel) throws DatabaseException;
 
     String createDeleteAction(String parentId, String parentLabel) throws DatabaseException;
+
+    void deleteObligations() throws DatabaseException;
 }

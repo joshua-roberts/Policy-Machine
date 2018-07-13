@@ -90,32 +90,4 @@ public class Neo4jNodesDAO implements NodesDAO {
         String cypher = "match(n{id:" + nodeId + "}) set n." + key + " = '" + value + "'";
         execute(connection, cypher);
     }
-
-    public List<Node> getNodes() throws DatabaseException {
-        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
-        ResultSet rs = execute(connection, cypher);
-        List<Node> nodes = getNodesFromResultSet(rs);
-        for(Node node : nodes){
-            node.setProperties(getNodeProps(node));
-        }
-
-        return nodes;
-    }
-
-    public List<Property> getNodeProps(Node node) throws DatabaseException {
-        String cypher = "match(n:" + node.getType() + "{id:" + node.getId() + "}) return n";
-        ResultSet rs = execute(connection, cypher);
-        try {
-            List<Property> props = new ArrayList<>();
-            while(rs.next()){
-                String json = rs.getString(1);
-                props.addAll(JsonHelper.getPropertiesFromJson(json));
-            }
-            return props;
-        }
-        catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
-        }
-    }
-
 }

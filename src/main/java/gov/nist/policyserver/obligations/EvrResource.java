@@ -6,6 +6,7 @@ import gov.nist.policyserver.obligations.exceptions.InvalidEvrException;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.exceptions.InvalidPropertyException;
+import gov.nist.policyserver.obligations.model.script.EvrScript;
 import gov.nist.policyserver.response.ApiResponse;
 import org.xml.sax.SAXException;
 
@@ -15,6 +16,8 @@ import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("/obligations")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,17 +34,22 @@ public class EvrResource {
         return new ApiResponse("success").toResponse();
     }
 
-    /*@Path("/{scriptName}")
-    @PUT
-    public Response updateEvr(EvrRequest request, @PathParam("scriptName") String scriptName) {
-        return new ApiResponse(evrService.update(request.getScriptName(), request.getSource())).toResponse();
+    @GET
+    public Response getObligations() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        List<EvrScript> scripts = evrService.getDaoManager().getObligationsDAO().getEvrManager().getScripts();
+        List<String> scriptNames = new ArrayList<>();
+        for(EvrScript script : scripts) {
+            scriptNames.add(script.getScriptName());
+        }
+
+        return new ApiResponse(scriptNames).toResponse();
     }
 
-    @Path("/{scriptName}")
-    @POST
-    public Response enableEvr(@PathParam("scriptName") String scriptName) {
-        evrService.enableEvr(scriptName);
-        return new ApiResponse("Script " + scriptName + " was successfully enabled").toResponse();
-    }*/
+    @DELETE
+    public Response deleteObligations() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        evrService.deleteObligations();
+
+        return new ApiResponse("Success").toResponse();
+    }
 
 }

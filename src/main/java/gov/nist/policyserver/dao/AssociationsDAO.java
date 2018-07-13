@@ -16,8 +16,6 @@ import java.util.List;
 
 public interface AssociationsDAO {
 
-    List<Association> getAssociations() throws DatabaseException;
-
     void createAssociation(long uaId, long targetId, HashSet<String> operations, boolean inherit) throws DatabaseException;
 
     void updateAssociation(long uaId, long targetId, boolean inherit, HashSet<String> ops) throws DatabaseException;

@@ -83,7 +83,7 @@ public class JsonHelper {
         return gson.toJson(je);
     }
 
-    public static List<Property> getPropertiesFromJson(String json) {
+    public static List<Property> getPropertiesFromJson(String json) throws InvalidPropertyException {
         List<Property> props = new ArrayList<>();
         JsonElement je = new JsonParser().parse(json);
         JsonObject jo = je.getAsJsonObject();
@@ -93,13 +93,9 @@ public class JsonHelper {
             if(prop.getKey().equals("name") || prop.getKey().equals("type") || prop.getKey().equals("id")){
                 continue;
             }
-            try {
-                Property property = new Property(prop.getKey(), StringUtils.strip(prop.getValue().toString(), "\""));
-                props.add(property);
-            }
-            catch (InvalidPropertyException e) {
-                e.printStackTrace();
-            }
+
+            Property property = new Property(prop.getKey(), StringUtils.strip(prop.getValue().toString(), "\""));
+            props.add(property);
         }
         return props;
     }

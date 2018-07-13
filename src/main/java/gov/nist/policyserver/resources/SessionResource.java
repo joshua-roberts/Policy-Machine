@@ -35,8 +35,14 @@ public class SessionResource {
 
     @Path("/{sessionId}")
     @DELETE
-    public Response deleteSession(@PathParam("sessionId") String sessionId) throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public Response deleteSession(@PathParam("sessionId") String sessionId) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         sessionService.deleteSession(sessionId);
         return new ApiResponse(ApiResponse.DELETE_SESSION_SUCCESS).toResponse();
+    }
+
+    @Path("/{sessionId}")
+    @GET
+    public Response getSessionUser(@PathParam("sessionId") String sessionId) throws SessionDoesNotExistException, IOException, SQLException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, InvalidPropertyException {
+        return new ApiResponse(sessionService.getSessionUser(sessionId)).toResponse();
     }
 }

@@ -37,4 +37,8 @@ public class PmAnalyticsEntry {
     public void setOperations(HashSet<String> operations) {
         this.operations = operations;
     }
+
+    public boolean hasOp(String perm) {
+        return operations.contains(perm) || operations.contains("*");
+    }
 }

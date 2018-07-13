@@ -1,5 +1,6 @@
 package gov.nist.policyserver.dao;
 
+import gov.nist.policyserver.exceptions.InvalidPropertyException;
 import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.obligations.model.EvrArg;
 import gov.nist.policyserver.obligations.model.EvrEntity;
@@ -37,7 +38,7 @@ public class NeoDAO extends DAO {
 
     private static String PROHIBITION_LABEL = "prohibition";
 
-    public NeoDAO() throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public NeoDAO() throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         super();
     }
 
@@ -76,7 +77,7 @@ public class NeoDAO extends DAO {
     }
 
     @Override
-    public void buildGraph() throws DatabaseException {
+    public void buildGraph() throws DatabaseException, InvalidPropertyException {
         System.out.println("Building graph...");
 
         graph = new PmGraph();
@@ -142,7 +143,7 @@ public class NeoDAO extends DAO {
 
     }
 
-    private List<Node> getNodes() throws DatabaseException {
+    private List<Node> getNodes() throws DatabaseException, InvalidPropertyException {
         String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
         ResultSet rs = execute(cypher);
         List<Node> nodes = getNodesFromResultSet(rs);
@@ -153,7 +154,7 @@ public class NeoDAO extends DAO {
         return nodes;
     }
 
-    private List<Property> getNodeProps(Node node) throws DatabaseException {
+    private List<Property> getNodeProps(Node node) throws DatabaseException, InvalidPropertyException {
         String cypher = "match(n:" + node.getType() + "{id:" + node.getId() + "}) return n";
         ResultSet rs = execute(cypher);
         try {

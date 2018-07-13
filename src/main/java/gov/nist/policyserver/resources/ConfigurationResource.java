@@ -24,13 +24,13 @@ public class ConfigurationResource {
     private ConfigurationService configService = new ConfigurationService();
 
     @GET
-    public Response getConfiguration() throws ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public Response getConfiguration() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         return new ApiResponse(configService.save()).toResponse();
     }
 
     @Path("connection")
     @POST
-    public Response connect(ConnectRequest request) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public Response connect(ConnectRequest request) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         String database = request.getDatabase();
         String host = request.getHost();
         int port = request.getPort();
@@ -56,7 +56,7 @@ public class ConfigurationResource {
     @POST
     public Response importData(@QueryParam("session") String session,
                                @QueryParam("process") long process,
-                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException {
+                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException {
         String host = request.getHost();
         int port = request.getPort();
         String schema = request.getSchema();
@@ -87,7 +87,7 @@ public class ConfigurationResource {
     @POST
     public Response uploadFiles(String[] files,
                                 @QueryParam("session") String session,
-                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
+                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
         configService.uploadFiles(files);
         return new ApiResponse(SUCCESS).toResponse();
     }

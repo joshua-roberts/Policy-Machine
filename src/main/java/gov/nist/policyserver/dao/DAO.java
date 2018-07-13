@@ -2,6 +2,7 @@ package gov.nist.policyserver.dao;
 
 import gov.nist.policyserver.analytics.PmAnalytics;
 import gov.nist.policyserver.common.Constants;
+import gov.nist.policyserver.exceptions.InvalidPropertyException;
 import gov.nist.policyserver.obligations.EvrManager;
 import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
 import gov.nist.policyserver.obligations.model.EvrArg;
@@ -88,6 +89,9 @@ public abstract class DAO {
         catch (IOException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
+        catch (InvalidPropertyException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -96,7 +100,7 @@ public abstract class DAO {
      * @param props
      * @throws DatabaseException
      */
-    public static void init(Properties props) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public static void init(Properties props) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //get properties
         database = props.getProperty("database");
         host = props.getProperty("host");
@@ -160,7 +164,7 @@ public abstract class DAO {
     private EvrManager  evrManager;
 
     public Connection conn;
-    public DAO() throws DatabaseException, IOException, ClassNotFoundException, SQLException {
+    public DAO() throws DatabaseException, IOException, ClassNotFoundException, SQLException, InvalidPropertyException {
         //connect to database
         connect();
 
@@ -251,7 +255,7 @@ public abstract class DAO {
      * Abstract method to build the in-memory nodes
      * @throws DatabaseException this method will access1 the database, so there may be connection issues
      */
-    public abstract void buildGraph() throws DatabaseException;
+    public abstract void buildGraph() throws DatabaseException, InvalidPropertyException;
 
     public abstract void buildProhibitions() throws DatabaseException;
 

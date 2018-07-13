@@ -4,6 +4,7 @@ import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
+import scala.sys.Prop;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -56,16 +57,26 @@ public class NodeService extends Service{
     }
 
     public HashSet<Node> getNodes(String namespace, String name, String type, List<Property> properties)
-            throws InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+            throws InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
         HashSet<Node> nodes = getGraph().getNodes();
 
+        if(properties != null) {
+            for (Property prop : properties) {
+                if (prop.getKey().equals(NAMESPACE_PROPERTY)) {
+                    namespace = prop.getValue();
+                }
+            }
+        }
+
+        final String fNamespace = namespace;
         //check namespace match
         if(namespace != null){
             nodes.removeIf(node -> {
                 try {
-                    return !node.hasProperty(NAMESPACE_PROPERTY) || !node.getProperty(NAMESPACE_PROPERTY).getValue().equalsIgnoreCase(namespace);
+                    return !node.hasProperty(NAMESPACE_PROPERTY) || !node.getProperty(NAMESPACE_PROPERTY).getValue()
+                            .equalsIgnoreCase(fNamespace);
                 }
                 catch (PropertyNotFoundException e) {
                     return true;
@@ -99,7 +110,7 @@ public class NodeService extends Service{
     }
 
     public Node getNode(String namespace, String name, String type, List<Property> properties)
-            throws InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+            throws InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
         HashSet<Node> nodes = getGraph().getNodes();
@@ -198,9 +209,9 @@ public class NodeService extends Service{
 
     public Node createNode(long baseId, long id, String name, String type, Property[] properties)
             throws NullNameException, NullTypeException, InvalidNodeTypeException,
-            InvalidPropertyException, NodeNameExistsInNamespaceException, DatabaseException,
+            InvalidPropertyException, DatabaseException,
             ConfigurationException, NodeNameExistsException, NodeIdExistsException,
-            NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException {
+            NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException {
         //check name and type are not null
         if(name == null){
             throw new NullNameException();
@@ -220,7 +231,7 @@ public class NodeService extends Service{
 
         HashSet<Node> nodes = getNodes(null, name, type, properties != null ? Arrays.asList(properties) : null);
         if(!nodes.isEmpty()) {
-           throw new NodeNameExistsException(name);
+            throw new NodeNameExistsException(name);
         }
 
         //create node in database
@@ -230,14 +241,62 @@ public class NodeService extends Service{
         //add the node to the nodes
         getGraph().addNode(newNode);
 
-        AssignmentService assignmentService = new AssignmentService();
-        if (newNode.getId() > 0) {
-            if(baseId > 0) {
-                assignmentService.createAssignment(newNode.getId(), baseId);
-            }
-            //assign node to connector
-            assignmentService.createAssignment(newNode.getId(), getConnector().getId());
+
+        //add properties to the node
+        try {
+            newNode = addNodeProperties(newNode, properties);
         }
+        catch (PropertyNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        //if there is a base ID present assign the new node to it
+        AssignmentService assignmentService = new AssignmentService();
+
+        if (baseId != NO_BASE_ID) {
+            assignmentService.createAssignment(newNode.getId(), baseId);
+        }
+
+        return newNode;
+    }
+
+    /**
+     * This method is only used when importing nodes through a configuration file
+     * @param id
+     * @param name
+     * @param type
+     * @param properties
+     * @return A Node object
+     */
+    public Node createNode(long id, String name, String type, Property[] properties) throws NullNameException, NullTypeException, NodeIdExistsException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, NodeNotFoundException, ConfigurationException {
+        //check name and type are not null
+        if(name == null){
+            throw new NullNameException();
+        }
+        if(type == null){
+            throw new NullTypeException();
+        }
+
+        if(id != 0) {
+            //check if ID exists
+            try {
+                Node node = getNode(id);
+                throw new NodeIdExistsException(id, node);
+            }
+            catch (NodeNotFoundException e) {/*expected exception*/}
+        }
+
+        HashSet<Node> nodes = getNodes(null, name, type, properties != null ? Arrays.asList(properties) : null);
+        if(!nodes.isEmpty()) {
+            throw new NodeNameExistsException(name);
+        }
+
+        //create node in database
+        NodeType nt = NodeType.toNodeType(type);
+        Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt);
+
+        //add the node to the nodes
+        getGraph().addNode(newNode);
 
         //add properties to the node
         try {
@@ -271,8 +330,6 @@ public class NodeService extends Service{
                     }
                     catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                         throw new InvalidPropertyException("Could not add password property. Node was created anyways.");
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 }
             }
@@ -281,8 +338,7 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node getNode(long nodeId)
-            throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public Node getNode(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Node node = getGraph().getNode(nodeId);
         if(node == null){
             throw new NodeNotFoundException(nodeId);
@@ -328,7 +384,7 @@ public class NodeService extends Service{
         return getGraph().getNode(nodeId);
     }
 
-    public void deleteNode(long nodeId) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException {
+    public void deleteNode(long nodeId) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check node exists
         getNode(nodeId);
 
@@ -339,7 +395,7 @@ public class NodeService extends Service{
         getGraph().deleteNode(nodeId);
     }
 
-    public List<Property> getNodeProperties(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public List<Property> getNodeProperties(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //get node
         Node node = getNode(nodeId);
 
@@ -361,7 +417,7 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Property getNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public Property getNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //get node
         Node node = getNode(nodeId);
 
@@ -369,7 +425,7 @@ public class NodeService extends Service{
         return node.getProperty(key);
     }
 
-    public void deleteNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public void deleteNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check if the property exists
         getNodeProperty(nodeId, key);
 
@@ -380,7 +436,7 @@ public class NodeService extends Service{
         getGraph().deleteNodeProperty(nodeId, key);
     }
 
-    private void deleteNodeProperties(long nodeId) throws NodeNotFoundException, ConfigurationException, DatabaseException, SQLException, IOException, ClassNotFoundException {
+    private void deleteNodeProperties(long nodeId) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         List<Property> props = getNodeProperties(nodeId);
 
         for(Property property : props) {
@@ -390,7 +446,7 @@ public class NodeService extends Service{
         getGraph().deleteNodeProperties(nodeId);
     }
 
-    public void updateNodeProperty(long nodeId, String key, String value) throws NodeNotFoundException, PropertyNotFoundException, ConfigurationException, DatabaseException, InvalidKeySpecException, NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException {
+    public void updateNodeProperty(long nodeId, String key, String value) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, InvalidKeySpecException, NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check if the property exists
         getNodeProperty(nodeId, key);
 
@@ -405,12 +461,12 @@ public class NodeService extends Service{
         getGraph().updateNodeProperty(nodeId, key, value);
     }
 
-    public HashSet<Node> getChildrenOfType(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public HashSet<Node> getChildrenOfType(long nodeId, String childType) throws NodeNotFoundException,
+            InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Node node = getNode(nodeId);
 
         HashSet<Node> children = getGraph().getChildren(node);
-        HashSet<Node> retChildren = new HashSet<>();
-        retChildren.addAll(children);
+        HashSet<Node> retChildren = new HashSet<>(children);
         if(childType != null) {
             NodeType nt = NodeType.toNodeType(childType);
             for (Node n : children) {
@@ -422,7 +478,7 @@ public class NodeService extends Service{
         return retChildren;
     }
 
-    public void deleteNodeChildren(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    public void deleteNodeChildren(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         HashSet<Node> children = getChildrenOfType(nodeId, childType);
         for(Node node : children){
             //delete node in db
@@ -433,12 +489,12 @@ public class NodeService extends Service{
         }
     }
 
-    public HashSet<Node> getParentsOfType(long nodeId, String parentType) throws InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public HashSet<Node> getParentsOfType(long nodeId, String parentType) throws InvalidNodeTypeException,
+            NodeNotFoundException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
         Node node = getNode(nodeId);
 
         HashSet<Node> parents = getGraph().getParents(node);
-        HashSet<Node> retParents = new HashSet<>();
-        retParents.addAll(parents);
+        HashSet<Node> retParents = new HashSet<>(parents);
         if(parentType != null) {
             NodeType nt = NodeType.toNodeType(parentType);
             for (Node n : parents) {

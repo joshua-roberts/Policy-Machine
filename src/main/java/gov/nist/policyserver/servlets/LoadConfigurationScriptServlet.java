@@ -1,6 +1,5 @@
 package gov.nist.policyserver.servlets;
 
-import gov.nist.policyserver.dao.DAO;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.service.ConfigurationService;
 import org.apache.commons.fileupload.FileItem;
@@ -57,10 +56,10 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
         }
         catch (NodeIdExistsException | FileUploadException | ConfigurationException |
                 InvalidPropertyException | AssignmentExistsException | DatabaseException |
-                NodeNameExistsException | NodeNotFoundException | NodeNameExistsInNamespaceException |
+                NodeNameExistsException | NodeNotFoundException | NoBaseIdException |
                 NullNameException | NullTypeException | InvalidNodeTypeException | AssociationExistsException |
                 InvalidKeySpecException | NoSuchAlgorithmException | InvalidAssignmentException |
-                SQLException | ClassNotFoundException e) {
+                SQLException | ClassNotFoundException | UnexpectedNumberOfNodesException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

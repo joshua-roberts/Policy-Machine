@@ -16,7 +16,7 @@ import static gov.nist.policyserver.common.Constants.ANY_OPERATIONS;
 public class AnalyticsService extends Service{
 
     public List<PmAnalyticsEntry> getUsersPermissionsOn(long targetId)
-            throws NodeNotFoundException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+            throws NodeNotFoundException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //check that the target node exists
         Node target = getGraph().getNode(targetId);
         if(target == null){
@@ -27,7 +27,7 @@ public class AnalyticsService extends Service{
     }
 
     public PmAnalyticsEntry getUserPermissionsOn(long targetId, long userId)
-            throws NodeNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+            throws NodeNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //check that the target and user nodes exist
         Node target = getGraph().getNode(targetId);
         if(target == null){
@@ -50,7 +50,7 @@ public class AnalyticsService extends Service{
         return userAccess;
     }
 
-    public List<PmAnalyticsEntry> getAccessibleChildren(long targetId, long userId) throws NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<PmAnalyticsEntry> getAccessibleChildren(long targetId, long userId) throws NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //check that a user id is present
         if(userId == 0){
             throw new NoUserParameterException();
@@ -69,7 +69,7 @@ public class AnalyticsService extends Service{
         return getAnalytics().getAccessibleChildrenOf(target, user);
     }
 
-    public List<PmAnalyticsEntry> getAccessibleNodes(long userId) throws NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<PmAnalyticsEntry> getAccessibleNodes(long userId) throws NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //check that the user id is present
         if(userId == 0){
             throw new NoUserParameterException();
@@ -86,13 +86,13 @@ public class AnalyticsService extends Service{
         return getAnalytics().getAccessibleNodes(user);
     }
 
-    public List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //get the accessible nodes and add it to the cache
 
         return getAnalytics().getAccessibleNodes(user);
     }
 
-    public HashSet<String> getProhibitedOps(long targetId, long subjectId, String subjectType) throws NodeNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public HashSet<String> getProhibitedOps(long targetId, long subjectId, String subjectType) throws NodeNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         if(subjectId == 0){
             throw new NoSubjectParameterException();
         }
@@ -115,7 +115,7 @@ public class AnalyticsService extends Service{
         return getAnalytics().getProhibitedOps(targetId, subjectId);
     }
 
-    public void checkPermissions(Node user, long process, long targetId, String reqPerm) throws MissingPermissionException, NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public void checkPermissions(Node user, long process, long targetId, String reqPerm) throws MissingPermissionException, NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         if(user == null && process == 0) {
             throw new MissingPermissionException("No User or Process found in checking permissions");
         }

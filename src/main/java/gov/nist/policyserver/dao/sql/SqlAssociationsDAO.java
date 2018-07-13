@@ -2,16 +2,9 @@ package gov.nist.policyserver.dao.sql;
 
 import gov.nist.policyserver.dao.AssociationsDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
-import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
-import gov.nist.policyserver.model.graph.nodes.Node;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
-import gov.nist.policyserver.model.graph.relationships.Association;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 
 public class SqlAssociationsDAO implements AssociationsDAO {
 
@@ -19,34 +12,6 @@ public class SqlAssociationsDAO implements AssociationsDAO {
 
     public SqlAssociationsDAO(Connection connection) {
         this.conn = connection;
-    }
-
-    public List<Association> getAssociations() throws DatabaseException {
-        try{
-            List<Association> associations = new ArrayList<>();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT ua_id,a.name,a.node_type_id, get_operations(opset_id),oa_id,b.name,b.node_type_id FROM association join node a on ua_id = a.node_id join node b on oa_id=b.node_id");
-            while (rs.next()) {
-                long id = rs.getInt(1);
-                String name = rs.getString(2);
-                NodeType type = NodeType.toNodeType(rs.getInt(3));
-                Node startNode = new Node(id, name, type);
-
-                HashSet<String> ops = new HashSet<>(Arrays.asList(rs.getString(4).split(",")));
-
-                id = rs.getInt(5);
-                name = rs.getString(6);
-                type = NodeType.toNodeType(rs.getInt(7));
-                Node endNode = new Node(id, name, type);
-
-                associations.add(new Association(startNode, endNode, ops, true));
-            }
-            return associations;
-        }catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }catch(InvalidNodeTypeException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
-        }
     }
 
     @Override

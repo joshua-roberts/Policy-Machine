@@ -894,4 +894,10 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
 
         return deleteActionId;
     }
+
+    @Override
+    public void deleteObligations() throws DatabaseException {
+        String cypher = "match(n:obligations) detach delete n";
+        execute(connection, cypher);
+    }
 }

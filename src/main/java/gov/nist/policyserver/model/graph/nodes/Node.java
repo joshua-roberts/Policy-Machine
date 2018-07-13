@@ -13,6 +13,7 @@ public class Node implements Serializable{
     private String         name;
     private NodeType       type;
     private List<Property> properties;
+    private String content;
 
     public Node(){
         this.properties = new ArrayList<>();
@@ -159,6 +160,14 @@ public class Node implements Serializable{
     public void updateProperty(String key, String value) throws PropertyNotFoundException {
         Property property = getProperty(key);
         property.setValue(value);
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public int hashCode(){

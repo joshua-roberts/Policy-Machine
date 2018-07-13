@@ -7,22 +7,17 @@
       },
       {
          "id":-2,
-         "name":"PM",
-         "type":"OA",
+         "name":"super",
+         "type":"UA",
          "properties": [
             {
                 "key": "namespace",
-                "value": "connector"
+                "value": "super"
             }
          ]
       },
       {
          "id":-3,
-         "name":"Super",
-         "type":"UA"
-      },
-      {
-         "id":-4,
          "name":"super",
          "type":"U",
          "properties": [
@@ -40,21 +35,8 @@
       },
       {
          "child":-3,
-         "parent":-1
-      },
-      {
-         "child":-4,
-         "parent":-3
+         "parent":-2
       }
    ],
-   "associations":[
-      {
-         "ua":-3,
-         "target":-2,
-         "ops":[
-            "*"
-         ],
-         "isInherit":true
-      }
-   ]
+   "associations":[]
 }

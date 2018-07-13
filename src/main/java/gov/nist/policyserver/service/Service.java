@@ -22,20 +22,20 @@ import static gov.nist.policyserver.common.Constants.*;
 public class Service {
 //    private DAOManager daoManager = DAOManager.instance;
 
-    public PmGraph getGraph() { //throws ClassNotFoundException, SQLException, IOException, DatabaseException {
-        return DAOManager.instance.graphDAO.getGraph();
+    public PmGraph getGraph() throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
+        return getDaoManager().getGraphDAO().getGraph();
     }
 
-    public PmAnalytics getAnalytics() { //throws ClassNotFoundException, SQLException, IOException, DatabaseException {
-        return DAOManager.instance.getGraphDAO().getAnalytics();
+    public PmAnalytics getAnalytics() throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
+        return getDaoManager().getGraphDAO().getAnalytics();
     }
 
-    public DAOManager getDaoManager() { // throws ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return DAOManager.instance;
+    public DAOManager getDaoManager() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        return DAOManager.getDaoManager();
     }
 
-    public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        long sessionUserId = DAOManager.getSessionsDAO().getSessionUserId(session);
+    public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
+        long sessionUserId = getDaoManager().getSessionsDAO().getSessionUserId(session);
         Node node = getGraph().getNode(sessionUserId);
         if(node == null) {
             throw new SessionUserNotFoundException(session);
@@ -44,7 +44,7 @@ public class Service {
         return node;
     }
 
-    public Node getConnector() throws InvalidPropertyException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    /*public Node getConnector() throws InvalidPropertyException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         HashSet<Node> nodes = getGraph().getNodes();
         for(Node node : nodes) {
             if(node.getName().equals(CONNECTOR_NAME) && node.hasProperty(new Property(NAMESPACE_PROPERTY, CONNECTOR_NAMESPACE))) {
@@ -53,7 +53,7 @@ public class Service {
         }
 
         throw new ConfigurationException("Could not find connector node 'PM'.  Make sure to load super.pm first");
-    }
+    }*/
 
     public static String generatePasswordHash(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
         int iterations = 100;

@@ -28,8 +28,4 @@ public interface NodesDAO {
 
     void updateNodeProperty(long nodeId, String key, String value) throws DatabaseException;
 
-    List<Node> getNodes() throws DatabaseException;
-
-    List<Property> getNodeProps(Node node) throws DatabaseException;
-
 }

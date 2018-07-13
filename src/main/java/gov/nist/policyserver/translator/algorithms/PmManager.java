@@ -42,7 +42,7 @@ public class PmManager {
     private EvrManager       evrManager;
     private String           process;
 
-    public PmManager(String username, String process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException {
+    public PmManager(String username, String process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException, InvalidPropertyException {
         this.nodeService = new NodeService();
         this.analyticsService = new AnalyticsService();
         this.pmUser = getPmUser(username);
@@ -82,13 +82,13 @@ public class PmManager {
         return nodeService.getNodeInNamespace(namespace, name, type).getId();
     }
 
-    public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(id, pmUser.getId());
         List<Node> nodes = new ArrayList<>();
         for(PmAnalyticsEntry entry : accessibleChildren) {
             Node target = entry.getTarget();
             HashSet<String> prohibitedOps = getProhibitedOps(target.getId());
-            if(entry.getOperations().contains(perm) && !prohibitedOps.contains(perm)) {
+            if(entry.hasOp(perm) && !prohibitedOps.contains(perm)) {
                 nodes.add(entry.getTarget());
             }
         }
@@ -104,7 +104,7 @@ public class PmManager {
      * @throws NodeNotFoundException
      * @throws InvalidProhibitionSubjectTypeException
      */
-    private HashSet<String> getProhibitedOps(long id) throws NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private HashSet<String> getProhibitedOps(long id) throws NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //get the prohibited ops for the user
         HashSet<String> prohibitedOps = analyticsService.getProhibitedOps(id, pmUser.getId(), "U");
 
@@ -116,7 +116,7 @@ public class PmManager {
         return prohibitedOps;
     }
 
-    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         HashSet<Node> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.O.toString());
         HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.O.toString());
         columnChildren.retainAll(rowChildren);
@@ -142,7 +142,7 @@ public class PmManager {
         HashSet<String> prohibitedOps = getProhibitedOps(node.getId());
         operations.removeAll(prohibitedOps);
 
-        return operations.containsAll(permList);
+        return operations.containsAll(permList) || operations.contains("*");
     }
 
     public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
@@ -161,7 +161,7 @@ public class PmManager {
         HashSet<String> prohibitedOps = getProhibitedOps(node.getId());
         operations.removeAll(prohibitedOps);
 
-        return operations.containsAll(permList);
+        return operations.containsAll(permList) || operations.contains("*");
     }
 
     /**

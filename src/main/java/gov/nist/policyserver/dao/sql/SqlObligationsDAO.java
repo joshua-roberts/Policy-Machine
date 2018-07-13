@@ -135,4 +135,9 @@ public class SqlObligationsDAO implements ObligationsDAO {
     public String createDeleteAction(String parentId, String parentLabel) throws DatabaseException {
         return null;
     }
+
+    @Override
+    public void deleteObligations() throws DatabaseException {
+
+    }
 }

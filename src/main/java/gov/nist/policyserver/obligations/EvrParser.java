@@ -272,7 +272,7 @@ public class EvrParser {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private EvrTime parseTime(String ruleId, Node timeNode) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
+    private EvrTime parseTime(String ruleId, Node timeNode) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         System.out.println("parsing time event...");
 
         EvrTime evrTime = new EvrTime();
@@ -348,7 +348,8 @@ public class EvrParser {
 
     /**
      * Parse a target.  This can be in an event or actions. The entity tag are the objects
-     * (i.e. 'any object' = <entity/). The containers tag, contains one or more entities.
+     * (i.e. 'any object' = <entity/). The containers tag, contains one or more entities, and an intersection
+     * attribute that denotes whether or not to take the intersection of the containers
      * Allowed child tags: entity, containers
      * @param parentId
      * @param parentLabel
@@ -468,7 +469,7 @@ public class EvrParser {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private EvrOpertations parseOperations(String parentId, String parentLabel, Node operationsNode) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException {
+    private EvrOpertations parseOperations(String parentId, String parentLabel, Node operationsNode) throws DatabaseException, ConfigurationException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         System.out.println("parsing op...");
 
         HashSet<String> ops = new HashSet<>();
