@@ -33,7 +33,7 @@ public class PmKernelResource {
     AnalyticsService  analyticsService  = new AnalyticsService();
     AssignmentService assignmentService = new AssignmentService();
 
-    public PmKernelResource() throws ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException {
+    public PmKernelResource() {
     }
 
     @Path("/analytics/rows/{rowId}/columns")
