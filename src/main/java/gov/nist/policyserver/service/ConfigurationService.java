@@ -366,6 +366,7 @@ public class ConfigurationService extends Service{
 
     public void uploadFiles(String[] files) throws NullNameException, NodeIdExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         for(String file : files) {
+            System.out.println("*************** In uploadFiles ***************");
             String[] split = file.split("/");
             for(int i = 0; i < split.length; i++) {
                 String fileStr = split[i];
@@ -405,8 +406,10 @@ public class ConfigurationService extends Service{
                     //create node
                     if(parentNode == null) {
                         //create pc
+                        System.out.println("*************** Parent node is null, creating one ***************");
                         parentNode = nodeService.createNode(NEW_NODE_ID, NEW_NODE_ID, fileName, NodeType.PC.toString(), null);
                     }
+                    System.out.println("*************** Creating the node requeested ***************" + NEW_NODE_ID);
                     nodeService.createNode(parentNode.getId(), NEW_NODE_ID, fileName,
                             file.endsWith("/") ? NodeType.OA.toString() : NodeType.O.toString(),
                             new Property[]{

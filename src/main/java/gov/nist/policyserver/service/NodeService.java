@@ -271,6 +271,8 @@ public class NodeService extends Service{
                     }
                     catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                         throw new InvalidPropertyException("Could not add password property. Node was created anyways.");
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }

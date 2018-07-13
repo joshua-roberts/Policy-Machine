@@ -79,9 +79,12 @@ public class SqlNodesDAO implements NodesDAO {
             cs.registerOutParameter(1, Types.INTEGER);
             cs.setLong(2, id);
             cs.setString(3, name);
-            cs.setString(4, type.toString());
+            cs.setString(4, type.name());
+
             cs.execute();
-            id = cs.getInt(1);
+            if (id == 0) {
+                id = cs.getInt(1);
+            }
 
             return new Node(id, name, type);
         }catch(SQLException e){
@@ -117,7 +120,7 @@ public class SqlNodesDAO implements NodesDAO {
     @Override
     public synchronized void addNodeProperty(long nodeId, Property property) throws DatabaseException {
         try{
-            String sql = "insert into node_property values (" + nodeId + ", '" + property.getKey() + "', '" + property.getValue() + "')";
+            String sql = "insert into node_property (property_node_id, property_key, property_value) values (" + nodeId + ", '" + property.getKey() + "', '" + property.getValue() + "')";
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
         }
@@ -131,7 +134,6 @@ public class SqlNodesDAO implements NodesDAO {
         int deletedRows = 0;
         try{
             String sql = "delete from node_property where property_node_id=" + nodeId + " and property_key='" + key + "'";
-            System.out.println(sql);
             Statement stmt = conn.createStatement();
             deletedRows = stmt.executeUpdate(sql);
         }

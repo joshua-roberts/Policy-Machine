@@ -42,7 +42,6 @@ public class DAOManager {
             FileInputStream fis = new FileInputStream("pm.conf");
             ObjectInputStream ois = new ObjectInputStream(fis);
             Properties props = (Properties) ois.readObject();
-            System.out.println("Getting properties ");
             //get properties
             database = props.getProperty("database");
             host = props.getProperty("host");
@@ -50,23 +49,21 @@ public class DAOManager {
             schema = props.getProperty("schema");
             username = props.getProperty("username");
             password = props.getProperty("password");
-            System.out.println("Got properties ");
             String inter = props.getProperty("interval");
             if (inter != null) {
                 interval = Integer.parseInt(inter);
             }
-            System.out.println("database is " + database);
 
             if (database.equalsIgnoreCase("neo4j")) {
                 neo4jConnect();
 
-                graphDAO = new Neo4jGraphDAO(connection);
                 nodesDAO = new Neo4jNodesDAO(connection);
                 assignmentsDAO = new Neo4jAssignmentsDAO(connection);
                 associationsDAO = new Neo4jAssociationsDAO(connection);
                 obligationsDAO = new Neo4jObligationsDAO(connection);
                 prohibitionsDAO = new Neo4jProhibitionsDAO(connection);
                 sessionsDAO = new Neo4jSessionsDAO(connection);
+                graphDAO = new Neo4jGraphDAO(connection);
             } else {
                 sqlConnect();
                 nodesDAO = new SqlNodesDAO(connection);
@@ -124,7 +121,6 @@ public class DAOManager {
             //load nodes into cache
             //warmUp();
 
-            System.out.println("Connected to Neo4j");
         }
         catch (SQLException e) {
             throw new DatabaseException(ERR_NEO, e.getMessage());
@@ -135,7 +131,6 @@ public class DAOManager {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + schema, username, password);
-            System.out.println("Connected to MySQL");
         }catch(Exception e){
             throw new DatabaseException(e.hashCode(), e.getMessage());
         }
