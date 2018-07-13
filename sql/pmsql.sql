@@ -13,7 +13,6 @@
 
 
 -- Dumping database structure for pmwsdb
-DROP DATABASE IF EXISTS `pmwsdb`;
 CREATE DATABASE IF NOT EXISTS `pmwsdb` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `pmwsdb`;
 
@@ -131,13 +130,6 @@ CREATE TABLE IF NOT EXISTS `assignment` (
 
 -- Dumping data for table pmwsdb.assignment: ~6 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
-INSERT INTO `assignment` (`assignment_id`, `start_node_id`, `end_node_id`, `depth`, `assignment_path_id`) VALUES
-	(19, -3, -4, 1, 7),
-	(22, -2, 8, 1, NULL),
-	(17, -1, -3, 1, 5),
-	(18, -1, -2, 1, 6),
-	(20, -1, -4, 2, 7),
-	(23, 8, -3, 1, NULL);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.assignment_path
@@ -151,10 +143,6 @@ CREATE TABLE IF NOT EXISTS `assignment_path` (
 
 -- Dumping data for table pmwsdb.assignment_path: ~3 rows (approximately)
 /*!40000 ALTER TABLE `assignment_path` DISABLE KEYS */;
-INSERT INTO `assignment_path` (`assignment_path_id`, `assignment_node_id`) VALUES
-	(7, -4),
-	(5, -3),
-	(6, -2);
 /*!40000 ALTER TABLE `assignment_path` ENABLE KEYS */;
 
 -- Dumping structure for view pmwsdb.assignment_view
@@ -1039,8 +1027,7 @@ CREATE TABLE IF NOT EXISTS `host` (
 -- Dumping data for table pmwsdb.host: ~2 rows (approximately)
 /*!40000 ALTER TABLE `host` DISABLE KEYS */;
 INSERT INTO `host` (`host_id`, `host_name`, `workarea_path`) VALUES
-	(1, 'Dummy_host', 'dummy'),
-	(100, 'SERVER_COMPUTER_NAME', 'C:\\PMWorkarea');
+	(1, 'Dummy_host', 'dummy');
 /*!40000 ALTER TABLE `host` ENABLE KEYS */;
 
 -- Dumping structure for function pmwsdb.isValidCSL
@@ -1183,12 +1170,6 @@ CREATE TABLE IF NOT EXISTS `node` (
 
 -- Dumping data for table pmwsdb.node: ~5 rows (approximately)
 /*!40000 ALTER TABLE `node` DISABLE KEYS */;
-INSERT INTO `node` (`node_id`, `node_type_id`, `name`, `description`) VALUES
-	(-4, 4, 'super', NULL),
-	(-3, 3, 'Super', NULL),
-	(-2, 5, 'PM', NULL),
-	(-1, 2, 'Super PC', NULL),
-	(8, 7, 'opset-3-2', 'opset-3-2');
 /*!40000 ALTER TABLE `node` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.node_property
@@ -1202,9 +1183,6 @@ CREATE TABLE IF NOT EXISTS `node_property` (
 
 -- Dumping data for table pmwsdb.node_property: ~2 rows (approximately)
 /*!40000 ALTER TABLE `node_property` DISABLE KEYS */;
-INSERT INTO `node_property` (`property_node_id`, `property_key`, `property_value`) VALUES
-	(-4, 'password', '100edf75215d0be7842ee7588df5d8e3ac19106464c017dd99ce123046f52e5882a97a8c2ac096009ca3076573a30899f5d94ec043901a12ec22fc3adf522077fdadf126e4da8c9c0477bdff8fd78ad6fd5'),
-	(-2, 'namespace', 'connector');
 /*!40000 ALTER TABLE `node_property` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.node_type
@@ -1400,8 +1378,6 @@ CREATE TABLE IF NOT EXISTS `operation_set_details` (
 
 -- Dumping data for table pmwsdb.operation_set_details: ~1 rows (approximately)
 /*!40000 ALTER TABLE `operation_set_details` DISABLE KEYS */;
-INSERT INTO `operation_set_details` (`operation_set_details_node_id`, `operation_id`) VALUES
-	(8, 3);
 /*!40000 ALTER TABLE `operation_set_details` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.operation_type
