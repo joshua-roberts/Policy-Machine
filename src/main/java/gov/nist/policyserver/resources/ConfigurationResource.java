@@ -56,14 +56,14 @@ public class ConfigurationResource {
     @POST
     public Response importData(@QueryParam("session") String session,
                                @QueryParam("process") long process,
-                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException {
+                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException {
         String host = request.getHost();
         int port = request.getPort();
         String schema = request.getSchema();
         String username = request.getUsername();
         String password = request.getPassword();
 
-        configService.importData(host, port, schema, username, password);
+        configService.importData(host, port, schema, username, password, session, process);
 
         return new ApiResponse(SUCCESS).toResponse();
     }
@@ -80,35 +80,38 @@ public class ConfigurationResource {
         String schema = request.getSchema();
         String tableName = request.getTable();
 
-        return new ApiResponse(configService.getData(host, port, username, password, schema, tableName)).toResponse();
+        return new ApiResponse(configService.getData(host, port, username, password, schema, tableName, session, process)).toResponse();
     }
 
     @Path("data/files")
     @POST
     public Response uploadFiles(String[] files,
                                 @QueryParam("session") String session,
-                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
-        configService.uploadFiles(files);
+                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
+        configService.uploadFiles(files, session, process);
         return new ApiResponse(SUCCESS).toResponse();
     }
 
 
     @Path("graph")
     @GET
-    public Response getGraph() throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return new ApiResponse(configService.getJsonGraph()).toResponse();
+    public Response getGraph(@QueryParam("session") String session,
+                             @QueryParam("process") long process) throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
+        return new ApiResponse(configService.getJsonGraph(session, process)).toResponse();
     }
 
     @Path("graph/users")
     @GET
-    public Response getUserGraph() throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    public Response getUserGraph(@QueryParam("session") String session,
+                                 @QueryParam("process") long process) throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
         System.out.println("in user");
-        return new ApiResponse(configService.getUserGraph()).toResponse();
+        return new ApiResponse(configService.getUserGraph(session, process)).toResponse();
     }
 
     @Path("graph/objects")
     @GET
-    public Response getObjGraph() throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return new ApiResponse(configService.getObjGraph()).toResponse();
+    public Response getObjGraph(@QueryParam("session") String session,
+                                @QueryParam("process") long process) throws NodeNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
+        return new ApiResponse(configService.getObjGraph(session, process)).toResponse();
     }
 }

@@ -82,7 +82,7 @@ public class SelectAlgorithm extends Algorithm {
         System.out.println("3: " + (e-s));
 
         //process select
-        pmManager.processSelect(id, groups.keySet(), compositeRows, dbManager);
+        //pmManager.processSelect(id, groups.keySet(), compositeRows, dbManager);
 
         return permittedSelect;
     }
@@ -243,7 +243,8 @@ public class SelectAlgorithm extends Algorithm {
                         long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
 
                         if (!checkColumn(columnPmId, rowPmId, FILE_READ)) {
-                            throw new PMAccessDeniedException(column.toString());
+                            okColumns.clear();
+                            break;
                         }
                     }
                 }

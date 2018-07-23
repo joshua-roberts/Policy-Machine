@@ -22,7 +22,6 @@ import static gov.nist.policyserver.common.Constants.*;
 public class AssignmentResource {
 
     private AssignmentService assignmentService = new AssignmentService();
-    private AnalyticsService  analyticsService  = new AnalyticsService();
 
     @GET
     public Response isAssigned(@QueryParam("childId") long childId,
@@ -35,20 +34,8 @@ public class AssignmentResource {
     @POST
     public Response createAssignment(AssignmentRequest request,
                                      @QueryParam("session") String session,
-                                     @QueryParam("process") long process)
-            throws NodeNotFoundException, AssignmentExistsException, NoSubjectParameterException,
-            MissingPermissionException, InvalidProhibitionSubjectTypeException, DatabaseException,
-            ConfigurationException, SessionUserNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException, UnexpectedNumberOfNodesException, AssociationExistsException, InvalidNodeTypeException {
-        Node user = analyticsService.getSessionUser(session);
-
-        //check user can assign the child node to the parent node
-        //1. can assign (type) TO parent node
-        analyticsService.checkPermissions(user, process, request.getParentId(), ASSIGN_TO);
-
-        //2. can assign child
-        analyticsService.checkPermissions(user, process, request.getChildId(), ASSIGN);
-
-        assignmentService.createAssignment(request.getChildId(), request.getParentId());
+                                     @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, SessionDoesNotExistException, NodeNotFoundException, ClassNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidAssignmentException, ConfigurationException, UnexpectedNumberOfNodesException, AssociationExistsException, SQLException, IOException, SessionUserNotFoundException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException, PropertyNotFoundException {
+        assignmentService.createAssignment(session, process, request.getChildId(), request.getParentId(), true);
 
         return new ApiResponse(ApiResponse.CREATE_ASSIGNMENT_SUCCESS).toResponse();
     }
@@ -57,19 +44,8 @@ public class AssignmentResource {
     public Response deleteAssignment(@QueryParam("childId") long childId,
                                      @QueryParam("parentId") long parentId,
                                      @QueryParam("session") String session,
-                                     @QueryParam("process") long process) throws NodeNotFoundException, AssignmentDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
-        //get user from username
-        Node user = analyticsService.getSessionUser(session);
-
-        //PERMISSION CHECK
-        //check user can deassign the child node from the parent node
-        //1. can assign (type) TO parent node
-        analyticsService.checkPermissions(user, process, parentId, DEASSIGN_FROM);
-
-        //2. can deassign child
-        analyticsService.checkPermissions(user, process, childId, DEASSIGN);
-
-        assignmentService.deleteAssignment(childId, parentId);
+                                     @QueryParam("process") long process) throws IOException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, SQLException, MissingPermissionException, DatabaseException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, InvalidPropertyException, ClassNotFoundException, AssignmentDoesNotExistException, NodeNotFoundException {
+        assignmentService.deleteAssignment(session, process, childId, parentId);
 
         return new ApiResponse(ApiResponse.DELETE_ASSIGNMENT_SUCCESS).toResponse();
     }

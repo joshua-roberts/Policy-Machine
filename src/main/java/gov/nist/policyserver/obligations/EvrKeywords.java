@@ -21,9 +21,9 @@ public class EvrKeywords {
     public static final  String OR_TAG         = "or";
     public static final  String AND_TAG        = "and";
     public static final  String CONDITION_TAG  = "condition";
-    public static final  String ASSIGN_TAG     = "assign";
     public static final  String CHILD_TAG      = "child";
     public static final  String PARENT_TAG      = "parent";
+    public static final  String ASSIGN_TAG     = "assign";
     public static final  String GRANT_TAG       = "grant";
     public static final  String CREATE_TAG      = "create";
     public static final  String DENY_TAG        = "deny";

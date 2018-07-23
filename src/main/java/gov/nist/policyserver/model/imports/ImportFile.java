@@ -2,7 +2,7 @@ package gov.nist.policyserver.model.imports;
 
 public class ImportFile {
     String bucket;
-    String name;
+    String path;
     String contentType;
     long size;
 
@@ -14,12 +14,12 @@ public class ImportFile {
         this.bucket = bucket;
     }
 
-    public String getName() {
-        return name;
+    public String getPath() {
+        return path;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public String getContentType() {

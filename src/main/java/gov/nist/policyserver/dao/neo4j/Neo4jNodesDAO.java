@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.nist.policyserver.common.Constants.ERR_NEO;
+import static gov.nist.policyserver.common.Constants.NEW_NODE_ID;
 import static gov.nist.policyserver.dao.neo4j.Neo4jHelper.execute;
 import static gov.nist.policyserver.dao.neo4j.Neo4jHelper.getNodesFromResultSet;
 
@@ -27,7 +28,7 @@ public class Neo4jNodesDAO implements NodesDAO {
 
     @Override
     public Node createNode(long id, String name, NodeType type) throws DatabaseException {
-        if(id == 0) {
+        if(id == NEW_NODE_ID) {
             id = getMaxId() + 1;
         }
         String cypher = "CREATE " +

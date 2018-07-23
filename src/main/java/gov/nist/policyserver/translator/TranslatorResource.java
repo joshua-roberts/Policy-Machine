@@ -21,7 +21,7 @@ import java.sql.SQLException;
 public class TranslatorResource {
     private TranslatorService translatorService = new TranslatorService();
 
-    public TranslatorResource() throws ConfigurationException, ClassNotFoundException {
+    public TranslatorResource() {
     }
 
     @POST

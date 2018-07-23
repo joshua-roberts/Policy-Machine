@@ -13,7 +13,7 @@ public class Prohibition  implements Serializable {
     private boolean                   intersection;
 
     public Prohibition(){
-
+        this.resources = new ArrayList<>();
     }
 
     public Prohibition(ProhibitionSubject subject, List<ProhibitionResource> resources, String name, HashSet<String> operations, boolean intersection) {

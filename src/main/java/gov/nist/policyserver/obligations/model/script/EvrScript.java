@@ -16,6 +16,12 @@ public class EvrScript {
         this.rules = new ArrayList<>();
     }
 
+    public EvrScript(String scriptName, boolean enabled) {
+        this.scriptName = scriptName;
+        this.rules = new ArrayList<>();
+        this.enabled = enabled;
+    }
+
     public String getScriptName() {
         return scriptName;
     }

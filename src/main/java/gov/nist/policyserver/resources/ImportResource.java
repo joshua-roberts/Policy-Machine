@@ -24,15 +24,17 @@ public class ImportResource {
 
     @Path("files")
     @POST
-    public Response importFiles(ImportFilesRequest request) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
-        importService.importFiles(request.getFiles(), request.getSource());
+    public Response importFiles(ImportFilesRequest request,
+                                @QueryParam("session") String session,
+                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
+        importService.importFiles(request.getFiles(), request.getSource(), session, process);
         return new ApiResponse("Successfully imported " + request.getFiles().length + " files from " + request
                 .getSource()).toResponse();
     }
 
     @Path("entities")
     @POST
-    public Response importEntities(ImportEntitiesRequest request) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
+    public Response importEntities(ImportEntitiesRequest request) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
         importService.importEntities(request.getKind(), request.getEntities());
 
         return null;
@@ -42,14 +44,14 @@ public class ImportResource {
     @POST
     public Response importData(@QueryParam("session") String session,
                                @QueryParam("process") long process,
-                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
+                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException {
         String host = request.getHost();
         int port = request.getPort();
         String schema = request.getSchema();
         String username = request.getUsername();
         String password = request.getPassword();
 
-        importService.importSql(host, port, schema, username, password);
+        importService.importSql(host, port, schema, username, password, session, process);
 
         return new ApiResponse(SUCCESS).toResponse();
     }

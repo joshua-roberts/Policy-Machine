@@ -19,8 +19,8 @@ import java.util.UUID;
 import static gov.nist.policyserver.common.Constants.DESCRIPTION_PROPERTY;
 import static gov.nist.policyserver.common.Constants.PASSWORD_PROPERTY;
 
-public class SessionService extends Service{
-    private NodeService nodeService;
+public class SessionService extends Service {
+    private NodeService      nodeService;
     private AnalyticsService analyticsService;
 
     public SessionService() {
@@ -30,8 +30,8 @@ public class SessionService extends Service{
 
     public String createSession(String username, String password) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, PMAccessDeniedException, NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, ConfigurationException, NullTypeException, NodeIdExistsException, DatabaseException, AssignmentExistsException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         //authenticate
-        HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null, null);
-        if(nodes.isEmpty()){
+        HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null);
+        if (nodes.isEmpty()) {
             throw new NodeNotFoundException(username);
         }
 
@@ -42,7 +42,7 @@ public class SessionService extends Service{
         Property property = userNode.getProperty(PASSWORD_PROPERTY);
         String storedPass = property.getValue();
 
-        if(!checkPasswordHash(storedPass, password)) {
+        if (!checkPasswordHash(storedPass, password)) {
             throw new PMAccessDeniedException("Username and password does not match.");
         }
 
@@ -50,7 +50,7 @@ public class SessionService extends Service{
         String sessionId = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
 
         //create session node
-        Property[] properties = new Property[] {
+        Property[] properties = new Property[]{
                 new Property(DESCRIPTION_PROPERTY, "Session for " + username)
         };
 
@@ -62,18 +62,6 @@ public class SessionService extends Service{
     }
 
     public void deleteSession(String sessionId) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
-       getDaoManager().getSessionsDAO().deleteSession(sessionId);
-    }
-
-    public List<PmAnalyticsEntry> getSessionAccess(String sessionId) throws InvalidNodeTypeException, InvalidPropertyException, SessionDoesNotExistException, PropertyNotFoundException, NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        HashSet<Node> nodes = nodeService.getNodes(null, sessionId, NodeType.S.toString(), null, null);
-        if(nodes.isEmpty()){
-            throw new SessionDoesNotExistException(sessionId);
-        }
-
-        Node sessionNode = nodes.iterator().next();
-        Property userIdProp = sessionNode.getProperty(Constants.SESSION_USER_ID_PROPERTY);
-
-        return analyticsService.getAccessibleNodes(Long.parseLong(userIdProp.getValue()));
+        getDaoManager().getSessionsDAO().deleteSession(sessionId);
     }
 }

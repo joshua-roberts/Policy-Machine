@@ -3,7 +3,7 @@ package gov.nist.policyserver.translator;
 public class TranslateRequest {
     private String sql;
     private String username;
-    private String process;
+    private long process;
     private String host;
     private int    port;
     private String dbUsername;
@@ -14,7 +14,7 @@ public class TranslateRequest {
 
     }
 
-    public TranslateRequest(String sql, String username, String process, String host, int port, String dbUsername, String dbPassword, String database) {
+    public TranslateRequest(String sql, String username, long process, String host, int port, String dbUsername, String dbPassword, String database) {
         this.sql = sql;
         this.username = username;
         this.process = process;
@@ -41,11 +41,11 @@ public class TranslateRequest {
         this.username = username;
     }
 
-    public String getProcess() {
+    public long getProcess() {
         return process;
     }
 
-    public void setProcess(String process) {
+    public void setProcess(long process) {
         this.process = process;
     }
 

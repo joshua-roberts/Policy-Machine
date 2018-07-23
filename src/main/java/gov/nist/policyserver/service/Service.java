@@ -20,8 +20,6 @@ import java.util.HashSet;
 import static gov.nist.policyserver.common.Constants.*;
 
 public class Service {
-//    private DAOManager daoManager = DAOManager.instance;
-
     public PmGraph getGraph() throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
         return getDaoManager().getGraphDAO().getGraph();
     }
@@ -43,17 +41,6 @@ public class Service {
 
         return node;
     }
-
-    /*public Node getConnector() throws InvalidPropertyException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        HashSet<Node> nodes = getGraph().getNodes();
-        for(Node node : nodes) {
-            if(node.getName().equals(CONNECTOR_NAME) && node.hasProperty(new Property(NAMESPACE_PROPERTY, CONNECTOR_NAMESPACE))) {
-                return node;
-            }
-        }
-
-        throw new ConfigurationException("Could not find connector node 'PM'.  Make sure to load super.pm first");
-    }*/
 
     public static String generatePasswordHash(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
         int iterations = 100;

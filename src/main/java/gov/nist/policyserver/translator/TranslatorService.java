@@ -22,7 +22,7 @@ public class TranslatorService {
     public TranslatorService() {
     }
 
-    public TranslateResponse translate(String sql, String username, String process, String host, int port,
+    public TranslateResponse translate(String sql, String username, long process, String host, int port,
                             String dbUsername, String dbPassword, String database)
             throws SQLException, IOException, ClassNotFoundException,
             JSQLParserException, PolicyMachineException, PmException, InvalidEntityException {

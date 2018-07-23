@@ -12,6 +12,7 @@ import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
 import gov.nist.policyserver.model.prohibitions.Prohibition;
 import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
+import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -542,11 +543,19 @@ public class PmAnalytics implements Serializable{
      * @param subjectId the ID of the user/user attribute/process
      * @return The set of prohibited operations for the subject on the resource
      */
-    public HashSet<String> getProhibitedOps(long targetId, long subjectId) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    public HashSet<String> getProhibitedOps(long targetId, long subjectId) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        System.out.println("Getting prohibited ops for " + subjectId + " on " + targetId);
         HashSet<String> prohibitedOps = new HashSet<>();
         for(Prohibition prohibition : prohibitions){
-            boolean subjectInDeny = (prohibition.getSubject().getSubjectId()==subjectId) ||
-                    getGraph().getAscesndants(prohibition.getSubject().getSubjectId()).contains(getGraph().getNode(subjectId));
+            boolean subjectInDeny;
+
+            if(prohibition.getSubject().getSubjectType().equals(ProhibitionSubjectType.P)) {
+                subjectInDeny = prohibition.getSubject().getSubjectId()==subjectId;
+            } else {
+                subjectInDeny = (prohibition.getSubject().getSubjectId()==subjectId) ||
+                        getGraph().getAscesndants(prohibition.getSubject().getSubjectId()).contains(getGraph().getNode(subjectId));
+            }
+
             if(subjectInDeny){
                 boolean inter = prohibition.isIntersection();
                 List<ProhibitionResource> resources = prohibition.getResources();

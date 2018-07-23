@@ -46,7 +46,7 @@ public class UpdateAlgorithm extends Algorithm {
         checkRows(rows);
 
         //process the statement as an event
-        pmManager.processUpdate(id, update, rows, dbManager);
+        //pmManager.processUpdate(id, update, rows, dbManager);
 
         //return update statement
         return update.toString();

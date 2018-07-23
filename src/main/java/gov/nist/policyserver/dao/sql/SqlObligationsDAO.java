@@ -12,7 +12,6 @@ import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTime;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.List;
 
 public class SqlObligationsDAO implements ObligationsDAO {
     private Connection conn;
@@ -81,8 +80,9 @@ public class SqlObligationsDAO implements ObligationsDAO {
         return null;
     }
 
+
     @Override
-    public void updateProcess(String parentId, String process) throws DatabaseException {
+    public void updateProcess(String parentId, long process) throws DatabaseException {
 
     }
 
@@ -138,6 +138,11 @@ public class SqlObligationsDAO implements ObligationsDAO {
 
     @Override
     public void deleteObligations() throws DatabaseException {
+
+    }
+
+    @Override
+    public void updateScript(String obligation, boolean enabled) throws DatabaseException {
 
     }
 }

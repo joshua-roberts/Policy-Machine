@@ -1,18 +1,18 @@
 package gov.nist.policyserver.obligations.model;
 
 public class EvrProcess {
-    private String processId;
+    private long processId;
     private EvrFunction evrFunction;
 
     public EvrProcess() {
 
     }
 
-    public EvrProcess(String processId) {
+    public EvrProcess(long processId) {
         this.processId = processId;
     }
 
-    public String getProcessId() {
+    public long getProcessId() {
         return this.processId;
     }
 

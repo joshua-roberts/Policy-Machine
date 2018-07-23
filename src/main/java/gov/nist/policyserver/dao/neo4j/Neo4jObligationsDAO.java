@@ -30,6 +30,12 @@ import static gov.nist.policyserver.obligations.EvrKeywords.*;
 
 public class Neo4jObligationsDAO implements ObligationsDAO {
 
+    public static final  String ASSIGN_ACTION_TAG     = "assign_action";
+    public static final  String GRANT_ACTION_TAG       = "grant_action";
+    public static final  String CREATE_ACTION_TAG      = "create_action";
+    public static final  String DENY_ACTION_TAG        = "deny_action";
+    public static final  String DELETE_ACTION_TAG      = "delete_action";
+
     public static void main(String[] args) throws SQLException, DatabaseException, IOException, ClassNotFoundException {
         Driver driver = new org.neo4j.jdbc.Driver();
         DriverManager.registerDriver(driver);
@@ -44,6 +50,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         this.connection = connection;
         evrManager = new EvrManager();
 
+        System.out.println("Building obligations...");
         buildObligations();
     }
 
@@ -67,9 +74,10 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
 
             EvrScript script = new EvrScript(scriptLabel);
             script.setRules(loadRules(scriptId));
+            script.setEnabled(true);
 
             System.out.println("Adding script " + scriptLabel);
-            //evrManager.addScript(script);
+            evrManager.addScript(script);
         }
     }
 
@@ -118,7 +126,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                 case POLICIES_TAG:
                     EvrPolicies evrPolicies = loadEvrPolicies(child.getEvrId());
                     event.setEvrPolicies(evrPolicies);
-
+                    break;
                 case TARGET_TAG:
                     EvrTarget target = loadTarget(child.getEvrId());
                     event.setTarget(target);
@@ -154,7 +162,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
             }
         }
 
-        return null;
+        return subject;
     }
 
     private EvrEntity loadEntity(String evrId) throws DatabaseException, SQLException {
@@ -167,7 +175,11 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
             rs.next();
 
             String name = rs.getString(1);
+            name = (name.equalsIgnoreCase("null")) ? null : name;
+
             String type = rs.getString(2);
+            type = (type.equalsIgnoreCase("null")) ? null : type;
+
             List<Property> properties = new ArrayList<>();
             try {
                 properties = strToPropertyList(rs.getString(3));
@@ -219,7 +231,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     private EvrProcess loadProcess(String evrId) throws DatabaseException, SQLException {
         List<EvrNode> children = getChildren(evrId, PROCESS_TAG);
         if(children.isEmpty()) {
-            return new EvrProcess(getEvrNodeName(evrId, PROCESS_TAG));
+            return new EvrProcess(Integer.valueOf(getEvrNodeName(evrId, PROCESS_TAG)));
         } else {
             EvrNode argChild = children.get(0);
             EvrFunction evrFunction = loadFunction(argChild.getEvrId());
@@ -268,7 +280,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     evrTarget.setEntity(loadEntity(entityNode.getEvrId()));
                     break;
                 case "target_containers":
-                    List<EvrNode> targetContainers = getChildren(child.getEvrId(), "target_object");
+                    List<EvrNode> targetContainers = getChildren(child.getEvrId(), "target_containers");
                     for(EvrNode evrNode : targetContainers) {
                         evrTarget.addContainer(loadEntity(evrNode.getEvrId()));
                     }
@@ -332,23 +344,23 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     EvrCondition condition = loadCondition(child.getEvrId());
                     response.setCondition(condition);
                     break;
-                case ASSIGN_TAG:
+                case ASSIGN_ACTION_TAG:
                     EvrAssignAction evrAssignAction = loadAssign(child.getEvrId());
                     response.addAction(evrAssignAction);
                     break;
-                case GRANT_TAG:
+                case GRANT_ACTION_TAG:
                     EvrGrantAction evrGrantAction = loadGrant(child.getEvrId());
                     response.addAction(evrGrantAction);
                     break;
-                case CREATE_TAG:
+                case CREATE_ACTION_TAG:
                     EvrCreateAction evrCreateAction = loadCreate(child.getEvrId());
                     response.addAction(evrCreateAction);
                     break;
-                case DENY_TAG:
+                case DENY_ACTION_TAG:
                     EvrDenyAction evrDenyAction = loadDeny(child.getEvrId());
                     response.addAction(evrDenyAction);
                     break;
-                case DELETE_TAG:
+                case DELETE_ACTION_TAG:
                     EvrDeleteAction evrDeleteAction = loadDelete(child.getEvrId());
                     response.addAction(evrDeleteAction);
                     break;
@@ -363,12 +375,12 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         List<EvrNode> children = getChildren(evrId, "delete_action");
         for(EvrNode child : children) {
             switch(child.getEvrType()) {
-                case ASSIGN_TAG:
-                    EvrAssignAction evrAssignAction = loadAssign(evrId);
+                case ASSIGN_ACTION_TAG:
+                    EvrAssignAction evrAssignAction = loadAssign(child.getEvrId());
                     action.setEvrAction(evrAssignAction);
                     break;
-                case DENY_TAG:
-                    EvrDenyAction evrDenyAction = loadDeny(evrId);
+                case DENY_ACTION_TAG:
+                    EvrDenyAction evrDenyAction = loadDeny(child.getEvrId());
                     action.setEvrAction(evrDenyAction);
                     break;
                 case RULE_TAG:
@@ -388,15 +400,15 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         for(EvrNode child : children) {
             switch (child.getEvrType()) {
                 case SUBJECT_TAG:
-                    EvrSubject evrSubject = loadSubject(evrId);
+                    EvrSubject evrSubject = loadSubject(child.getEvrId());
                     action.setSubject(evrSubject);
                     break;
                 case OPERATIONS_TAG:
-                    EvrOpertations evrOpertations = loadEvrOperations(evrId);
+                    EvrOpertations evrOpertations = loadEvrOperations(child.getEvrId());
                     action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
-                    EvrTarget evrTarget = loadTarget(evrId);
+                    EvrTarget evrTarget = loadTarget(child.getEvrId());
                     action.setTarget(evrTarget);
                     break;
             }
@@ -444,7 +456,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
                     action.setEvrOperations(evrOpertations);
                     break;
                 case TARGET_TAG:
-                    EvrTarget evrTarget = loadTarget(evrId);
+                    EvrTarget evrTarget = loadTarget(child.getEvrId());
                     action.setTarget(evrTarget);
                     break;
             }
@@ -773,7 +785,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     }
 
     @Override
-    public void updateProcess(String parentId, String process) throws DatabaseException {
+    public void updateProcess(String parentId, long process) throws DatabaseException {
         String cypher = "match(n:obligations:process{evr_id:'" + parentId + "'}) set n.name='" + process + "'";
         execute(connection, cypher);
     }
@@ -898,6 +910,12 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     @Override
     public void deleteObligations() throws DatabaseException {
         String cypher = "match(n:obligations) detach delete n";
+        execute(connection, cypher);
+    }
+
+    @Override
+    public void updateScript(String obligation, boolean enabled) throws DatabaseException {
+        String cypher = "match(n:obligations:script{evr_id:'" + obligation + "'}) set n.enabled=" + enabled;
         execute(connection, cypher);
     }
 }

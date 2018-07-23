@@ -563,7 +563,7 @@ public class EvrParser {
 
         List<Node> childNodes = getChildNodes(processNode);
         if(childNodes.isEmpty()) {
-            evrProcess = new EvrProcess(processNode.getTextContent());
+            evrProcess = new EvrProcess(Long.valueOf(processNode.getTextContent()));
 
             evrService.updateProcess(processId, evrProcess.getProcessId());
         }else {

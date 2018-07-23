@@ -3,31 +3,31 @@ package gov.nist.policyserver.model.prohibitions;
 import java.io.Serializable;
 
 public class ProhibitionSubject  implements Serializable {
-    long subjectId;
-    ProhibitionSubjectType subjectType;
+    long id;
+    ProhibitionSubjectType type;
 
     public ProhibitionSubject(){
 
     }
 
     public ProhibitionSubject(long subjectId, ProhibitionSubjectType subjectType) {
-        this.subjectId = subjectId;
-        this.subjectType = subjectType;
+        this.id = subjectId;
+        this.type = subjectType;
     }
 
     public long getSubjectId() {
-        return subjectId;
+        return id;
     }
 
     public void setSubjectId(long subjectId) {
-        this.subjectId = subjectId;
+        this.id = subjectId;
     }
 
     public ProhibitionSubjectType getSubjectType() {
-        return subjectType;
+        return type;
     }
 
     public void setSubjectType(ProhibitionSubjectType subjectType) {
-        this.subjectType = subjectType;
+        this.type = subjectType;
     }
 }

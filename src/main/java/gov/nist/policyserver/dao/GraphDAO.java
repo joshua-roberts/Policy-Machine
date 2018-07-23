@@ -8,6 +8,7 @@ import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
+import gov.nist.policyserver.model.prohibitions.Prohibition;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -28,4 +29,6 @@ public interface GraphDAO {
     PmAnalytics getAnalytics();
 
     void reset() throws DatabaseException;
+
+    List<Prohibition> getProhibitions() throws DatabaseException;
 }

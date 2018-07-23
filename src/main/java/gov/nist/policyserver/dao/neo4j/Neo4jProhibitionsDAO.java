@@ -65,7 +65,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
     public void setProhibitionSubject(String prohibitionName, long subjectId, ProhibitionSubjectType subjectType) throws DatabaseException {
         String cypher;
         if(subjectType.equals(ProhibitionSubjectType.P)) {
-            cypher = "match(p:" + PROHIBITION_LABEL + "{name:'" + prohibitionName + "'}) create (p)<-[:" + PROHIBITION_LABEL + "]-(:PP{subjectId:" + subjectId + ", subjectType:'" + subjectType + "'})";
+            cypher = "match(p:" + PROHIBITION_LABEL + "{name:'" + prohibitionName + "'}) create (p)<-[:" + PROHIBITION_LABEL + "]-(:process{id:" + subjectId + ", type:'" + subjectType + "'})";
         } else {
             cypher = "match(p:" + PROHIBITION_LABEL + "{name:'" + prohibitionName + "'}), (n{id:" + subjectId + ", type:'" + subjectType + "'}) create (p)<-[:" + PROHIBITION_LABEL + "]-(n)";
         }

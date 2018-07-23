@@ -7,6 +7,7 @@ public class CreateNodeRequest {
     String     name;
     String     type;
     Property[] properties;
+    String content;
 
     public long getId() {
         return id;
@@ -38,5 +39,13 @@ public class CreateNodeRequest {
 
     public void setProperties(Property[] properties) {
         this.properties = properties;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

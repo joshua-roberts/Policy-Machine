@@ -37,17 +37,25 @@ public class EvrResource {
     @GET
     public Response getObligations() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         List<EvrScript> scripts = evrService.getDaoManager().getObligationsDAO().getEvrManager().getScripts();
-        List<String> scriptNames = new ArrayList<>();
+        List<EvrScript> retScripts = new ArrayList<>();
         for(EvrScript script : scripts) {
-            scriptNames.add(script.getScriptName());
+            retScripts.add(new EvrScript(script.getScriptName(), script.isEnabled()));
         }
 
-        return new ApiResponse(scriptNames).toResponse();
+        return new ApiResponse(retScripts).toResponse();
     }
 
     @DELETE
     public Response deleteObligations() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         evrService.deleteObligations();
+
+        return new ApiResponse("Success").toResponse();
+    }
+
+    @Path("/{obligation}/enabled")
+    @PUT
+    public Response updateObligationEnabled(@PathParam("obligation") String obligation) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
+        evrService.updateScript(obligation);
 
         return new ApiResponse("Success").toResponse();
     }

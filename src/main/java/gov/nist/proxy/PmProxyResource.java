@@ -46,7 +46,7 @@ public class PmProxyResource {
         System.out.println("Original sql: " + sql);
 
         String username = "";
-        String process = "";
+        long process = 0;
         String[] pieces = sql.split("/\\*|\\*//*");
         if(pieces.length > 1) {
             String[] properties = pieces[1].split(",");
@@ -54,7 +54,7 @@ public class PmProxyResource {
                 if(s.startsWith("user=")){
                     username = s.split("=")[1];
                 } else if(s.startsWith("process=")) {
-                    process = s.split("=")[1];
+                    process = Long.valueOf(s.split("=")[1]);
                 }
             }
         }

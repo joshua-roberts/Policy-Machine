@@ -1,5 +1,6 @@
 package gov.nist.policyserver.service;
 
+import com.sun.deploy.association.AssociationService;
 import gov.nist.policyserver.common.Constants;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
@@ -9,34 +10,36 @@ import gov.nist.policyserver.model.imports.ImportFile;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static gov.nist.policyserver.common.Constants.*;
+import static gov.nist.policyserver.dao.DAOManager.getDaoManager;
+import static gov.nist.policyserver.model.graph.nodes.NodeType.OA;
+import static gov.nist.policyserver.model.graph.nodes.NodeType.PC;
 
 public class ImportService {
 
-    private NodeService nodeService;
-    private AssignmentService assignmentService;
+    private NodeService        nodeService;
+    private AssignmentService  assignmentService;
+    private AssociationsService associationsService;
 
     public ImportService() {
         nodeService = new NodeService();
         assignmentService = new AssignmentService();
+        associationsService = new AssociationsService();
     }
 
-    public void importFiles(ImportFile[] files, String storage) throws InvalidPropertyException,
-            AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
+    public void importFiles(ImportFile[] files, String storage, String session, long process) throws InvalidPropertyException,
+            AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
         for(ImportFile importFile : files) {
-            String name = importFile.getName();
+            String name = importFile.getPath();
             String bucket = importFile.getBucket();
             String contentType = importFile.getContentType();
             long size = importFile.getSize();
 
             Node bucketNode;
             try {
-                bucketNode = nodeService.getNode(bucket, NodeType.OA.toString(), NAMESPACE_PROPERTY + "=" + bucket);
+                bucketNode = nodeService.getNode(bucket, NodeType.OA.toString(), NAMESPACE_PROPERTY + "=" + bucket, session, process);
             }
             catch (UnexpectedNumberOfNodesException e) {
                 //create bucket pc
@@ -85,11 +88,11 @@ public class ImportService {
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OA);
+                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OA, session, process);
                 }catch (Exception e){}
 
                 try {
-                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OA);
+                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OA, session, process);
                 }catch (Exception e) {}
 
                 if(node == null) {
@@ -115,7 +118,7 @@ public class ImportService {
         }
     }
 
-    public void importEntities(String kind, HashMap<String, Object>[] entities) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
+    public void importEntities(String kind, HashMap<String, Object>[] entities) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
         //create pc for kind
         Node node = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, kind, NodeType.PC.toString(), null);
 
@@ -149,9 +152,9 @@ public class ImportService {
         }
     }
 
-    public void importSql(String host, int port, String schema, String username, String password)
+    public void importSql(String host, int port, String schema, String username, String password, String session, long process)
             throws DatabaseException, NodeNotFoundException, ConfigurationException, AssignmentExistsException,
-            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeNameExistsException, NodeNameExistsInNamespaceException, NodeIdExistsException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
+            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeNameExistsException, NodeNameExistsInNamespaceException, NodeIdExistsException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException {
         //create the schema policy class node
         Property[] properties = new Property[] {
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
@@ -212,6 +215,7 @@ public class ImportService {
                 String colSql = "SELECT c.column_name FROM INFORMATION_SCHEMA.COLUMNS c WHERE c.table_name = '" + tableName + "' AND c.table_schema = '" + schema + "'";
                 ResultSet rs1 = stmt1.executeQuery(colSql);
                 String columnSql = "";
+                HashMap<String, Node> columnNodes = new HashMap<>();
                 while(rs1.next()){
                     String columnName = rs1.getString(1);
                     System.out.println("creating column " + columnName);
@@ -219,10 +223,9 @@ public class ImportService {
                     properties = new Property[]{
                             new Property(NAMESPACE_PROPERTY, tableName)
                     };
-                    Node columnNode = nodeService.createNode(columnsNode.getId(), NEW_NODE_ID, columnName, NodeType.OA
-                                    .toString
-                                    (),
+                    Node columnNode = nodeService.createNode(columnsNode.getId(), NEW_NODE_ID, columnName, NodeType.OA.toString(),
                             properties);
+                    columnNodes.put(columnName, columnNode);
 
                     columnSql += columnName + ", ";
                 }
@@ -266,28 +269,32 @@ public class ImportService {
                                 new Property(NAMESPACE_PROPERTY, tableName),
                                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY)
                         };
-                        Node rowNode = nodeService.createNode(rowsNode.getId(), NEW_NODE_ID, rowName, NodeType.OA
+                        Node rowNode = nodeService.createNode(NEW_NODE_ID, rowName, NodeType.OA.toString(), properties);
+                        /*Node rowNode = nodeService.createNode(rowsNode.getId(), NEW_NODE_ID, rowName, NodeType.OA
                                         .toString(),
-                                properties);
+                                properties);*/
+                        createAssignment(rowNode, rowsNode);
 
                         //create data objects, assign to row and column
                         for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
                             //get column
                             String columnName = rs2MetaData.getColumnName(i);
-                            Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA);
+                            Node columnNode = columnNodes.get(columnName);//nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA, session, process);
 
 
                             //create data object node
-                            String objectName = UUID.randomUUID().toString();
+                            String objectName = rowName + "_" + columnName;
                             properties = new Property[]{
                                     new Property(NAMESPACE_PROPERTY, tableName),
                                     new Property(DESCRIPTION_PROPERTY, "Object in table=" + tableName + ", row=" + rowName + ", column=" + columnNode.getName())
                             };
-                            Node objectNode = nodeService.createNode(rowNode.getId(), NEW_NODE_ID, objectName, NodeType.O.toString(),
-                                    properties);
+                            /*Node objectNode = nodeService.createNode(rowNode.getId(), NEW_NODE_ID, objectName, NodeType.O.toString(),
+                                    properties);*/
+                            Node objectNode = nodeService.createNode(NEW_NODE_ID, objectName, NodeType.O.toString(), properties);
+                            createAssignment(objectNode, rowNode);
 
                             //assign object to row and column
-                            assignmentService.createAssignment(objectNode.getId(), columnNode.getId());
+                            createAssignment(objectNode, columnNode);
                         }
                     }
                 }
@@ -297,5 +304,48 @@ public class ImportService {
             e.printStackTrace();
             throw new DatabaseException(PmException.CLIENT_ERROR, e.getMessage());
         }
+    }
+
+    private void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, DatabaseException, InvalidPropertyException, IOException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException {
+        //create assignment in database
+        getDaoManager().getAssignmentsDAO().createAssignment(child.getId(), parent.getId());
+
+        //create assignment in nodes
+        getDaoManager().getGraphDAO().getGraph().createAssignment(child, parent);
+
+        //if the parent is a PC and the child is an OA, create a Association for the super user on the child
+        if (parent.getType().equals(PC) && child.getType().equals(OA)) {
+            Node superUA = getSuperUA();
+
+            //assign UA to PC
+            if(!assignmentService.isAssigned(superUA.getId(), parent.getId())) {
+                createAssignment(superUA, parent);
+            }
+
+            //create Association
+            createAssociation(superUA.getId(), child.getId(),
+                    new HashSet<>(Collections.singleton(ALL_OPS)));
+        }
+    }
+
+    void createAssociation(long uaId, long targetId, HashSet<String> ops) throws ClassNotFoundException, SQLException, DatabaseException, InvalidPropertyException, IOException {
+        //create association in database
+        getDaoManager().getAssociationsDAO().createAssociation(uaId, targetId, ops, true);
+
+        //create association in nodes
+        getDaoManager().getGraphDAO().getGraph().createAssociation(uaId, targetId, ops, true);
+    }
+
+    private Node getSuperUA() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidNodeTypeException, PropertyNotFoundException, NodeNotFoundException {
+        HashSet<Node> nodesOfType = getDaoManager().getGraphDAO().getGraph().getNodesOfType(NodeType.UA);
+        for(Node node : nodesOfType) {
+            if(node.getName().equals(SUPER_KEYWORD)) {
+                if(node.hasProperty(NAMESPACE_PROPERTY) && node.getProperty(NAMESPACE_PROPERTY).getValue().equals(SUPER_KEYWORD)) {
+                    return node;
+                }
+            }
+        }
+
+        throw new NodeNotFoundException(SUPER_KEYWORD);
     }
 }

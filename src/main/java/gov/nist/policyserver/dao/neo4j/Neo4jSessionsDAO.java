@@ -16,8 +16,23 @@ public class Neo4jSessionsDAO implements SessionsDAO {
     private HashMap<String, Long> sessions = new HashMap<>();
     private Connection            connection;
 
-    public Neo4jSessionsDAO(Connection connection) {
+    public Neo4jSessionsDAO(Connection connection) throws DatabaseException, SQLException {
         this.connection = connection;
+
+        loadSessions();
+    }
+
+    public void loadSessions() throws DatabaseException, SQLException {
+        sessions.clear();
+
+        String cypher = "match(n:session) return n.user_id, n.session_id";
+        ResultSet rs = execute(connection, cypher);
+        while(rs.next()) {
+            long userId = rs.getLong(1);
+            String sessionId = rs.getString(2);
+
+            sessions.put(sessionId, userId);
+        }
     }
 
     @Override

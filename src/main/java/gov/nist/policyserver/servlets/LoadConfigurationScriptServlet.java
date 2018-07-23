@@ -54,12 +54,9 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
 
         }
-        catch (NodeIdExistsException | FileUploadException | ConfigurationException |
-                InvalidPropertyException | AssignmentExistsException | DatabaseException |
-                NodeNameExistsException | NodeNotFoundException | NoBaseIdException |
-                NullNameException | NullTypeException | InvalidNodeTypeException | AssociationExistsException |
-                InvalidKeySpecException | NoSuchAlgorithmException | InvalidAssignmentException |
-                SQLException | ClassNotFoundException | UnexpectedNumberOfNodesException e) {
+        catch ( FileUploadException |
+                InvalidPropertyException | DatabaseException |
+                SQLException | ClassNotFoundException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

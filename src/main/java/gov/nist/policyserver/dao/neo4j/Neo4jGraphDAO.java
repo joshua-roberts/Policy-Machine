@@ -1,7 +1,7 @@
 package gov.nist.policyserver.dao.neo4j;
 
+import com.google.gson.Gson;
 import gov.nist.policyserver.analytics.PmAnalytics;
-import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.dao.GraphDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.exceptions.InvalidPropertyException;
@@ -11,8 +11,11 @@ import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
+import gov.nist.policyserver.model.prohibitions.Prohibition;
+import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
+import gov.nist.policyserver.model.prohibitions.ProhibitionSubject;
 
-import java.io.IOException;
+import javax.xml.transform.Result;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,13 +29,12 @@ import static gov.nist.policyserver.dao.neo4j.Neo4jHelper.*;
 public class Neo4jGraphDAO implements GraphDAO {
 
     private PmGraph    graph;
-    private PmAnalytics analytics;
+    private PmAnalytics analytics = new PmAnalytics();
     private Connection connection;
 
     public Neo4jGraphDAO(Connection connection) throws DatabaseException, InvalidPropertyException {
         this.connection = connection;
         buildGraph();
-        analytics = new PmAnalytics();
     }
 
     @Override
@@ -73,6 +75,12 @@ public class Neo4jGraphDAO implements GraphDAO {
         }
         System.out.println("DONE");
 
+        System.out.print("Getting prohibitions...");
+        List<Prohibition> prohibitions = getProhibitions();
+        for(Prohibition prohibition : prohibitions) {
+            analytics.addProhibition(prohibition);
+        }
+        System.out.println("DONE");
         return graph;
     }
 
@@ -149,5 +157,44 @@ public class Neo4jGraphDAO implements GraphDAO {
     public void reset() throws DatabaseException {
         String cypher = "match(n) where n.id > 0 detach delete n";
         execute(connection, cypher);
+    }
+
+    @Override
+    public List<Prohibition> getProhibitions() throws DatabaseException {
+        List<Prohibition> prohibitions = new ArrayList<>();
+
+        String cypher = "match(p:prohibition) return p";
+        ResultSet rs = execute(connection, cypher);
+        try {
+            while (rs.next()) {
+                String json = rs.getString(1);
+                Prohibition prohibition = JsonHelper.getProhibition(json);
+
+                //get subject
+                cypher = "match(d:prohibition{name:'" + prohibition.getName() + "'})<-[:prohibition]-(s) return s";
+                ResultSet rs2 = execute(connection, cypher);
+                if(rs2.next()) {
+                    json = rs2.getString(1);
+                    prohibition.setSubject(JsonHelper.getProhibitionSubject(json));
+                }
+
+                //get resources
+                cypher = "match(d:prohibition{name:'" + prohibition.getName() + "'})-[r:prohibition]->(s) return s, r.complement";
+                rs2 = execute(connection, cypher);
+                while(rs2.next()) {
+                    json = rs2.getString(1);
+                    Node node = new Gson().fromJson(json, Node.class);
+
+                    boolean complement = rs2.getBoolean(2);
+                    prohibition.addResource(new ProhibitionResource(node.getId(), complement));
+                }
+
+                prohibitions.add(prohibition);
+            }
+        }catch(SQLException e){
+            throw new DatabaseException(ERR_NEO, "Error getting prohibitions from nodes");
+        }
+
+        return prohibitions;
     }
 }

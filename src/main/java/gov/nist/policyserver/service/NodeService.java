@@ -1,26 +1,52 @@
 package gov.nist.policyserver.service;
 
+import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.exceptions.*;
+import gov.nist.policyserver.helpers.ContentHelper;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
-import scala.sys.Prop;
+import gov.nist.policyserver.model.imports.ImportFile;
+import gov.nist.policyserver.obligations.EvrService;
+import gov.nist.policyserver.obligations.exceptions.InvalidEntityException;
+import gov.nist.policyserver.obligations.exceptions.InvalidEvrException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static gov.nist.policyserver.common.Constants.*;
 
 public class NodeService extends Service{
 
-    public HashSet<Node> getNodes(String namespace, String name, String type, String key, String value)
-            throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    private        AssignmentService assignmentService = new AssignmentService();
+    private        AnalyticsService  analyticsService  = new AnalyticsService();
+    private        EvrService        evrService        =  new EvrService();
+
+    public HashSet<Node> getNodes(String namespace, String name, String type, String key, String value, String session, long process)
+            throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
+        Node user = getSessionUser(session);
+
+        HashSet<Node> nodes = getNodes(namespace, name, type, key, value);
+
+        nodes.removeIf(node -> {
+            try {
+                if(node.getType().equals(NodeType.O) || node.getType().equals(NodeType.OA)) {
+                    analyticsService.checkPermissions(user, process, node.getId(), ANY_OPERATIONS);
+                }
+                return false;
+            }
+            catch (MissingPermissionException | NoSubjectParameterException | InvalidProhibitionSubjectTypeException | NodeNotFoundException | ClassNotFoundException | ConfigurationException | DatabaseException | SQLException | InvalidPropertyException | IOException e) {
+                return true;
+            }
+        });
+
+        return nodes;
+    }
+
+    public HashSet<Node> getNodes(String namespace, String name, String type, String key, String value) throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
         Property property = (key==null||value==null)?null : new Property(key, value);
 
@@ -54,6 +80,7 @@ public class NodeService extends Service{
         }
 
         return nodes;
+
     }
 
     public HashSet<Node> getNodes(String namespace, String name, String type, List<Property> properties)
@@ -191,7 +218,9 @@ public class NodeService extends Service{
         return nodes;
     }
 
-    public Node getNode(String name, String type, String properties) throws InvalidPropertyException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    public Node getNode(String name, String type, String properties, String session, long process) throws InvalidPropertyException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException {
+        Node user = getSessionUser(session);
+
         //get target node
         //get properties
         List<Property> propList = new ArrayList<>();
@@ -204,14 +233,95 @@ public class NodeService extends Service{
                 }
             }
         }
-        return getNode(null, name, type, propList);
+        Node node = getNode(null, name, type, propList);
+
+        analyticsService.checkPermissions(user, process, node.getId(), ANY_OPERATIONS);
+
+        return node;
     }
 
-    public Node createNode(long baseId, long id, String name, String type, Property[] properties)
-            throws NullNameException, NullTypeException, InvalidNodeTypeException,
-            InvalidPropertyException, DatabaseException,
-            ConfigurationException, NodeNameExistsException, NodeIdExistsException,
-            NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException {
+    public Node createNodeIn(long baseId, String name, String type, Property[] properties, String content, String session, long process) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, NullNameException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, NodeIdExistsException, NodeNameExistsException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException {
+        Node user = getSessionUser(session);
+
+        //check parent node exists
+        Node parentNode = getNode(baseId);
+
+        //check parameters are not null
+        if(name == null){
+            throw new NullNameException();
+        }
+        if(type == null){
+            throw new NullTypeException();
+        }
+
+        //create Node
+        Node node = createNode(NEW_NODE_ID, name, type, properties);
+
+        //create assignment
+        try {
+            assignmentService.createAssignment(session, process, node.getId(), parentNode.getId(), false);
+        }
+        catch (AssignmentExistsException | UnexpectedNumberOfNodesException | AssociationExistsException | MissingPermissionException e) {
+            deleteNode(node.getId());
+            throw e;
+        }
+
+        //check if requesting content
+        if(content != null) {
+            analyticsService.checkPermissions(user, process, node.getId(), FILE_WRITE);
+
+            ImportFile importFile = ContentHelper.createNodeContents(user, process, node, content);
+            if(importFile != null) {
+                node.setContent(content);
+
+                //update node properties
+                List<Property> nodeProperties = node.getProperties();
+                for (Property prop : nodeProperties) {
+                    switch (prop.getKey()) {
+                        case BUCKET_PROPERTY:
+                            updateNodeProperty(node.getId(), BUCKET_PROPERTY, importFile.getBucket());
+                            break;
+                        case PATH_PROPERTY:
+                            updateNodeProperty(node.getId(), PATH_PROPERTY, importFile.getPath());
+                            break;
+                        case CONTENT_TYPE_PROPERTY:
+                            updateNodeProperty(node.getId(), CONTENT_TYPE_PROPERTY, importFile.getContentType());
+                            break;
+                        case SIZE_PROPERTY:
+                            updateNodeProperty(node.getId(), SIZE_PROPERTY, String.valueOf(importFile.getSize()));
+                            break;
+                    }
+                }
+            }
+        }
+
+        return node;
+    }
+
+    public Node createNode(String name, String type, Property[] properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIdExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException {
+        Node user = getSessionUser(session);
+
+        Node node = createNode(NO_BASE_ID, NEW_NODE_ID, name, type, properties);
+
+        //if the node is a PC, create an OA and UA for PC admin
+        if (node.getType().equals(NodeType.PC)) {
+            //create OA
+            Node oaNode = createNode(node.getId(), NEW_NODE_ID, node.getName(), NodeType.OA.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
+
+            //create UA
+            Node uaNode = createNode(node.getId(), NEW_NODE_ID, node.getName() + " admin", NodeType.UA.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
+
+            //assign U to UA
+            new AssignmentService().createAssignment(user.getId(), uaNode.getId());
+
+            //create association
+            new AssociationsService().createAssociation(uaNode.getId(), oaNode.getId(), new HashSet<>(Collections.singleton(ALL_OPERATIONS)), true);
+        }
+
+        return node;
+    }
+
+    public Node createNode(long baseId, long id, String name, String type, Property[] properties) throws NullNameException, NullTypeException, InvalidNodeTypeException, InvalidPropertyException, DatabaseException, ConfigurationException, NodeNameExistsException, NodeIdExistsException, NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException {
         //check name and type are not null
         if(name == null){
             throw new NullNameException();
@@ -220,7 +330,7 @@ public class NodeService extends Service{
             throw new NullTypeException();
         }
 
-        if(id != 0) {
+        if(id != NEW_NODE_ID) {
             //check if ID exists
             try {
                 Node node = getNode(id);
@@ -236,28 +346,27 @@ public class NodeService extends Service{
 
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
-        Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt);
+        Node node = getDaoManager().getNodesDAO().createNode(id, name, nt);
 
         //add the node to the nodes
-        getGraph().addNode(newNode);
+        getGraph().addNode(node);
 
 
         //add properties to the node
         try {
-            newNode = addNodeProperties(newNode, properties);
+            node = addNodeProperties(node, properties);
         }
         catch (PropertyNotFoundException e) {
             e.printStackTrace();
         }
 
-        //if there is a base ID present assign the new node to it
-        AssignmentService assignmentService = new AssignmentService();
-
-        if (baseId != NO_BASE_ID) {
-            assignmentService.createAssignment(newNode.getId(), baseId);
+        if(baseId != NO_BASE_ID) {
+            //if there is a base ID present assign the new node to it
+            AssignmentService assignmentService = new AssignmentService();
+            assignmentService.createAssignment(node.getId(), baseId);
         }
 
-        return newNode;
+        return node;
     }
 
     /**
@@ -269,28 +378,6 @@ public class NodeService extends Service{
      * @return A Node object
      */
     public Node createNode(long id, String name, String type, Property[] properties) throws NullNameException, NullTypeException, NodeIdExistsException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, NodeNotFoundException, ConfigurationException {
-        //check name and type are not null
-        if(name == null){
-            throw new NullNameException();
-        }
-        if(type == null){
-            throw new NullTypeException();
-        }
-
-        if(id != 0) {
-            //check if ID exists
-            try {
-                Node node = getNode(id);
-                throw new NodeIdExistsException(id, node);
-            }
-            catch (NodeNotFoundException e) {/*expected exception*/}
-        }
-
-        HashSet<Node> nodes = getNodes(null, name, type, properties != null ? Arrays.asList(properties) : null);
-        if(!nodes.isEmpty()) {
-            throw new NodeNameExistsException(name);
-        }
-
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
         Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt);
@@ -312,7 +399,7 @@ public class NodeService extends Service{
     private Node addNodeProperties(Node node, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException, SQLException, IOException, ClassNotFoundException {
         if(properties != null) {
             for (Property property : properties) {
-                if(property.isValid()) {
+                if(property.validProperty()) {
                     try {
                         if(node.hasProperty(property.getKey())) {
                             updateNodeProperty(node.getId(), property.getKey(), property.getValue());
@@ -338,6 +425,27 @@ public class NodeService extends Service{
         return node;
     }
 
+    public Node getNode(long nodeId, boolean content, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NodeNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, MissingPermissionException, PropertyNotFoundException, ProhibitionNameExistsException, InvalidEvrException, ProhibitionDoesNotExistException, InvalidEntityException, NullNameException, ProhibitionResourceExistsException, InvalidNodeTypeException {
+        Node user = getSessionUser(session);
+
+        Node node = getNode(nodeId);
+
+        if(node.getType().equals(NodeType.OA) || node.getType().equals(NodeType.O)) {
+            //check user can access the node
+            analyticsService.checkPermissions(user, process, nodeId, ANY_OPERATIONS);
+        }
+
+        if(content) {
+            node.setContent(ContentHelper.getNodeContents(user, process, nodeId, node));
+
+            // process file read
+            evrService.processFileRead(node, user, process);
+
+        }
+
+        return node;
+    }
+
     public Node getNode(long nodeId) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Node node = getGraph().getNode(nodeId);
         if(node == null){
@@ -347,9 +455,8 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node getNodeInNamespace(String namespace, String name, NodeType type)
-            throws NameInNamespaceNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        HashSet<Node> nodes = getNodes(namespace, name, null, null, null);
+    public Node getNodeInNamespace(String namespace, String name, NodeType type) throws SQLException, IOException, ClassNotFoundException, InvalidPropertyException, DatabaseException, InvalidNodeTypeException, NameInNamespaceNotFoundException {
+        HashSet<Node> nodes = getNodes(namespace, name, null, null);
         if(nodes.isEmpty()){
             throw new NameInNamespaceNotFoundException(namespace, name, type);
         }
@@ -357,12 +464,53 @@ public class NodeService extends Service{
         return nodes.iterator().next();
     }
 
-    public void deleteNodeInNamespace(String namespace, String nodeName, NodeType type)
-            throws InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidPropertyException, NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException {
-        //get the node in namespace
-        Node node = getNodeInNamespace(namespace, nodeName, type);
+    public Node getNodeInNamespace(String namespace, String name, NodeType type, String session, long process)
+            throws NameInNamespaceNotFoundException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException {
+        HashSet<Node> nodes = getNodes(namespace, name, null, null, null, session, process);
+        if(nodes.isEmpty()){
+            throw new NameInNamespaceNotFoundException(namespace, name, type);
+        }
 
-        deleteNode(node.getId());
+        return nodes.iterator().next();
+    }
+
+    public Node updateNode(long nodeId, String name, Property[] properties, String content, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
+        Node user = getSessionUser(session);
+
+        //check user can update the node
+        //analyticsService.checkPermissions(user, process, nodeId, UPDATE_NODE);
+
+        Node node = updateNode(nodeId, name, properties);
+
+        // check if updating content
+        if(content != null) {
+            //update the node contents
+            ImportFile importFile = ContentHelper.updateNodeContents(user, process, node, content);
+            if(importFile != null) {
+                node.setContent(content);
+
+                //update node properties
+                List<Property> nodeProperties = node.getProperties();
+                for (Property prop : nodeProperties) {
+                    switch (prop.getKey()) {
+                        case BUCKET_PROPERTY:
+                            updateNodeProperty(nodeId, BUCKET_PROPERTY, importFile.getBucket());
+                            break;
+                        case PATH_PROPERTY:
+                            updateNodeProperty(nodeId, PATH_PROPERTY, importFile.getPath());
+                            break;
+                        case CONTENT_TYPE_PROPERTY:
+                            updateNodeProperty(nodeId, CONTENT_TYPE_PROPERTY, importFile.getContentType());
+                            break;
+                        case SIZE_PROPERTY:
+                            updateNodeProperty(nodeId, SIZE_PROPERTY, String.valueOf(importFile.getSize()));
+                            break;
+                    }
+                }
+            }
+        }
+
+        return node;
     }
 
     public Node updateNode(long nodeId, String name, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException, SQLException, IOException, ClassNotFoundException {
@@ -382,6 +530,22 @@ public class NodeService extends Service{
         addNodeProperties(node, properties);
 
         return getGraph().getNode(nodeId);
+    }
+
+    public void deleteNode(long nodeId, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException {
+        //PERMISSION CHECK
+        //get user from username
+        Node user = getSessionUser(session);
+
+        //check node exists
+        Node node = getNode(nodeId);
+
+        if(node.getType().equals(NodeType.OA) || node.getType().equals(NodeType.O)) {
+            //check user can delete the node
+            analyticsService.checkPermissions(user, process, nodeId, DELETE_NODE);
+        }
+
+        deleteNode(nodeId);
     }
 
     public void deleteNode(long nodeId) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
@@ -423,6 +587,17 @@ public class NodeService extends Service{
 
         //get node property
         return node.getProperty(key);
+    }
+
+    public void deleteNodeProperty(long nodeId, String key, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NodeNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, MissingPermissionException, PropertyNotFoundException {
+        Node user = getSessionUser(session);
+
+        Node node = getNode(nodeId);
+
+        //check user can delete the node property
+        analyticsService.checkPermissions(user, process, node.getId(), UPDATE_NODE);
+
+        deleteNodeProperty(nodeId, key);
     }
 
     public void deleteNodeProperty(long nodeId, String key) throws NodeNotFoundException, PropertyNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
@@ -478,6 +653,56 @@ public class NodeService extends Service{
         return retChildren;
     }
 
+    public HashSet<Node> getNodeChildren(long nodeId, String childType, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NodeNotFoundException, NoUserParameterException, ConfigurationException, InvalidNodeTypeException {
+        Node user = getSessionUser(session);
+
+        Node node = getNode(nodeId);
+
+        HashSet<Node> nodes = new HashSet<>();
+
+        if(node.getType().equals(NodeType.PC)) {
+            HashSet<Node> uas = getChildrenOfType(nodeId, NodeType.UA.toString());
+            //add all uas because there are no associations on them
+            nodes.addAll(uas);
+
+            //get all oas user has access to
+            List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(nodeId, user.getId());
+            for(PmAnalyticsEntry entry : accessibleChildren) {
+                if(childType == null || childType.equals(entry.getTarget().getType().toString())) {
+                    nodes.add(entry.getTarget());
+                }
+            }
+        } else if(node.getType().equals(NodeType.OA)) {
+            //get all oas user has access to
+            List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(nodeId, user.getId());
+            for(PmAnalyticsEntry entry : accessibleChildren) {
+                if(childType == null || childType.equals(entry.getTarget().getType().toString())) {
+                    nodes.add(entry.getTarget());
+                }
+            }
+        } else if(node.getType().equals(NodeType.UA)) {
+            //add all children
+            HashSet<Node> children = getChildrenOfType(node.getId(), null);
+            nodes.addAll(children);
+        }
+
+        return nodes;
+    }
+
+    public void deleteNodeChildren(long nodeId, String childType, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NodeNotFoundException, InvalidNodeTypeException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+        Node user = getSessionUser(session);
+
+        analyticsService.checkPermissions(user, process, nodeId, DEASSIGN_FROM);
+
+        HashSet<Node> children = getChildrenOfType(nodeId, childType);
+        for(Node node : children) {
+            analyticsService.checkPermissions(user, process, node.getId(), DELETE_NODE);
+            analyticsService.checkPermissions(user, process, node.getId(), DEASSIGN);
+        }
+
+        deleteNodeChildren(nodeId, childType);
+    }
+
     public void deleteNodeChildren(long nodeId, String childType) throws NodeNotFoundException, InvalidNodeTypeException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         HashSet<Node> children = getChildrenOfType(nodeId, childType);
         for(Node node : children){
@@ -487,6 +712,22 @@ public class NodeService extends Service{
             //delete node in database
             getGraph().deleteNode(node.getId());
         }
+    }
+
+    public HashSet<Node> getParentsOfType(long nodeId, String parentType, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, InvalidNodeTypeException, NodeNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+        Node user = getSessionUser(session);
+
+        HashSet<Node> parents = getParentsOfType(nodeId, parentType);
+        parents.removeIf(node -> {
+            try {
+                analyticsService.checkPermissions(user, process, node.getId(), ANY_OPERATIONS);
+                return false;
+            } catch(Exception e) {
+                return true;
+            }
+        });
+
+        return parents;
     }
 
     public HashSet<Node> getParentsOfType(long nodeId, String parentType) throws InvalidNodeTypeException,

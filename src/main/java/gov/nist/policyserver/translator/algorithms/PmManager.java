@@ -40,9 +40,9 @@ public class PmManager {
     private NodeService      nodeService;
     private AnalyticsService analyticsService;
     private EvrManager       evrManager;
-    private String           process;
+    private long           process;
 
-    public PmManager(String username, String process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException, InvalidPropertyException {
+    public PmManager(String username, long process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException, InvalidPropertyException {
         this.nodeService = new NodeService();
         this.analyticsService = new AnalyticsService();
         this.pmUser = getPmUser(username);
@@ -50,17 +50,17 @@ public class PmManager {
         this.process = process;
     }
 
-    public String getProcess() {
+    public long getProcess() {
         return process;
     }
 
-    public void setProcess(String process) {
+    public void setProcess(long process) {
         this.process = process;
     }
 
     private Node getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         try {
-            HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null, null);
+            HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null);
             if(!nodes.isEmpty()) {
                 return nodes.iterator().next();
             }else {
@@ -109,7 +109,7 @@ public class PmManager {
         HashSet<String> prohibitedOps = analyticsService.getProhibitedOps(id, pmUser.getId(), "U");
 
         //get the prohibited ops for the process if it exists
-        if(process != null && !process.isEmpty()) {
+        if(process != 0) {
             prohibitedOps.addAll(analyticsService.getProhibitedOps(id, Long.valueOf(process), "P"));
         }
 
@@ -146,7 +146,7 @@ public class PmManager {
     }
 
     public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        HashSet<Node> nodes = nodeService.getNodes(tableName, "Rows", NodeType.OA.toString(), null, null);
+        HashSet<Node> nodes = nodeService.getNodes(tableName, "Rows", NodeType.OA.toString(), null);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException("Could not find row object attribute for table " + tableName);
         }
@@ -164,13 +164,7 @@ public class PmManager {
         return operations.containsAll(permList) || operations.contains("*");
     }
 
-    /**
-     * Process an update statement as an event
-     * @param id
-     * @param rows the names of the targeted rows
-     * @param dbManager
-     */
-    public void processUpdate(String id, Update update, List<String> rows, DbManager dbManager) {
+    /*public void processUpdate(String id, Update update, List<String> rows, DbManager dbManager) {
         new Thread(() -> {
             while(true) {
                 if(!evrManager.isActiveSql(id)) {
@@ -233,7 +227,7 @@ public class PmManager {
                 }
             }
         }).start();
-    }
+    }*/
 
     public void addActiveSql(String id) {
         evrManager.addActiveSql(id);

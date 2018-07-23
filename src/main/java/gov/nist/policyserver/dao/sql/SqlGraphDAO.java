@@ -5,6 +5,7 @@ import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.dao.GraphDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
+import gov.nist.policyserver.exceptions.InvalidProhibitionSubjectTypeException;
 import gov.nist.policyserver.exceptions.InvalidPropertyException;
 import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
@@ -12,6 +13,10 @@ import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
+import gov.nist.policyserver.model.prohibitions.Prohibition;
+import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
+import gov.nist.policyserver.model.prohibitions.ProhibitionSubject;
+import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -179,5 +184,64 @@ public class SqlGraphDAO implements GraphDAO {
     @Override
     public void reset() throws DatabaseException {
 
+    }
+
+    @Override
+    public List<Prohibition> getProhibitions() throws DatabaseException {
+        List<Prohibition> prohibitions = new ArrayList<>();
+        /*try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT deny_name, abbreviation, user_attribute_id, is_intersection, " +
+                    "object_attribute_id, object_complement, " +
+                    "get_operation_name(deny_operation_id)  " +
+                    "FROM deny, deny_obj_attribute, deny_operation, deny_type " +
+                    "WHERE deny.deny_id = deny_obj_attribute.deny_id " +
+                    "AND deny.deny_id = deny_operation.deny_id " +
+                    "AND deny_type.deny_type_id = deny.deny_type_id");
+
+            while(rs.next()) {
+                //prohibitions and subject information
+                String deny_name = rs.getString(1);
+                String type_abbr = rs.getString(2);
+                int ua_id = rs.getInt(3);
+                boolean intersection = rs.getInt(4) == 1;
+                //resource information
+                int object_attribute_id = rs.getInt(5);
+                boolean object_complement = rs.getInt(6) == 1;
+                //operation information
+                String operation_name = rs.getString(7);
+
+                Prohibition p = access.getProhibition(deny_name);
+                if (p == null) {
+                    ProhibitionSubject subject = new ProhibitionSubject(ua_id, ProhibitionSubjectType.toProhibitionSubjectType(type_abbr));
+                    List<ProhibitionResource> resources = new ArrayList<>();
+                    resources.add(new ProhibitionResource(object_attribute_id, object_complement));
+                    HashSet<String> operations = new HashSet<>();
+                    operations.add(operation_name);
+
+                    p = new Prohibition(subject, resources, deny_name, operations, intersection);
+                    access.addProhibition(p);
+                } else {
+                    boolean found = false;
+                    List<ProhibitionResource> prs = p.getResources();
+                    for (ProhibitionResource pr: prs) {
+                        if (pr.getResourceId() == object_attribute_id) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        p.addResource(new ProhibitionResource(object_attribute_id, object_complement));
+                    }
+                    HashSet<String> ops = p.getOperations();
+                    ops.add(operation_name);
+                    p.setOperations(ops);
+                }
+            }
+        } catch(SQLException e){
+            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+        } catch (InvalidProhibitionSubjectTypeException e) {
+            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+        }*/
+        return prohibitions;
     }
 }

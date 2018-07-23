@@ -31,16 +31,6 @@ import java.sql.*;
 import java.util.*;
 
 public class EvrManager {
-    private static final String INSERT_EVENT      = "insert";
-    private static final String DELETE_EVENT      = "delete";
-    private static final String UPDATE_EVENT      = "update";
-    private static final String SELECT_EVENT      = "select";
-    private static final String OBJ_CREATE_EVENT  = "Object create";
-    private static final String OBJ_DESTROY_EVENT = "Object destroy";
-    private static final String OBJ_READ_EVENT    = "Object read";
-    private static final String OBJ_WRITE_EVENT   = "Object write";
-    private static final String USER_CREATE_EVENT = "User create";
-
     private EvrParser            parser;
     private List<EvrScript>      scripts;
     //private EvrEventProcessor    eventProcessor;
@@ -94,7 +84,7 @@ public class EvrManager {
         activeSqls.remove(id);
     }
 
-    public void processUpdate(Node user, String process, Update update) throws InvalidPropertyException, InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, InvalidEntityException, SQLException, ConfigurationException, DatabaseException, AssignmentExistsException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    /*public void processUpdate(Node user, long process, Update update) throws InvalidPropertyException, InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, InvalidEntityException, SQLException, ConfigurationException, DatabaseException, AssignmentExistsException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         //if user is null, its a process
         EvrSubject evrSubject = new EvrSubject();
         if(process != null) {
@@ -137,7 +127,7 @@ public class EvrManager {
         }
     }
 
-    public void processSelect(Node user, String process) throws InvalidPropertyException, InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, InvalidEntityException, SQLException, ConfigurationException, DatabaseException, AssignmentExistsException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    public void processSelect(Node user, long process) throws InvalidPropertyException, InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, InvalidEntityException, SQLException, ConfigurationException, DatabaseException, AssignmentExistsException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         //if user is null, its a process
         EvrSubject evrSubject = new EvrSubject();
         if(process != null) {
@@ -191,9 +181,9 @@ public class EvrManager {
                 }
             }
         }
-    }
+    }*/
 
-    public void processEvent(EvrSubject procSubject, EvrPolicies procPc, String procEvent, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    /*public void processEvent(EvrSubject procSubject, EvrPolicies procPc, String procEvent, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         //get all rules with the same event
         List<EvrRule> rules = getRules(procEvent);
         for(EvrRule rule : rules) {
@@ -369,11 +359,11 @@ public class EvrManager {
                 procEntity.getProcess().equals(evrEntity.getProcess());
     }
 
-    /**
+    *//**
      * Evaluate a function
      * @param function
      * @return
-     */
+     *//*
     private EvrEntity evalFunction(EvrFunction function) throws InvalidEvrException, InvalidNodeTypeException, InvalidPropertyException, SQLException, DatabaseException, IOException, ClassNotFoundException {
         List<EvrEntity> args = evalArgs(function.getArgs());
 
@@ -440,14 +430,14 @@ public class EvrManager {
         return evrEntity;
     }
 
-    /**
+    *//**
      * number of args = 2
      * 1. property name
      * 2. property value
      * @param args
      * @return
      * @throws InvalidEvrException
-     */
+     *//*
     private EvrEntity getNodeWithProperty(List<EvrEntity> args) throws InvalidEvrException, InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         if(args.size() != 2) {
             throw new InvalidEvrException("Invalid number of parameters for function 'getNodeWithProperty'. Expected 2, got " + args.size());
@@ -476,11 +466,11 @@ public class EvrManager {
         return new EvrEntity(evrEntities);
     }
 
-    /**
+    *//**
      * Take in a list of EvrArgs and return a list with no functions
      * @param args
      * @return
-     */
+     *//*
     private List<EvrEntity> evalArgs(List<EvrArg> args) throws InvalidEvrException, InvalidNodeTypeException, InvalidPropertyException, SQLException, DatabaseException, IOException, ClassNotFoundException {
         List<EvrEntity> retArgs = new ArrayList<>();
         for(EvrArg arg : args) {
@@ -496,12 +486,12 @@ public class EvrManager {
         return retArgs;
     }
 
-    /**
+    *//**
      * This method assumes both are nodes, check for functions or processes are done elsewhere
      * @param procEntity
      * @param evrEntity
      * @return
-     */
+     *//*
     private boolean checkNode(EvrEntity procEntity, EvrEntity evrEntity) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashSet<Node> nodes =
                 nodeService.getNodes(null, evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
@@ -731,10 +721,10 @@ public class EvrManager {
     }
 
 
-    /**
+    *//**
      * grant each subject the ops on the target
      * @param grantAction
-     */
+     *//*
     private void doGrant(EvrGrantAction grantAction) throws InvalidEntityException, InvalidNodeTypeException, SQLException, InvalidEvrException, InvalidPropertyException, DatabaseException, IOException, ClassNotFoundException {
         EvrSubject subject = grantAction.getSubject();
         List<EvrEntity> entities = subject.getEntities();
@@ -772,7 +762,7 @@ public class EvrManager {
                 }
             }
         }
-    }
+    }*/
 
     public void deleteScripts() {
         scripts.clear();

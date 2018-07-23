@@ -36,7 +36,7 @@ public class Property  implements Serializable {
 		return false;
 	}
 
-    public boolean isValid() {
+    public boolean validProperty() {
 		return key != null && value != null;
     }
 
