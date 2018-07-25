@@ -21,9 +21,9 @@ public class SqlSessionsDAO implements SessionsDAO {
     }
 
     public void createSession(String sessionId, long userId) throws SQLException {
-        String sql = "INSERT INTO session(session_id,user_node_id) VALUES (" + sessionId + "," + userId +")";
+        String sql = "INSERT INTO session(session_id,user_node_id) VALUES ('" + sessionId + "'," + userId +")";
         Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
+        stmt.execute(sql);
         sessions.put(sessionId, userId);
     }
 

@@ -23,6 +23,7 @@ public class DAOManager {
     private ObligationsDAO obligationsDAO;
     private ProhibitionsDAO prohibitionsDAO;
     private SessionsDAO sessionsDAO;
+    private ApplicationDAO applicationDAO;
 
     private String database;
     private String host;
@@ -72,6 +73,7 @@ public class DAOManager {
             prohibitionsDAO = new SqlProhibitionsDAO(connection);
             sessionsDAO = new SqlSessionsDAO(connection);
             graphDAO = new SqlGraphDAO(connection);
+            applicationDAO = new ApplicationDAO(connection);
         }
 
         System.out.println("DAO initialized");
@@ -166,6 +168,11 @@ public class DAOManager {
     public SessionsDAO getSessionsDAO() {
         return sessionsDAO;
     }
+
+    public ApplicationDAO getApplicationDAO() {
+        return applicationDAO;
+    }
+
 
     private static DAOManager daoManager;
     public static DAOManager getDaoManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException, InvalidPropertyException {
