@@ -19,12 +19,14 @@ public class ApplicationDAO {
         }catch(Exception e){
             throw new DatabaseException(e.hashCode(), e.getMessage());
         }
-
     }
 
     public List<Email> getEmails(List<Long> emailIds) throws DatabaseException {
         try {
             List<Email> emails = new ArrayList<>();
+            if (emailIds.size() == 0 ) {
+                return emails;
+            }
             List<Integer> attachments = new ArrayList<>();
             Statement stmt = conn.createStatement();
             String emailIdList = "";
