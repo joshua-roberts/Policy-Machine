@@ -35,7 +35,7 @@ public class EmailResource {
 
             List<Long> emailIds = new ArrayList<>();
             Node user = analyticsService.getSessionUser(session);
-            Node inbox = nodeService.getNode(null, user.getName() + " INBOX", null, null);
+            Node inbox = nodeService.getNode(null, user.getName() + " " + box, null, null);
             List<PmAnalyticsEntry> entries = analyticsService.getAccessibleChildren(inbox.getId(), user.getId());
             for (PmAnalyticsEntry entry : entries) {
                 emailIds.add(entry.getTarget().getId());
