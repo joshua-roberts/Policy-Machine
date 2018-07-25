@@ -63,6 +63,7 @@ public class DAOManager {
             prohibitionsDAO = new Neo4jProhibitionsDAO(connection);
             sessionsDAO = new Neo4jSessionsDAO(connection);
             graphDAO = new Neo4jGraphDAO(connection);
+            applicationDAO = new ApplicationDAO();
         } else {
             sqlConnect();
 
@@ -73,7 +74,7 @@ public class DAOManager {
             prohibitionsDAO = new SqlProhibitionsDAO(connection);
             sessionsDAO = new SqlSessionsDAO(connection);
             graphDAO = new SqlGraphDAO(connection);
-            applicationDAO = new ApplicationDAO(connection);
+            applicationDAO = new ApplicationDAO();
         }
 
         System.out.println("DAO initialized");

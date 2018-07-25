@@ -43,9 +43,9 @@ public class EmailResource {
             return new ApiResponse(emailService.getEmails(emailIds)).toResponse();
         }
     }
-     @Path("/saveDraft")
-     @POST
-     public Response sendEmail(EmailRequest request, @QueryParam("session") String session) throws NullNameException, NodeIdExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException {
+    @Path("/sendEmail")
+    @POST
+    public Response sendEmail(EmailRequest request, @QueryParam("session") String session) throws NullNameException, NodeIdExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException {
     /*
         Steps
         1. Create OA Node and get the node_id back with email_node_id
@@ -57,7 +57,7 @@ public class EmailResource {
 
         Node user = analyticsService.getSessionUser(session);
 
-         Email email = new Email();
+        Email email = new Email();
         email.setEmailNodeId(request.getEmailNodeId());
         email.setEmailSubject(request.getEmailSubject());
         email.setTimestamp(request.getTimestamp());
@@ -67,6 +67,6 @@ public class EmailResource {
         email.setEmailBody(request.getEmailBody());
         emailService.sendEmail(email,user);
 
-         return null;
-        }
+        return null;
+    }
     }

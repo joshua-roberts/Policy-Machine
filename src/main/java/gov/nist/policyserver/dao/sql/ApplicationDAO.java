@@ -11,8 +11,15 @@ public class ApplicationDAO {
 
     private Connection conn;
 
-    public ApplicationDAO(Connection connection) {
-        this.conn = connection;
+    public ApplicationDAO() throws DatabaseException {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://" + "localhost" + ":" + 3306 + "/" + "pmwsdb", "root", "password");
+            System.out.println("Connected to MySQL");
+        }catch(Exception e){
+            throw new DatabaseException(e.hashCode(), e.getMessage());
+        }
+
     }
 
     public List<Email> getEmails(List<Long> emailIds) throws DatabaseException {
@@ -54,10 +61,7 @@ public class ApplicationDAO {
 
     public void saveEmail(Email email) throws DatabaseException {
         try {
-            List<Email> emails = new ArrayList<>();
-            List<Integer> attachments = new ArrayList<>();
             Statement stmt = conn.createStatement();
-            String AttachmentIdList = "";
             String emailSql = "INSERT INTO email_detail(email_node_id,sender,recipient,timestamp,email_subject,email_body) VALUES (" +
                     email.getEmailNodeId() + "," +
                     email.getSender() + "," +

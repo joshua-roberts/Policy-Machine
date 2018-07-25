@@ -14,8 +14,6 @@ public class EmailService {
 
     private NodeService nodeService      = new NodeService();
     private AssignmentService assignmentService      = new AssignmentService();
-    private EmailService emailService      = new EmailService();
-    private AnalyticsService analyticsService = new AnalyticsService();
 
     public List<Email> getEmails(List<Long> emailIds) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException {
         return getDaoManager().getApplicationDAO().getEmails(emailIds);
