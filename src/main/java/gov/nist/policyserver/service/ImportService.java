@@ -9,6 +9,8 @@ import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.imports.ImportFile;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.util.*;
 
@@ -304,11 +306,17 @@ public class ImportService {
             e.printStackTrace();
             throw new DatabaseException(PmException.CLIENT_ERROR, e.getMessage());
         }
+        catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, DatabaseException, InvalidPropertyException, IOException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException {
         //create assignment in database
-        getDaoManager().getAssignmentsDAO().createAssignment(child.getId(), parent.getId());
+        getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
 
         //create assignment in nodes
         getDaoManager().getGraphDAO().getGraph().createAssignment(child, parent);

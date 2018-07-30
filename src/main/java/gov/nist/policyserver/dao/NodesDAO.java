@@ -1,6 +1,7 @@
 package gov.nist.policyserver.dao;
 
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
 import gov.nist.policyserver.helpers.JsonHelper;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
@@ -28,4 +29,7 @@ public interface NodesDAO {
 
     void updateNodeProperty(long nodeId, String key, String value) throws DatabaseException;
 
+    void setNodeProperties(long nodeId, Property[] properties) throws DatabaseException;
+
+    Node createNode(long id, String name, String type, Property[] properties) throws DatabaseException, InvalidNodeTypeException;
 }

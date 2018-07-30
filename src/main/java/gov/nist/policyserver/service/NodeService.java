@@ -377,8 +377,9 @@ public class NodeService extends Service{
      * @param properties
      * @return A Node object
      */
-    public Node createNode(long id, String name, String type, Property[] properties) throws NullNameException, NullTypeException, NodeIdExistsException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, NodeNotFoundException, ConfigurationException {
+    public Node createNode(long id, String name, String type, Property[] properties) throws NullNameException, NullTypeException, NodeIdExistsException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, NodeNotFoundException, ConfigurationException, InvalidKeySpecException, NoSuchAlgorithmException {
         //create node in database
+
         NodeType nt = NodeType.toNodeType(type);
         Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt);
 
@@ -386,6 +387,7 @@ public class NodeService extends Service{
         getGraph().addNode(newNode);
 
         //add properties to the node
+        //setNodeProperties(newNode, properties);
         try {
             newNode = addNodeProperties(newNode, properties);
         }
@@ -395,6 +397,42 @@ public class NodeService extends Service{
 
         return newNode;
     }
+
+    private void setNodeProperties(Node node, Property[] properties) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
+        for(Property prop : properties) {
+            if(prop.getKey().equals(PASSWORD_PROPERTY)) {
+                //check ic password is already hashed, and hash it if not
+                //this will occur when loading a configuration
+                if(prop.getValue().length() != HASH_LENGTH) {
+                    String hash = generatePasswordHash(prop.getValue());
+                    prop.setValue(hash);
+                }
+            }
+
+            //add property to node in database
+            getDaoManager().getNodesDAO().addNodeProperty(node.getId(), prop);
+
+            //add property to node in nodes
+            node.addProperty(prop);
+        }
+        /*if(properties != null) {
+            for(Property prop : properties) {
+                if (prop.getKey().equals(PASSWORD_PROPERTY)) {
+                    //check ic password is already hashed, and hash it if not
+                    //this will occur when loading a configuration
+                    if (prop.getValue().length() != HASH_LENGTH) {
+                        String hash = generatePasswordHash(prop.getValue());
+                        prop.setValue(hash);
+                    }
+                }
+            }
+
+            getDaoManager().getNodesDAO().setNodeProperties(node.getId(), properties);
+
+            node.setProperties(Arrays.asList(properties));
+        }*/
+    }
+
 
     private Node addNodeProperties(Node node, Property[] properties) throws NodeNotFoundException, DatabaseException, ConfigurationException, InvalidPropertyException, PropertyNotFoundException, SQLException, IOException, ClassNotFoundException {
         if(properties != null) {
@@ -440,7 +478,6 @@ public class NodeService extends Service{
 
             // process file read
             evrService.processFileRead(node, user, process);
-
         }
 
         return node;

@@ -24,8 +24,8 @@ public class Neo4jAssignmentsDAO implements AssignmentsDAO {
     }
 
     @Override
-    public void createAssignment(long childId, long parentId) throws DatabaseException {
-        String cypher = "MATCH (a {id:" + childId + "}), (b {id:" + parentId + "}) " +
+    public void createAssignment(Node child, Node parent) throws DatabaseException {
+        String cypher = "MATCH (a:" + child.getType() + " {id:" + child.getId() + "}), (b:" + parent.getType() + " {id:" + parent.getId() + "}) " +
                 "CREATE (a)-[:assigned_to]->(b)";
         execute(connection, cypher);
     }

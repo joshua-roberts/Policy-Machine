@@ -2,6 +2,7 @@ package gov.nist.policyserver.dao.neo4j;
 
 import gov.nist.policyserver.dao.NodesDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
+import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
 import gov.nist.policyserver.helpers.JsonHelper;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
@@ -90,5 +91,45 @@ public class Neo4jNodesDAO implements NodesDAO {
     public void updateNodeProperty(long nodeId, String key, String value) throws DatabaseException {
         String cypher = "match(n{id:" + nodeId + "}) set n." + key + " = '" + value + "'";
         execute(connection, cypher);
+    }
+
+    @Override
+    public void setNodeProperties(long nodeId, Property[] properties) throws DatabaseException {
+        // SET n += { hungry: TRUE , position: 'Entrepreneur' }
+        if(properties.length > 0) {
+            String cypher = "match(n{id:" + nodeId + "}) set n += {";
+            String propStr = "";
+            for(Property prop : properties) {
+                if(propStr.isEmpty()) {
+                    propStr += prop.getKey() + ": '" + prop.getValue() + "'";
+                } else {
+                    propStr += "," + prop.getKey() + ": '" + prop.getValue() + "'";
+                }
+            }
+            cypher += propStr + "}";
+            execute(connection, cypher);
+        }
+    }
+
+    @Override
+    public Node createNode(long id, String name, String type, Property[] properties) throws DatabaseException, InvalidNodeTypeException {
+        String propStr = "";
+        for(Property prop : properties) {
+            propStr += "," + prop.getKey() + ": '" + prop.getValue() + "'";
+        }
+
+
+        String cypher = "CREATE " +
+                "(n:" + type +
+                "{" +
+                "id: " + id + ", " +
+                "name:'" + name + "'," +
+                "type:'" + type + "'" +
+                 propStr + "})";
+        execute(connection, cypher);
+
+        Node node = new Node(id, name, NodeType.toNodeType(type), properties);
+
+        return node;
     }
 }

@@ -53,12 +53,14 @@ public class PmAnalytics implements Serializable{
 
         HashMap<Node, HashMap<Node, HashSet<String>>> D = new HashMap<>();
 
+        //add PC to the map to signify end of dfs
         for(Node pc : pcs){
             HashMap<Node, HashSet<String>> pcMap = new HashMap<>();
             pcMap.put(pc, new HashSet<>());
             D.put(pc, pcMap);
         }
 
+        //run dfs on target, with border oas
         dfs(target, D, dc);
 
         //for every pc the object reaches check to see if they have a common access1 right.
@@ -417,11 +419,10 @@ public class PmAnalytics implements Serializable{
     }
 
     //Utility Methods
-    private synchronized HashMap<Node, HashSet<String>> getBorderOas(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    private synchronized HashMap<Node, HashSet<String>> getBorderOas(Node user) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashMap<Node, HashSet<String>> d = new HashMap<>();
-        HashSet<Assignment> uaEdges = new HashSet<>();
         Set<Assignment> edges = getGraph().outgoingEdgesOf(user);
-        uaEdges.addAll(edges);
+        HashSet<Assignment> uaEdges = new HashSet<>(edges);
         while(!uaEdges.isEmpty()){
             Assignment edge = uaEdges.iterator().next();
             if(edge instanceof Association){
@@ -452,16 +453,19 @@ public class PmAnalytics implements Serializable{
 
         Set<Assignment> assignments = getGraph().outgoingEdgesOf(w);
 
+        //loop through the parents of node w
         for(Assignment edge : assignments){
             if(edge instanceof Association){
                 continue;
             }
 
+            //if the parent is not in the map yet, run dfs on it
             Node node = edge.getParent();
             if(!D.containsKey(node)){
                 dfs(node, D, dc);
             }
 
+            //the first time we get here will be for a PC
             HashMap<Node, HashSet<String>> pcSet = D.get(node);
             for(Node pc : pcSet.keySet()){
                 HashSet<String> ops = pcSet.get(pc);

@@ -93,7 +93,7 @@ public class SqlGraphDAO implements GraphDAO {
                 String name = rs.getString(2);
                 NodeType type = NodeType.toNodeType(rs.getInt(3));
                 String description = rs.getString(4);
-                Node node = new Node(id, name, type, description);
+                Node node = new Node(id, name, type);
 
                 Statement propStmt = conn.createStatement();
                 List<Property> props = getNodeProps(node);

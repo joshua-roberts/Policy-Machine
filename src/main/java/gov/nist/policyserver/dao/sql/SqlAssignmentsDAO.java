@@ -22,12 +22,12 @@ public class SqlAssignmentsDAO implements AssignmentsDAO {
     }
 
     @Override
-    public synchronized void createAssignment(long childId, long parentId) throws DatabaseException {
+    public void createAssignment(Node child, Node parent) throws DatabaseException {
         boolean result;
         try {
             CallableStatement stmt = conn.prepareCall("{call create_assignment(?,?,?)}");
-            stmt.setInt(1, (int) parentId);
-            stmt.setInt(2, (int) childId);
+            stmt.setInt(1, (int) parent.getId());
+            stmt.setInt(2, (int) child.getId());
             stmt.registerOutParameter(3, Types.VARCHAR);
             result = stmt.execute();
             String errorMsg = stmt.getString(3);

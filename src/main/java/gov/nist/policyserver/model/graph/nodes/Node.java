@@ -46,7 +46,7 @@ public class Node implements Serializable{
         properties = new ArrayList<>();
     }
 
-    public Node (long id, String name, NodeType type, String description){
+ /*   public Node (long id, String name, NodeType type){
         if(name == null){
             throw new IllegalArgumentException("The name of a node cannot be null");
         }
@@ -58,7 +58,7 @@ public class Node implements Serializable{
         this.name = name;
         this.type = type;
         this.properties = new ArrayList<>();
-    }
+    }*/
 
     public Node (String name, NodeType type, String description){
         if(name == null){
@@ -73,7 +73,7 @@ public class Node implements Serializable{
         this.properties = new ArrayList<>();
     }
 
-    public Node (long id, String name, NodeType type, String description, Property[] properties){
+    public Node (long id, String name, NodeType type, Property[] properties){
         if(name == null){
             throw new IllegalArgumentException("The name of a node cannot be null");
         }

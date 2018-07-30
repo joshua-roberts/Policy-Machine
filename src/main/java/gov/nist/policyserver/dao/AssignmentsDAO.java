@@ -1,13 +1,11 @@
 package gov.nist.policyserver.dao;
 
 import gov.nist.policyserver.exceptions.DatabaseException;
-import gov.nist.policyserver.model.graph.relationships.Assignment;
-
-import java.util.List;
+import gov.nist.policyserver.model.graph.nodes.Node;
 
 public interface AssignmentsDAO {
 
-    void createAssignment(long childId, long parentId) throws DatabaseException;
+    void createAssignment(Node child, Node parent) throws DatabaseException;
 
     void deleteAssignment(long childId, long parentId) throws DatabaseException;
 }

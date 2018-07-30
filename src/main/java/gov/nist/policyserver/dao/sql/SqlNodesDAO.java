@@ -98,4 +98,14 @@ public class SqlNodesDAO implements NodesDAO {
     public void updateNodeProperty(long nodeId, String key, String value) {
 
     }
+
+    @Override
+    public void setNodeProperties(long nodeId, Property[] properties) throws DatabaseException {
+
+    }
+
+    @Override
+    public Node createNode(long id, String name, String type, Property[] properties) throws DatabaseException, InvalidNodeTypeException {
+        return null;
+    }
 }

@@ -133,8 +133,12 @@ public class AssignmentService extends Service{
             throw new AssignmentExistsException("Assignment exists between node " + childId + " and " + parentId);
         }
 
+        createAssignment(child, parent);
+    }
+
+    public void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException {
         //create assignment in database
-        getDaoManager().getAssignmentsDAO().createAssignment(childId, parentId);
+        getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
 
         //create assignment in nodes
         getGraph().createAssignment(child, parent);
@@ -144,12 +148,10 @@ public class AssignmentService extends Service{
             Node superUA = getSuperUA();
 
             //assign UA to PC
-            if(!isAssigned(superUA.getId(), parentId)) {
-                createAssignment(superUA.getId(), parentId);
-            }
+            createAssignment(superUA, parent);
 
             //create Association
-            associationsService.createAssociation(superUA.getId(), childId,
+            associationsService.createAssociation(superUA.getId(), child.getId(),
                     new HashSet<>(Collections.singleton(ALL_OPS)), true);
         }
     }

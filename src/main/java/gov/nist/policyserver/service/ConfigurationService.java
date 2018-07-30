@@ -543,6 +543,7 @@ public class ConfigurationService extends Service{
     public void load(String config) {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
+        HashMap<Long, Node> nodesMap = new HashMap<>();
         HashSet<Node> nodes = graph.getNodes();
         for(Node node : nodes) {
             List<Property> properties = node.getProperties();
@@ -552,42 +553,10 @@ public class ConfigurationService extends Service{
                 propArr = properties.toArray(propArr);
             }
             try {
-                nodeService.createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
+                getDaoManager().getNodesDAO().createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
+                nodesMap.put(node.getId(), node);
             }
-            catch (NullNameException e) {
-                e.printStackTrace();
-            }
-            catch (NullTypeException e) {
-                e.printStackTrace();
-            }
-            catch (NodeIdExistsException e) {
-                e.printStackTrace();
-            }
-            catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-            }
-            catch (InvalidPropertyException e) {
-                e.printStackTrace();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            catch (DatabaseException e) {
-                e.printStackTrace();
-            }
-            catch (InvalidNodeTypeException e) {
-                e.printStackTrace();
-            }
-            catch (NodeNameExistsException e) {
-                e.printStackTrace();
-            }
-            catch (NodeNotFoundException e) {
-                e.printStackTrace();
-            }
-            catch (ConfigurationException e) {
+            catch (IOException | SQLException | InvalidPropertyException | DatabaseException | ClassNotFoundException | InvalidNodeTypeException e) {
                 e.printStackTrace();
             }
         }
@@ -597,42 +566,21 @@ public class ConfigurationService extends Service{
             // child - assigned to -> parent
             if(assignment != null) {
                 try {
-                    assignmentService.createAssignment(assignment.getChild(), assignment.getParent());
+                    System.out.println("assignment: " + assignment.getChild() + "->" + assignment.getParent());
+                    Node child = nodesMap.get(assignment.getChild());
+                    Node parent = nodesMap.get(assignment.getParent());
+                    getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
                 }
-                catch (NodeNotFoundException e) {
-                    e.printStackTrace();
-                }
-                catch (AssignmentExistsException e) {
-                    e.printStackTrace();
-                }
-                catch (DatabaseException e) {
-                    e.printStackTrace();
-                }
-                catch (InvalidAssignmentException e) {
+                catch (DatabaseException | IOException e) {
                     e.printStackTrace();
                 }
                 catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                catch (IOException e) {
                     e.printStackTrace();
                 }
                 catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
                 catch (InvalidPropertyException e) {
-                    e.printStackTrace();
-                }
-                catch (InvalidNodeTypeException e) {
-                    e.printStackTrace();
-                }
-                catch (UnexpectedNumberOfNodesException e) {
-                    e.printStackTrace();
-                }
-                catch (AssociationExistsException e) {
-                    e.printStackTrace();
-                }
-                catch (PropertyNotFoundException e) {
                     e.printStackTrace();
                 }
             }
@@ -642,15 +590,9 @@ public class ConfigurationService extends Service{
         for(JsonAssociation association : associations) {
             System.out.println(association.getUa() + "-> " + association.getTarget());
             try {
-                associationsService.createAssociation(association.getUa(), association.getTarget(), association.getOps(), association.isInherit());
-            }
-            catch (NodeNotFoundException e) {
-                e.printStackTrace();
+                getDaoManager().getAssociationsDAO().createAssociation(association.getUa(), association.getTarget(), association.getOps(), association.isInherit());
             }
             catch (DatabaseException e) {
-                e.printStackTrace();
-            }
-            catch (AssociationExistsException e) {
                 e.printStackTrace();
             }
             catch (SQLException e) {

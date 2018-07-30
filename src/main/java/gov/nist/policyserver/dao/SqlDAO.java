@@ -143,7 +143,7 @@ public class SqlDAO extends DAO {
                 String name = rs.getString(2);
                 NodeType type = NodeType.toNodeType(rs.getInt(3));
                 String description = rs.getString(4);
-                Node node = new Node(id, name, type, description);
+                Node node = new Node(id, name, type);
 
                 Statement propStmt = conn.createStatement();
                 ResultSet propRs = propStmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + id);
