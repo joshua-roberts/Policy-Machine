@@ -1,0 +1,70 @@
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>MLS evr</label>
+    <rules>
+        <rule>
+            <label>top secret</label>
+            <event>
+                <subject/><!--any user-->
+                <operations>
+                    <operation>file read</operation>
+                </operations>
+                <target>
+                    <entity/><!--any object-->
+                    <containers intersection="false">
+                        <entity name="Top Secret OA" type="OA"/>
+                    </containers>
+                </target>
+            </event>
+            <response>
+                <deny>
+                    <subject>
+                        <process>
+                            <function name="current_process"/>
+                        </process>
+                    </subject>
+                    <operations>
+                        <operation>file write</operation>
+                    </operations>
+                    <target>
+                        <containers intersection="false">
+                            <entity name="Top Secret OA" type="OA" complement="true"/>
+                        </containers>
+                    </target>
+                </deny>
+            </response>
+        </rule>
+        <rule>
+            <label>secret</label>
+            <event>
+                <subject/><!--any user-->
+                <operations>
+                    <operation>file read</operation>
+                </operations>
+                <target>
+                    <entity/><!--any object-->
+                    <containers>
+                        <entity name="Secret OA" type="OA"/>
+                    </containers>
+                </target>
+            </event>
+            <response>
+                <deny>
+                    <subject>
+                        <process>
+                            <function name="current_process"/>
+                        </process>
+                    </subject>
+                    <operations>
+                        <operation>file write</operation>
+                    </operations>
+                    <target>
+                        <containers intersection="false">
+                            <entity name="Secret OA" type="OA" complement="true"/>
+                        </containers>
+                    </target>
+                </deny>
+            </response>
+        </rule>
+    </rules>
+</script>
+
