@@ -13,6 +13,7 @@
 
 
 -- Dumping database structure for pmwsdb
+DROP DATABASE IF EXISTS `pmwsdb`;
 CREATE DATABASE IF NOT EXISTS `pmwsdb` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `pmwsdb`;
 
@@ -128,8 +129,12 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   CONSTRAINT `fk_startnode` FOREIGN KEY (`start_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table stores assignment relations';
 
--- Dumping data for table pmwsdb.assignment: ~6 rows (approximately)
+-- Dumping data for table pmwsdb.assignment: ~3 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
+INSERT INTO `assignment` (`assignment_id`, `start_node_id`, `end_node_id`, `depth`, `assignment_path_id`) VALUES
+	(2, -2, -3, 1, 2),
+	(1, -1, -2, 1, 1),
+	(3, -1, -3, 2, 2);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.assignment_path
@@ -141,8 +146,17 @@ CREATE TABLE IF NOT EXISTS `assignment_path` (
   CONSTRAINT `fk_assignment_node_id` FOREIGN KEY (`assignment_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Dumping data for table pmwsdb.assignment_path: ~3 rows (approximately)
+-- Dumping data for table pmwsdb.assignment_path: ~8 rows (approximately)
 /*!40000 ALTER TABLE `assignment_path` DISABLE KEYS */;
+INSERT INTO `assignment_path` (`assignment_path_id`, `assignment_node_id`) VALUES
+	(2, -3),
+	(99, -3),
+	(303, -3),
+	(734, -3),
+	(1, -2),
+	(62, -2),
+	(244, -2),
+	(604, -2);
 /*!40000 ALTER TABLE `assignment_path` ENABLE KEYS */;
 
 -- Dumping structure for view pmwsdb.assignment_view
@@ -1168,8 +1182,12 @@ CREATE TABLE IF NOT EXISTS `node` (
   CONSTRAINT `fk_node_type_id` FOREIGN KEY (`node_type_id`) REFERENCES `node_type` (`node_type_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains all the nodes in the graph';
 
--- Dumping data for table pmwsdb.node: ~5 rows (approximately)
+-- Dumping data for table pmwsdb.node: ~3 rows (approximately)
 /*!40000 ALTER TABLE `node` DISABLE KEYS */;
+INSERT INTO `node` (`node_id`, `node_type_id`, `name`, `description`) VALUES
+	(-3, 4, 'super', NULL),
+	(-2, 3, 'super', NULL),
+	(-1, 2, 'Super PC', NULL);
 /*!40000 ALTER TABLE `node` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.node_property
@@ -1183,6 +1201,9 @@ CREATE TABLE IF NOT EXISTS `node_property` (
 
 -- Dumping data for table pmwsdb.node_property: ~2 rows (approximately)
 /*!40000 ALTER TABLE `node_property` DISABLE KEYS */;
+INSERT INTO `node_property` (`property_node_id`, `property_key`, `property_value`) VALUES
+	(-3, 'password', '100a7fc75da46aa90b44cf30e5175f976b3eac52e27c2e6cf78865cbed3a3a4b71172bb15329d7066a042af98287254f5d6e3f4fb7dbc4cbd8941885f7100c8f7a2c552edb8e3c9f68769720965d6b56a23'),
+	(-2, 'namespace', 'super');
 /*!40000 ALTER TABLE `node_property` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.node_type
@@ -1267,13 +1288,13 @@ CREATE TABLE `object_view` (
 
 -- Dumping structure for table pmwsdb.open_object
 CREATE TABLE IF NOT EXISTS `open_object` (
-  `session_id` int(11) NOT NULL,
+  `session_id` varchar(150) NOT NULL,
   `object_node_id` int(11) NOT NULL,
   `count` int(2) DEFAULT NULL,
   PRIMARY KEY (`session_id`,`object_node_id`),
   KEY `fk_object_id_oo_idx` (`object_node_id`),
   CONSTRAINT `fk_object_id_oo` FOREIGN KEY (`object_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `fk_session_id_oo` FOREIGN KEY (`session_id`) REFERENCES `session` (`session_id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `fk_sessid_oo` FOREIGN KEY (`session_id`) REFERENCES `session` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table for open objects';
 
 -- Dumping data for table pmwsdb.open_object: ~0 rows (approximately)
@@ -1376,7 +1397,7 @@ CREATE TABLE IF NOT EXISTS `operation_set_details` (
   CONSTRAINT `fk_operation_set_details_node_id` FOREIGN KEY (`operation_set_details_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the information for User operation node';
 
--- Dumping data for table pmwsdb.operation_set_details: ~1 rows (approximately)
+-- Dumping data for table pmwsdb.operation_set_details: ~0 rows (approximately)
 /*!40000 ALTER TABLE `operation_set_details` DISABLE KEYS */;
 /*!40000 ALTER TABLE `operation_set_details` ENABLE KEYS */;
 
@@ -1428,48 +1449,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_data`(session_id_in INT(11))
 BEGIN
 
 SET SQL_SAFE_UPDATES = 0;
-delete from application;
-delete from assignment where assignment_id > 100;
-delete from assignment_path where assignment_path_id > 100;
-delete from audit_information;
-delete from deny where deny_id > 100;
-delete from deny_obj_attribute where deny_id > 100;
-delete from deny_operation where deny_id > 100;
-delete from deny_type where deny_type_id > 100;
-delete from email_attachment;
-delete from email_detail;
-delete from keystore;
-delete from node where node_id > 100;
-delete from node_property;
-delete from node_type where node_type_id > 100;
-delete from object_detail where object_node_id > 100;
-delete from ob_script;
-delete from open_object;
-delete from operation where operation_id > 100;
-delete from operation_set_details where operation_set_details_node_id > 100;
-delete from operation_type where operation_type_id > 100;
-delete from record_components;
-delete from record_key;
-delete from session where session_id <> session_id_in;
-delete from template;
-delete from template_component;
-delete from template_key;
-delete from user_detail where user_node_id > 100;
-delete from host where host_id > 100;
 
-alter table application auto_increment = 101;
-alter table deny auto_increment = 101;
-alter table host auto_increment = 101;
-alter table keystore auto_increment = 101;
-alter table node auto_increment = 101;
-alter table object_class auto_increment = 101;
-alter table object_detail auto_increment = 101;
-alter table operation auto_increment = 101;
-alter table session auto_increment = 101;
-alter table template auto_increment = 101;
-alter table assignment auto_increment = 101;
-alter table assignment_path auto_increment = 101;
-alter table assignment auto_increment = 101;
+delete from node where node_id > 0;
+delete from session where session_id <> session_id_in;
 
 SET SQL_SAFE_UPDATES = 1;
 END//
@@ -1477,8 +1459,8 @@ DELIMITER ;
 
 -- Dumping structure for table pmwsdb.session
 CREATE TABLE IF NOT EXISTS `session` (
-  `session_id` int(11) NOT NULL AUTO_INCREMENT,
-  `session_name` varchar(150) DEFAULT NULL,
+  `session_id` varchar(150) NOT NULL,
+  `session_name` varchar(20) DEFAULT NULL,
   `user_node_id` int(11) NOT NULL,
   `start_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `host_id` int(11) DEFAULT NULL,
@@ -1488,8 +1470,10 @@ CREATE TABLE IF NOT EXISTS `session` (
   CONSTRAINT `fk_session_user_node_id` FOREIGN KEY (`user_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table stores sessions created for users. This will be temperory data and rows will be deleted from this table depending on retention policy. ';
 
--- Dumping data for table pmwsdb.session: ~0 rows (approximately)
+-- Dumping data for table pmwsdb.session: ~1 rows (approximately)
 /*!40000 ALTER TABLE `session` DISABLE KEYS */;
+INSERT INTO `session` (`session_id`, `session_name`, `user_node_id`, `start_time`, `host_id`) VALUES
+	('572937EB02454B5B828044386B592E2B', NULL, -3, '2018-07-25 15:27:36', NULL);
 /*!40000 ALTER TABLE `session` ENABLE KEYS */;
 
 -- Dumping structure for procedure pmwsdb.set_property
