@@ -5,6 +5,8 @@ import gov.nist.policyserver.model.applications.Email;
 import gov.nist.policyserver.model.graph.nodes.Node;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class EmailService {
         return getDaoManager().getApplicationDAO().getEmails(emailIds);
     }
 
-    public void sendEmail(Email email, Node user) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNameException, NodeNameExistsException, NodeIdExistsException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException {
+    public void sendEmail(Email email, Node user) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNameException, NodeNameExistsException, NodeIdExistsException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
 
 
         Node recepientInbox = nodeService.getNode(null,email.getRecipient() + " INBOX", null, null);

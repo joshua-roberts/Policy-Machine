@@ -13,6 +13,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +38,8 @@ public class EmailResource {
             List<Long> emailIds = new ArrayList<>();
             Node user = analyticsService.getSessionUser(session);
             Node inbox = nodeService.getNode(null, user.getName() + " " + box, null, null);
-            List<PmAnalyticsEntry> entries = analyticsService.getAccessibleChildren(inbox.getId(), user.getId());
-            for (PmAnalyticsEntry entry : entries) {
+            List<PmAnalyticsEntry> emails = analyticsService.getAccessibleChildren(inbox.getId(), user.getId());
+            for (PmAnalyticsEntry entry : emails) {
                 emailIds.add(entry.getTarget().getId());
             }
             return new ApiResponse(emailService.getEmails(emailIds)).toResponse();
@@ -45,7 +47,7 @@ public class EmailResource {
     }
     @Path("/sendEmail")
     @POST
-    public Response sendEmail(EmailRequest request, @QueryParam("session") String session) throws NullNameException, NodeIdExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException {
+    public Response sendEmail(EmailRequest request, @QueryParam("session") String session) throws NullNameException, NodeIdExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
     /*
         Steps
         1. Create OA Node and get the node_id back with email_node_id
