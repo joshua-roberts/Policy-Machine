@@ -74,8 +74,10 @@ public class ApplicationDAO {
                     "'" + email.getEmailBody() + "'" + ")";
             stmt.executeUpdate(emailSql);
             String attachmentSql = " INSERT INTO email_attachment(email_node_id, attachment_node_id) VALUES (" + email.getEmailNodeId() + ",";
-            for(Integer attachmentId: email.getAttachments()) {
-                stmt.executeUpdate(attachmentSql+attachmentId+")");
+            if (email.getAttachments() != null) {
+                for (Integer attachmentId : email.getAttachments()) {
+                    stmt.executeUpdate(attachmentSql + attachmentId + ")");
+                }
             }
         }catch(SQLException e){
             throw new DatabaseException(e.getErrorCode(), e.getMessage());

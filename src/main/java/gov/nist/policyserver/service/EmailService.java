@@ -28,8 +28,10 @@ public class EmailService {
         System.out.println(emailNodeId.getId());
         assignmentService.createAssignment(emailNodeId.getId(),senderOutbox.getId());
         assignmentService.createAssignment(emailNodeId.getId(),recepientInbox.getId());
-        for(Integer attachmentId : email.getAttachments()) {
-            assignmentService.createAssignment(attachmentId, emailNodeId.getId());
+        if (email.getAttachments() != null) {
+            for (Integer attachmentId : email.getAttachments()) {
+                assignmentService.createAssignment(attachmentId, emailNodeId.getId());
+            }
         }
         getDaoManager().getApplicationDAO().saveEmail(email);
     }
