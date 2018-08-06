@@ -27,11 +27,12 @@ public class SqlNodesDAO implements NodesDAO {
     @Override
     public Node createNode(long id, String name, NodeType type) throws DatabaseException {
         try{
+            System.out.println("Creating node - calling create_node_fun " + id + "-" + name + "-" + type.name().toLowerCase());
             CallableStatement cs = conn.prepareCall("{? = call create_node_fun(?,?,?)}");
             cs.registerOutParameter(1, Types.INTEGER);
             cs.setLong(2, id);
             cs.setString(3, name);
-            cs.setString(4, type.name());
+            cs.setString(4, type.name().toLowerCase());
 
             cs.execute();
             if (id == 0) {
@@ -95,17 +96,45 @@ public class SqlNodesDAO implements NodesDAO {
     }
 
     @Override
-    public void updateNodeProperty(long nodeId, String key, String value) {
-
+    public void updateNodeProperty(long nodeId, String key, String value) throws DatabaseException {
+        int updatedRows = 0;
+        try{
+            String sql = "update node_property set property_value = '" + value + "' where property_node_id=" + nodeId + " and property_key='" + key + "'";
+            Statement stmt = conn.createStatement();
+            updatedRows = stmt.executeUpdate(sql);
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+        }
     }
 
     @Override
     public void setNodeProperties(long nodeId, Property[] properties) throws DatabaseException {
-
+        for(Property property : properties) {
+            addNodeProperty(nodeId, property);
+        }
     }
 
     @Override
     public Node createNode(long id, String name, String type, Property[] properties) throws DatabaseException, InvalidNodeTypeException {
-        return null;
+        try{
+            System.out.println("Creating node - calling create_node_fun " + id + "-" + name + "-" + type.toLowerCase());
+            CallableStatement cs = conn.prepareCall("{? = call create_node_fun(?,?,?)}");
+            cs.registerOutParameter(1, Types.INTEGER);
+            cs.setLong(2, id);
+            cs.setString(3, name);
+            cs.setString(4, type.toLowerCase());
+
+            cs.execute();
+            if (id == 0) {
+                id = cs.getInt(1);
+            }
+            for(Property property : properties) {
+                addNodeProperty(id, property);
+            }
+            return new Node(id, name, NodeType.toNodeType(type),properties);
+        }catch(SQLException e){
+            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+        }
     }
 }

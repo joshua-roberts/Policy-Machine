@@ -545,6 +545,7 @@ public class ConfigurationService extends Service{
 
         HashMap<Long, Node> nodesMap = new HashMap<>();
         HashSet<Node> nodes = graph.getNodes();
+        System.out.println("In load configuration method");
         for(Node node : nodes) {
             List<Property> properties = node.getProperties();
             Property[] propArr = null;
@@ -552,6 +553,7 @@ public class ConfigurationService extends Service{
                 propArr = new Property[properties.size()];
                 propArr = properties.toArray(propArr);
             }
+            System.out.println("Creating node " + node.getId() + "-" + node.getName() + "-" + node.getType().toString());
             try {
                 getDaoManager().getNodesDAO().createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
                 nodesMap.put(node.getId(), node);
