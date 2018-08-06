@@ -16,7 +16,7 @@ public class ApplicationDAO {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection("jdbc:mysql://" + "localhost" + ":" + 3306 + "/" + "pmwsdb", "root", "password");
             System.out.println("Connected to MySQL");
-        }catch(Exception e){
+        } catch(Exception e) {
             throw new DatabaseException(e.hashCode(), e.getMessage());
         }
     }
@@ -31,14 +31,15 @@ public class ApplicationDAO {
             Statement stmt = conn.createStatement();
             String emailIdList = "";
             Integer attachmentId = 0;
-            String emailSql = "SELECT object_node_id, sender, recipient, `timestamp`, email_subject FROM email_detail WHERE object_node_id in (";
-            String attachmentSql = " SELECT attachment_node_id FROM email_attachment WHERE object_node_id = ";
+            String emailSql = "SELECT email_node_id, sender, recipient, `timestamp`, email_subject FROM email_detail WHERE email_node_id in (";
+            String attachmentSql = " SELECT attachment_node_id FROM email_attachment WHERE email_node_id = ";
             for(Long emailId : emailIds) {
                 emailIdList += emailId + ",";
             }
             emailIdList = emailIdList.substring(0,emailIdList.length()-2)+")";
             emailSql+=emailIdList;
             ResultSet rs1 = stmt.executeQuery(emailSql);
+            System.out.println(rs1.getFetchSize());
             Email email = new Email();
             while (rs1.next()) {
                 email.setEmailNodeId(rs1.getInt(1));
@@ -66,11 +67,11 @@ public class ApplicationDAO {
             Statement stmt = conn.createStatement();
             String emailSql = "INSERT INTO email_detail(email_node_id,sender,recipient,timestamp,email_subject,email_body) VALUES (" +
                     email.getEmailNodeId() + "," +
-                    email.getSender() + "," +
-                    email.getRecipient() + "," +
-                    email.getTimestamp() + "," +
-                    email.getEmailSubject() + "," +
-                    email.getEmailBody() + ")";
+                    "'" + email.getSender() + "'" + "," +
+                    "'" + email.getRecipient() + "'" + "," +
+                    "'" + email.getTimestamp() + "'" + "," +
+                    "'" + email.getEmailSubject() + "'" + "," +
+                    "'" + email.getEmailBody() + "'" + ")";
             stmt.executeUpdate(emailSql);
             String attachmentSql = " INSERT INTO email_attachment(email_node_id, attachment_node_id) VALUES (" + email.getEmailNodeId() + ",";
             for(Integer attachmentId: email.getAttachments()) {
