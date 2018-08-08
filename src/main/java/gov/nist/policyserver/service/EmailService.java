@@ -26,6 +26,7 @@ public class EmailService {
         Node senderOutbox = nodeService.getNode(null, user.getName() + " outbox", null, null);
         Node emailNodeId = nodeService.createNode(email.getEmailNodeId(),email.getSender() + " to " + email.getRecipient() + email.getTimestamp(),"OA",null);
         System.out.println(emailNodeId.getId());
+        email.setEmailNodeId(((int) emailNodeId.getId()));
         assignmentService.createAssignment(emailNodeId.getId(),senderOutbox.getId());
         assignmentService.createAssignment(emailNodeId.getId(),recepientInbox.getId());
         if (email.getAttachments() != null) {

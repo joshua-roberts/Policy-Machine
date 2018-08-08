@@ -38,6 +38,7 @@ public class ApplicationDAO {
             }
             emailIdList = emailIdList.substring(0,emailIdList.length()-2)+")";
             emailSql+=emailIdList;
+            System.out.println("emailSql is " + emailSql);
             ResultSet rs1 = stmt.executeQuery(emailSql);
             System.out.println(rs1.getFetchSize());
             Email email = new Email();
