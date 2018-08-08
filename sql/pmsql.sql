@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   CONSTRAINT `fk_startnode` FOREIGN KEY (`start_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table stores assignment relations';
 
--- Dumping data for table pmwsdb.assignment: ~341 rows (approximately)
+-- Dumping data for table pmwsdb.assignment: ~348 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
 INSERT INTO `assignment` (`assignment_id`, `start_node_id`, `end_node_id`, `depth`, `assignment_path_id`) VALUES
 	(1, -2, -3, 1, 1),
@@ -446,18 +446,22 @@ INSERT INTO `assignment` (`assignment_id`, `start_node_id`, `end_node_id`, `dept
 	(69, 11088, 11084, 1, 63),
 	(37, 11093, 11094, 1, 37),
 	(203, 11093, 11095, 1, 165),
-	(377, 11093, 11111, 2, 272),
-	(381, 11093, 11112, 2, 274),
-	(385, 11093, 11113, 2, 276),
-	(389, 11093, 11114, 2, 278),
-	(393, 11093, 11115, 2, 280),
-	(397, 11093, 11116, 2, 282),
-	(376, 11095, 11111, 1, 272),
-	(380, 11095, 11112, 1, 274),
-	(384, 11095, 11113, 1, 276),
-	(388, 11095, 11114, 1, 278),
-	(392, 11095, 11115, 1, 280),
-	(396, 11095, 11116, 1, 282),
+	(409, 11093, 50003, 2, 288),
+	(414, 11093, 50004, 2, 291),
+	(418, 11093, 50005, 2, 293),
+	(422, 11093, 50006, 2, 295),
+	(426, 11093, 50007, 2, 297),
+	(430, 11093, 50008, 2, 299),
+	(434, 11093, 50009, 2, 301),
+	(438, 11093, 50010, 2, 303),
+	(433, 11094, 50009, 1, 301),
+	(408, 11095, 50003, 1, 288),
+	(413, 11095, 50004, 1, 291),
+	(417, 11095, 50005, 1, 293),
+	(421, 11095, 50006, 1, 295),
+	(425, 11095, 50007, 1, 297),
+	(429, 11095, 50008, 1, 299),
+	(437, 11095, 50010, 1, 303),
 	(146, 11099, 11104, 1, 122),
 	(360, 11099, 264, 2, 262),
 	(47, 11100, 11104, 1, 47),
@@ -466,13 +470,16 @@ INSERT INTO `assignment` (`assignment_id`, `start_node_id`, `end_node_id`, `dept
 	(285, 11101, 11103, 1, 217),
 	(102, 11104, 277, 1, 88),
 	(358, 11104, 264, 1, 262),
-	(375, 11107, 11111, 1, 271),
-	(379, 11107, 11112, 1, 273),
-	(383, 11107, 11113, 1, 275),
-	(387, 11107, 11114, 1, 277),
-	(391, 11107, 11115, 1, 279),
-	(395, 11107, 11116, 1, 281),
-	(370, 11108, 11084, 1, 268);
+	(407, 11107, 50003, 1, 287),
+	(412, 11107, 50004, 1, 290),
+	(416, 11107, 50005, 1, 292),
+	(420, 11107, 50006, 1, 294),
+	(424, 11107, 50007, 1, 296),
+	(428, 11107, 50008, 1, 298),
+	(432, 11107, 50009, 1, 300),
+	(436, 11107, 50010, 1, 302),
+	(370, 11108, 11084, 1, 268),
+	(411, 11108, 50003, 1, 289);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.assignment_path
@@ -484,7 +491,7 @@ CREATE TABLE IF NOT EXISTS `assignment_path` (
   CONSTRAINT `fk_assignment_node_id` FOREIGN KEY (`assignment_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Dumping data for table pmwsdb.assignment_path: ~282 rows (approximately)
+-- Dumping data for table pmwsdb.assignment_path: ~287 rows (approximately)
 /*!40000 ALTER TABLE `assignment_path` DISABLE KEYS */;
 INSERT INTO `assignment_path` (`assignment_path_id`, `assignment_node_id`) VALUES
 	(1, -3),
@@ -757,18 +764,23 @@ INSERT INTO `assignment_path` (`assignment_path_id`, `assignment_node_id`) VALUE
 	(217, 11103),
 	(47, 11104),
 	(122, 11104),
-	(271, 11111),
-	(272, 11111),
-	(273, 11112),
-	(274, 11112),
-	(275, 11113),
-	(276, 11113),
-	(277, 11114),
-	(278, 11114),
-	(279, 11115),
-	(280, 11115),
-	(281, 11116),
-	(282, 11116);
+	(287, 50003),
+	(288, 50003),
+	(289, 50003),
+	(290, 50004),
+	(291, 50004),
+	(292, 50005),
+	(293, 50005),
+	(294, 50006),
+	(295, 50006),
+	(296, 50007),
+	(297, 50007),
+	(298, 50008),
+	(299, 50008),
+	(300, 50009),
+	(301, 50009),
+	(302, 50010),
+	(303, 50010);
 /*!40000 ALTER TABLE `assignment_path` ENABLE KEYS */;
 
 -- Dumping structure for view pmwsdb.assignment_view
@@ -967,7 +979,7 @@ DECLARE inserted_node_id int;
   ELSE
     INSERT INTO NODE (NODE_ID, NODE_TYPE_ID, NAME) VALUES (node_id_in, node_type_id_in,node_name);
   END IF;
-  SELECT LAST_INSERT_ID() INTO inserted_node_id FROM NODE;
+  SELECT LAST_INSERT_ID() INTO inserted_node_id;
   -- create self assignment
   -- INSERT INTO ASSIGNMENT (start_node_id, end_node_id, depth,assignment_path_id) VALUES (inserted_node_id, inserted_node_id,0,0);
   -- add assignment to the given base node
@@ -1318,16 +1330,20 @@ CREATE TABLE IF NOT EXISTS `email_detail` (
   `email_node_id` int(11) NOT NULL,
   `sender` varchar(254) NOT NULL,
   `recipient` varchar(254) NOT NULL,
-  `timestamp` datetime NOT NULL,
+  `email_timestamp` datetime NOT NULL,
   `email_subject` varchar(200) NOT NULL,
   `email_body` varchar(10000) DEFAULT NULL,
   PRIMARY KEY (`email_node_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table to hold information for emails.  sender, recipient, etc';
 
--- Dumping data for table pmwsdb.email_detail: ~1 rows (approximately)
+-- Dumping data for table pmwsdb.email_detail: ~5 rows (approximately)
 /*!40000 ALTER TABLE `email_detail` DISABLE KEYS */;
-INSERT INTO `email_detail` (`email_node_id`, `sender`, `recipient`, `timestamp`, `email_subject`, `email_body`) VALUES
-	(0, 'bob', 'alice', '1970-01-18 12:59:46', 'TEST', 'TEST');
+INSERT INTO `email_detail` (`email_node_id`, `sender`, `recipient`, `email_timestamp`, `email_subject`, `email_body`) VALUES
+	(0, 'bob', 'alice', '1970-01-18 13:00:55', 'TEST', 'TEST'),
+	(50007, 'bob', 'alice', '1970-01-18 13:01:08', 'TEST', 'TEST'),
+	(50008, 'bob', 'alice', '1970-01-18 13:02:34', 'TEST', 'TEST'),
+	(50009, 'bob', 'alice', '1970-01-18 13:02:36', 'TEST', 'TEST'),
+	(50010, 'bob', 'alice', '1970-01-18 13:02:36', 'TEST', 'TEST');
 /*!40000 ALTER TABLE `email_detail` ENABLE KEYS */;
 
 -- Dumping structure for function pmwsdb.formatCSL
@@ -1795,7 +1811,7 @@ CREATE TABLE IF NOT EXISTS `node` (
   CONSTRAINT `fk_node_type_id` FOREIGN KEY (`node_type_id`) REFERENCES `node_type` (`node_type_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains all the nodes in the graph';
 
--- Dumping data for table pmwsdb.node: ~1,170 rows (approximately)
+-- Dumping data for table pmwsdb.node: ~1,171 rows (approximately)
 /*!40000 ALTER TABLE `node` DISABLE KEYS */;
 INSERT INTO `node` (`node_id`, `node_type_id`, `name`, `description`) VALUES
 	(-3, 4, 'super', NULL),
@@ -2961,12 +2977,14 @@ INSERT INTO `node` (`node_id`, `node_type_id`, `name`, `description`) VALUES
 	(11108, 5, 'alice outbox', NULL),
 	(11109, 5, 'emily outbox', NULL),
 	(11110, 5, 'lucy outbox', NULL),
-	(11111, 5, 'bob to alicenull', NULL),
-	(11112, 5, 'bob to alicenull', NULL),
-	(11113, 5, 'bob to alice1970-01-18 12:59:45.515', NULL),
-	(11114, 5, 'bob to alice1970-01-18 12:59:45.767', NULL),
-	(11115, 5, 'bob to alice1970-01-18 12:59:45.969', NULL),
-	(11116, 5, 'bob to alice1970-01-18 12:59:46.164', NULL);
+	(50003, 5, 'bob to alice1970-01-18 13:00:54.875', NULL),
+	(50004, 5, 'bob to alice1970-01-18 13:01:06.493', NULL),
+	(50005, 5, 'bob to alice1970-01-18 13:01:06.977', NULL),
+	(50006, 5, 'bob to alice1970-01-18 13:01:07.557', NULL),
+	(50007, 5, 'bob to alice1970-01-18 13:01:07.809', NULL),
+	(50008, 5, 'bob to alice1970-01-18 13:02:33.529', NULL),
+	(50009, 5, 'bob to alice1970-01-18 13:02:35.797', NULL),
+	(50010, 5, 'bob to alice1970-01-18 13:02:36.046', NULL);
 /*!40000 ALTER TABLE `node` ENABLE KEYS */;
 
 -- Dumping structure for table pmwsdb.node_property
@@ -4627,13 +4645,17 @@ CREATE TABLE IF NOT EXISTS `session` (
   CONSTRAINT `fk_session_user_node_id` FOREIGN KEY (`user_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table stores sessions created for users. This will be temperory data and rows will be deleted from this table depending on retention policy. ';
 
--- Dumping data for table pmwsdb.session: ~4 rows (approximately)
+-- Dumping data for table pmwsdb.session: ~8 rows (approximately)
 /*!40000 ALTER TABLE `session` DISABLE KEYS */;
 INSERT INTO `session` (`session_id`, `session_name`, `user_node_id`, `start_time`, `host_id`) VALUES
-	('6EB9B27474874ED8AF57E2712D552F64', NULL, 11004, '2018-08-06 16:09:12', NULL),
-	('7D3507E9B3CB41E9B1E60E65E62218CD', NULL, 11004, '2018-08-06 16:02:39', NULL),
-	('B630E73F8E3D467984E2F6563BBD83EF', NULL, 11004, '2018-08-06 15:41:53', NULL),
-	('FF670ADE27174E4A8E2A2E2AE16E1088', NULL, 11004, '2018-08-06 15:57:31', NULL);
+	('001C4A0B19D048989A7553A19DEC96D5', NULL, 11004, '2018-08-08 15:16:30', NULL),
+	('364E1749D7984D8DACD6877B9744CD30', NULL, 11005, '2018-08-08 11:23:41', NULL),
+	('735958DC87A94F95B3AF64D5AB4A1EEA', NULL, 11004, '2018-08-07 14:55:08', NULL),
+	('7ED0137E4D524F06ACF7DBB7E9A93E42', NULL, 11004, '2018-08-08 15:20:38', NULL),
+	('B6A46F147CDD4F9F911649E2EA908567', NULL, 11004, '2018-08-08 15:12:20', NULL),
+	('C8D30C6098044C3F93C989B102AA5420', NULL, 11004, '2018-08-08 14:38:41', NULL),
+	('CC00297D191D416E896B0D9A5418C6AE', NULL, 11005, '2018-08-08 10:28:08', NULL),
+	('DD9832A0B72547EAB84CAC49345F30B3', NULL, 11005, '2018-08-07 14:55:16', NULL);
 /*!40000 ALTER TABLE `session` ENABLE KEYS */;
 
 -- Dumping structure for procedure pmwsdb.set_property
