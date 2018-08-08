@@ -31,7 +31,7 @@ public class ApplicationDAO {
             Statement stmt = conn.createStatement();
             String emailIdList = "";
             Integer attachmentId = 0;
-            String emailSql = "SELECT email_node_id, sender, recipient, `timestamp`, email_subject FROM email_detail WHERE email_node_id in (";
+            String emailSql = "SELECT email_node_id, sender, recipient, email_timestamp, email_subject FROM email_detail WHERE email_node_id in (";
             String attachmentSql = " SELECT attachment_node_id FROM email_attachment WHERE email_node_id = ";
             for(Long emailId : emailIds) {
                 emailIdList += emailId + ",";
@@ -66,7 +66,7 @@ public class ApplicationDAO {
     public void saveEmail(Email email) throws DatabaseException {
         try {
             Statement stmt = conn.createStatement();
-            String emailSql = "INSERT INTO email_detail(email_node_id,sender,recipient,timestamp,email_subject,email_body) VALUES (" +
+            String emailSql = "INSERT INTO email_detail(email_node_id,sender,recipient,email_timestamp,email_subject,email_body) VALUES (" +
                     email.getEmailNodeId() + "," +
                     "'" + email.getSender() + "'" + "," +
                     "'" + email.getRecipient() + "'" + "," +
