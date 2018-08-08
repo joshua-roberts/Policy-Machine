@@ -5,6 +5,7 @@ import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.model.applications.Email;
 import gov.nist.policyserver.model.graph.nodes.Node;
 
+import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.requests.EmailRequest;
 import gov.nist.policyserver.response.ApiResponse;
 import gov.nist.policyserver.service.*;
@@ -38,7 +39,10 @@ public class EmailResource {
             List<Long> emailIds = new ArrayList<>();
             Node user = analyticsService.getSessionUser(session);
             System.out.println(" user is " + user.getName());
-            Node inbox = nodeService.getNode(null, user.getName() + " " + box, null, null);
+            Property p = new Property("inbox",user.getName());
+            List<Property> propList = new ArrayList<Property>();
+            propList.add(p);
+            Node inbox = nodeService.getNode(null, null, null, propList);
             System.out.println(" name of the inbox " + inbox.getName() + " constists of ");
             List<PmAnalyticsEntry> emails = analyticsService.getAccessibleChildren(inbox.getId(),user.getId());
             for (PmAnalyticsEntry entry : emails) {
