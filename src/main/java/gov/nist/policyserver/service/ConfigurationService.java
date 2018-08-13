@@ -569,11 +569,22 @@ public class ConfigurationService extends Service{
             if(assignment != null) {
                 try {
                     System.out.println("assignment: " + assignment.getChild() + "->" + assignment.getParent());
-                    Node child = nodesMap.get(assignment.getChild());
-                    Node parent = nodesMap.get(assignment.getParent());
+                    Node child, parent;
+                    if (assignment.getChild() < 0) {
+                        child = nodeService.getNode(assignment.getChild());
+                    } else {
+                        child = nodesMap.get(assignment.getChild());
+                    }
+
+                    if (assignment.getParent() < 0) {
+                        parent = nodeService.getNode(assignment.getParent());
+                    } else {
+                        parent = nodesMap.get(assignment.getParent());
+                    }
+
                     getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
                 }
-                catch (DatabaseException | IOException e) {
+                catch (DatabaseException | IOException | NodeNotFoundException e) {
                     e.printStackTrace();
                 }
                 catch (SQLException e) {
