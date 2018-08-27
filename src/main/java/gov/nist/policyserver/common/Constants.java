@@ -70,6 +70,7 @@ public class Constants {
     public static final int ERR_INVALID_ASSIGNMENT       = 6030;
     public static final int ERR_NO_BASE_ID       = 6031;
     public static final int ERR_NO_PROCESS           = 6032;
+    public static final int ERR_MALFORMED_PDL          = 6033;
 
     public static final int ERR_NEO                                 = 7000;
 
