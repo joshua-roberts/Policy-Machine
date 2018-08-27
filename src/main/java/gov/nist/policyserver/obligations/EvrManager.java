@@ -175,7 +175,7 @@ public class EvrManager {
 
                 processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, node);
 
-                HashSet<Node> children = nodeService.getChildrenOfType(node.getId(), null);
+                HashSet<Node> children = nodeService.getChildrenOfType(node.getID(), null);
                 for(Node n : children) {
                     processEvent(evrSubject, new EvrPolicies(), SELECT_EVENT, n);
                 }
@@ -333,14 +333,14 @@ public class EvrManager {
                 HashSet<Node> nodes = nodeService.getNodes(null, evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
                 for(Node node : nodes) {
                     if(evrTargetNode != null) {
-                        HashSet<Node> ascendants = assignmentService.getAscendants(evrTargetNode.getId());
+                        HashSet<Node> ascendants = assignmentService.getAscendants(evrTargetNode.getID());
                         ascendants.add(evrTargetNode);
                         if(ascendants.contains(node)) {
                             return true;
                         }
                     } else {
                         //any object, check the processed target is in the container
-                        HashSet<Node> ascendants = assignmentService.getAscendants(node.getId());
+                        HashSet<Node> ascendants = assignmentService.getAscendants(node.getID());
                         ascendants.add(node);
                         if(ascendants.contains(procTarget)) {
                             return true;
@@ -506,7 +506,7 @@ public class EvrManager {
             return true;
         } else {
             //is the checked node an ascendant to the processed node
-            nodes = assignmentService.getAscendants(procEntity.getNode().getId());
+            nodes = assignmentService.getAscendants(procEntity.getNode().getID());
             return nodes.contains(checkNode);
         }
 
@@ -640,7 +640,7 @@ public class EvrManager {
                 throw new NodeNotFoundException("Error finding container node when creating a prohibition");
             }
             Node node = nodes.iterator().next();
-            resources[i] = new ProhibitionResource(node.getId(), evrEntity.isCompliment());
+            resources[i] = new ProhibitionResource(node.getID(), evrEntity.isCompliment());
         }
 
         List<EvrEntity> entities = subject.getEntities();
@@ -658,7 +658,7 @@ public class EvrManager {
                     throw new NodeNotFoundException("Error finding subject node when creating a prohibition");
                 }
                 Node node = nodes.iterator().next();
-                proSubject = new ProhibitionSubject(node.getId(), ProhibitionSubjectType.toProhibitionSubjectType(node.getType().toString()));
+                proSubject = new ProhibitionSubject(node.getID(), ProhibitionSubjectType.toProhibitionSubjectType(node.getType().toString()));
             } else {
                 //its a process
                 EvrProcess process = evrEntity.getProcess();
@@ -693,7 +693,7 @@ public class EvrManager {
         for(Node childNode : childNodes) {
             for(Node parentNode : parentnodes) {
                 System.out.println("Assigning " + childNode.getName() + " to " + parentNode.getName());
-                //assignmentService.createAssignment(childNode.getId(), parentNode.getId());
+                //assignmentService.createAssignment(childNode.getID(), parentNode.getID());
             }
         }
     }
@@ -757,7 +757,7 @@ public class EvrManager {
 
                     for(Node targetNode : targetNodes) {
                         System.out.println("Granting " + subjectNode.getName() + " " + ops + " on " + targetNode.getName());
-                        //analyticsService.grantAccess(subjectNode.getId(), targetNode.getId(), new HashSet<>(ops), true);
+                        //analyticsService.grantAccess(subjectNode.getID(), targetNode.getID(), new HashSet<>(ops), true);
                     }
                 }
             }

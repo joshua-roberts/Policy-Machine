@@ -66,7 +66,7 @@ public class NLPMResource {
                     });
 
             //assign user to UA
-            assignmentService.createAssignment(subjectNode.getId(), uaNode.getId());
+            assignmentService.createAssignment(subjectNode.getID(), uaNode.getID());
 
             //set uaNode as subjectNnode
             subjectNode = uaNode;
@@ -81,17 +81,17 @@ public class NLPMResource {
 
         //assign all target nodes to oaNode
         for(long target : request.getTargetIds()) {
-            assignmentService.createAssignment(target, oaNode.getId());
+            assignmentService.createAssignment(target, oaNode.getID());
         }
 
         //assign OA to PC
-        assignmentService.createAssignment(oaNode.getId(), pcNode.getId());
+        assignmentService.createAssignment(oaNode.getID(), pcNode.getID());
 
         //assign UA to PC
-        assignmentService.createAssignment(subjectNode.getId(), pcNode.getId());
+        assignmentService.createAssignment(subjectNode.getID(), pcNode.getID());
 
         //create association between subject/UA and Container
-        associationsService.createAssociation(subjectNode.getId(), oaNode.getId(), new HashSet<>(Arrays.asList(request.getOperations())), true);
+        associationsService.createAssociation(subjectNode.getID(), oaNode.getID(), new HashSet<>(Arrays.asList(request.getOperations())), true);
 
         return new ApiResponse("Success!").toResponse();
     }*/

@@ -240,21 +240,26 @@ public class GraphConfig {
     public void runCsv(){
         System.out.println("Building config...");
         addLine("id,name,type");
-        addLine("22,RBAC,PC");
-        addLine("32,EMP_PC,PC");
+        addLine("22,test_pc,PC");
+        addLine("32,test_emp_pc,PC");
         addLine(numGroups+1+"3,Employees1,UA");
         addLine(numGroups+1+"5,Employees2,OA");
 
         System.out.println("Building Object attributes");
         for(int i = 1; i <= numCols; i++){
+            System.out.println((double)i/numCols);
             addLine(numGroups+1+"5"+i+"555,col_"+i+"_5555555555,OA");
         }
 
         System.out.println("Building User attributes...");
         for(int i = 1; i <= numGroups; i++){
+            System.out.println((double)i/numCols);
+
             addLine(i+"3,Grp_" + i + "_UA,UA");
 
             for(int j = 1; j <= numUsers; j++){
+                System.out.println((double)j/numCols);
+
                 String id = String.valueOf(i) + String.valueOf(j) + "4";
                 addLine(id+",u_" + i + "_" + j + ",U");
             }
@@ -276,7 +281,7 @@ public class GraphConfig {
                     addLine(id+k+",er_" + i + "_"+j+"_"+k+",O");
                     c++;
                     double cur = (c/total);
-                    int percent = (int) (cur * 100.0);
+                    double percent = (cur * 100.0);
                     System.out.println(percent + "%");
                 }
             }
@@ -303,6 +308,62 @@ public class GraphConfig {
         System.out.println(config);
     }
 
+    int count = 0;
+    public void runCsvGcs(){
+        File f = new File("C:\\Users\\jnr6\\Documents\\Neo4j\\default.graphdb\\import\\test.csv");
+        FileWriter fw = null;
+
+        System.out.println("Building config...");
+        addLine("id,name,org_type,type");
+        addLine("999999990,gcs pc,PC,PC");
+
+        System.out.println("\nWriting to file..");
+        try {
+            fw = new FileWriter(f, false);
+            fw.write(config);
+            fw.flush();
+            config = "";
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        //org
+        for(int i = 1; i <= numGroups; i++) {
+            addLine("991" + String.format("%03d", i).replaceAll("0", "1") + ",ORG-" + i + ",ORG,OA");
+            addLine("995" + String.format("%03d", i).replaceAll("0", "1") + ",ORG-" + i + ",ORG,UA");
+
+            //folders
+            for (int j = 1; j <= numUsers; j++) {
+                addLine("992" + String.format("%03d", i).replaceAll("0", "1") + String.format("%03d", j).replaceAll("0", "1") + ",Folder-" + i + "-" + j + ",FOLDER,OA");
+                addLine("995" + String.format("%03d", i).replaceAll("0", "1") + String.format("%03d", j).replaceAll("0", "1") + ",Folder-" + i + "-" + j + ",FOLDER,UA");
+
+                //projects
+                for (int k = 1; k <= numUsers; k++) {
+                    addLine("993" + String.format("%03d", i).replaceAll("0", "1") + String.format("%03d", j).replaceAll("0", "1") + String.format("%03d", k).replaceAll("0", "1") + ",Project-" + i + "-" + j + "-" + k + ",PROJECT,OA");
+                    addLine("995" + String.format("%03d", i).replaceAll("0", "1") + String.format("%03d", j).replaceAll("0", "1") + String.format("%03d", k).replaceAll("0", "1") + ",Project-" + i + "-" + j + "-" + k + ",PROJECT,UA");
+
+                    //project resources
+                    for(int o = 1; o <= numObjects; o++) {
+                        addLine("994" + String.format("%03d", i).replaceAll("0", "1") + String.format("%03d", j).replaceAll("0", "1") + String.format("%03d", k).replaceAll("0", "1") + String.format("%03d", o).replaceAll("0", "1") + ",ProjectResource-" + i + "-" + j + "-" + k + "-" + o + ",PR,OA\n");
+                        System.out.println(count++);
+                    }
+                }
+
+                System.out.println("\nWriting to file..");
+                try {
+                    fw.append(config);
+                    fw.flush();
+                    config = "";
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private void addLine(String csv){
         this.config += csv + "\n";
     }
@@ -323,7 +384,7 @@ public class GraphConfig {
 
 
             System.out.println(System.getProperty("user.dir"));
-            Scanner sc = new Scanner(new File("src/main/java/gov/nist/policyserver/config/ImportCSV.cypher"));
+            Scanner sc = new Scanner(new File("src/main/java/gov/nist/policyserver/config/org.cypher"));
 
             sc.useDelimiter(";");
             while (sc.hasNext()) {
@@ -366,7 +427,8 @@ public class GraphConfig {
     }
 
     public static void main(String[] args){
-        GraphConfig c = new GraphConfig(2, 1, 1, 1);
-        c.runCsv();
+        GraphConfig c = new GraphConfig(10, 100, 5, 0);
+        c.runCsvGcs();
+        c.processCsv();
     }
 }

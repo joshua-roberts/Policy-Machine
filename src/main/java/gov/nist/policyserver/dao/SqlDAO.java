@@ -50,7 +50,7 @@ public class SqlDAO extends DAO {
         graph = new PmGraph();
         List<Node> nodes = getNodes();
         for (Node node : nodes) {
-            if (!node.getType().equals(NodeType.OS)) {
+            if (!node.getType().equals(NodeType.OPERATION_SET)) {
                 graph.addNode(node);
             }
         }
@@ -177,13 +177,13 @@ public class SqlDAO extends DAO {
                 String name = rs.getString(2);
                 NodeType type = NodeType.toNodeType(rs.getInt(3));
                 Node endNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
+                if(type.equals(NodeType.OPERATION_SET))continue;
 
                 id = rs.getInt(4);
                 name = rs.getString(5);
                 type = NodeType.toNodeType(rs.getInt(6));
                 Node startNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
+                if(type.equals(NodeType.OPERATION_SET))continue;
 
                 relationships.add(new Assignment(startNode, endNode));
             }

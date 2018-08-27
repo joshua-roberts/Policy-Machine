@@ -427,7 +427,7 @@ public class NodeService extends Service{
                 }
             }
 
-            getDaoManager().getNodesDAO().setNodeProperties(node.getId(), properties);
+            getDaoManager().getNodesDAO().setNodeProperties(node.getID(), properties);
 
             node.setProperties(Arrays.asList(properties));
         }*/

@@ -273,7 +273,7 @@ public class ImportService {
                                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY)
                         };
                         Node rowNode = nodeService.createNode(NEW_NODE_ID, rowName, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
-                        /*Node rowNode = nodeService.createNode(rowsNode.getId(), NEW_NODE_ID, rowName, NodeType.OA
+                        /*Node rowNode = nodeService.createNode(rowsNode.getID(), NEW_NODE_ID, rowName, NodeType.OA
                                         .toString(),
                                 properties);*/
                         createAssignment(rowNode, rowsNode);
@@ -291,7 +291,7 @@ public class ImportService {
                                     new Property(NAMESPACE_PROPERTY, tableName),
                                     new Property(DESCRIPTION_PROPERTY, "Object in table=" + tableName + ", row=" + rowName + ", column=" + columnNode.getName())
                             };
-                            /*Node objectNode = nodeService.createNode(rowNode.getId(), NEW_NODE_ID, objectName, NodeType.O.toString(),
+                            /*Node objectNode = nodeService.createNode(rowNode.getID(), NEW_NODE_ID, objectName, NodeType.O.toString(),
                                     properties);*/
                             Node objectNode = nodeService.createNode(NEW_NODE_ID, objectName, NodeType.OBJECT.toString(), properties);
                             createAssignment(objectNode, rowNode);

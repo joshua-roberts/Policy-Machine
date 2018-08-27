@@ -67,10 +67,10 @@ public class PEPResource {
         }
         Node rowNode = nodes.iterator().next();
 
-        System.out.println(userNode.getId() + "&" + rowNode.getName() + "(" + rowNode.getId() + ")");
+        System.out.println(userNode.getID() + "&" + rowNode.getName() + "(" + rowNode.getID() + ")");
 
         //get the accessible children of the row with the given permission
-        List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(rowNode.getId(), userNode.getId());
+        List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(rowNode.getID(), userNode.getID());
         for(PmAnalyticsEntry entry : accessibleChildren) {
             System.out.println(entry.getTarget().getName() + ": " + entry.getOperations());
         }
@@ -83,11 +83,11 @@ public class PEPResource {
         Node columnsNode = columns.iterator().next();
 
         //get the children of the columns node.  These are the columns of the table
-        columns = nodeService.getChildrenOfType(columnsNode.getId(), NodeType.OA.toString());
+        columns = nodeService.getChildrenOfType(columnsNode.getID(), NodeType.OA.toString());
 
         List<String> accesibleColumns = new ArrayList<>();
         for(Node column : columns) {
-            HashSet<Node> children = nodeService.getChildrenOfType(column.getId(), NodeType.O.toString());
+            HashSet<Node> children = nodeService.getChildrenOfType(column.getID(), NodeType.O.toString());
             for (PmAnalyticsEntry entry : accessibleChildren) {
                 Node target = entry.getTarget();
                 if (children.contains(target) && entry.getOperations().contains(FILE_WRITE)) {
@@ -112,7 +112,7 @@ public class PEPResource {
         nodes = nodeService.getNodes(null, null, null, property, value);
 
         for(Node node : nodes) {
-            PmAnalyticsEntry userAccessOn = analyticsService.getUserPermissionsOn(node.getId(), userNode.getId());
+            PmAnalyticsEntry userAccessOn = analyticsService.getUserPermissionsOn(node.getID(), userNode.getID());
             HashSet<String> operations = userAccessOn.getOperations();
             if(!operations.contains(requiredPermission)) {
                 return new ApiResponse(false).toResponse();
@@ -135,7 +135,7 @@ public class PEPResource {
     @Path("nodes/{baseId}")
     @POST
     public Response createNode(@PathParam("baseId") long baseId, CreateNodeRequest request) throws NullNameException, NodeNameExistsInNamespaceException, NullTypeException, InvalidPropertyException, DatabaseException, InvalidNodeTypeException, NodeNameExistsException, ConfigurationException, NodeIdExistsException, NodeNotFoundException, AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException {
-        Node node = nodeService.createNode(baseId, request.getId(), request.getName(), request.getType(), request.getProperties());
+        Node node = nodeService.createNode(baseId, request.getID(), request.getName(), request.getType(), request.getProperties());
 
         return new ApiResponse("success").toResponse();
     }
@@ -189,7 +189,7 @@ public class PEPResource {
         //get the user node
         Node userNode = nodeService.getNode(username, NodeType.U.toString(), null);
 
-        return new ApiResponse(analyticsService.getUserPermissionsOn(targetNode.getId(), userNode.getId()).getOperations()).toResponse();
+        return new ApiResponse(analyticsService.getUserPermissionsOn(targetNode.getID(), userNode.getID()).getOperations()).toResponse();
     }
 
     @Path("grant")
@@ -208,10 +208,10 @@ public class PEPResource {
         Node outboxNode = nodeService.getNode(null, NodeType.OA.toString(), "outbox=" + senderNode.getName());
 
         //assign attachment to inbox and outbox
-        analyticsService.checkPermissions(senderNode, -1, inboxNode.getId(), ASSIGN_OBJECT_ATTRIBUTE);
+        analyticsService.checkPermissions(senderNode, -1, inboxNode.getID(), ASSIGN_OBJECT_ATTRIBUTE);
         try {
-            assignmentService.createAssignment(attachmentId, inboxNode.getId());
-            assignmentService.createAssignment(attachmentId, outboxNode.getId());
+            assignmentService.createAssignment(attachmentId, inboxNode.getID());
+            assignmentService.createAssignment(attachmentId, outboxNode.getID());
         }
         catch (AssignmentExistsException | InvalidAssignmentException | AssociationExistsException e) {
             e.printStackTrace();

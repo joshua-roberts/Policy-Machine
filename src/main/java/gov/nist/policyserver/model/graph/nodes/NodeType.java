@@ -5,15 +5,15 @@ import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
 import java.io.Serializable;
 
 public enum NodeType  implements Serializable {
-	C("C"),
-	OA("OA"),
-	UA("UA"),
-	U("U"),
-	O("O"),
-	PC("PC"),
-	D("D"),
-	OS("OS"),
-	S("S");
+	CONNECTOR("C"),
+	OBJECT_ATTRIBUTE("OA"),
+	USER_ATTRIBUTE("UA"),
+	USER("U"),
+	OBJECT("O"),
+	POLICY_CLASS("PC"),
+	PROHIBITION("D"),
+	OPERATION_SET("OS"),
+	SESSION("S");
 
     //Node_Type ids
 
@@ -40,23 +40,23 @@ public enum NodeType  implements Serializable {
 		}
 		switch (type.toUpperCase()){
 			case "C":
-				return NodeType.C;
+				return NodeType.CONNECTOR;
 			case "OA":
-				return NodeType.OA;
+				return NodeType.OBJECT_ATTRIBUTE;
 			case "UA":
-				return NodeType.UA;
+				return NodeType.USER_ATTRIBUTE;
 			case "U":
-				return NodeType.U;
+				return NodeType.USER;
 			case "O":
-				return NodeType.O;
+				return NodeType.OBJECT;
 			case "PC":
-				return NodeType.PC;
+				return NodeType.POLICY_CLASS;
 			case "D":
-				return NodeType.D;
+				return NodeType.PROHIBITION;
 			case "OS":
-				return NodeType.OS;
+				return NodeType.OPERATION_SET;
 			case "S":
-				return NodeType.S;
+				return NodeType.SESSION;
 			default:
 				throw new InvalidNodeTypeException(type);
 		}
@@ -69,21 +69,21 @@ public enum NodeType  implements Serializable {
 
 		switch(typeId){
 			case 1:
-				return NodeType.C;
+				return NodeType.CONNECTOR;
 			case 2:
-				return NodeType.PC;
+				return NodeType.POLICY_CLASS;
 			case 3:
-				return NodeType.UA;
+				return NodeType.USER_ATTRIBUTE;
 			case 4:
-				return NodeType.U;
+				return NodeType.USER;
 			case 5:
-				return NodeType.OA;
+				return NodeType.OBJECT_ATTRIBUTE;
 			case 6:
-				return NodeType.O;
+				return NodeType.OBJECT;
 			case 7:
-				return NodeType.OS;
+				return NodeType.OPERATION_SET;
 			case 8:
-				return NodeType.S;
+				return NodeType.SESSION;
 			default:
 				throw new InvalidNodeTypeException(typeId);
 		}

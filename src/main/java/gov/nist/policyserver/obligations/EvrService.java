@@ -720,7 +720,7 @@ public class EvrService extends Service {
         for(Node childNode : childNodes) {
             for(Node parentNode : parentnodes) {
                 System.out.println("Assigning " + childNode.getName() + " to " + parentNode.getName());
-                //assignmentService.createAssignment(childNode.getId(), parentNode.getId());
+                //assignmentService.createAssignment(childNode.getID(), parentNode.getID());
             }
         }
     }
@@ -784,7 +784,7 @@ public class EvrService extends Service {
 
                     for(Node targetNode : targetNodes) {
                         System.out.println("Granting " + subjectNode.getName() + " " + ops + " on " + targetNode.getName());
-                        //analyticsService.grantAccess(subjectNode.getId(), targetNode.getId(), new HashSet<>(ops), true);
+                        //analyticsService.grantAccess(subjectNode.getID(), targetNode.getID(), new HashSet<>(ops), true);
                     }
                 }
             }
