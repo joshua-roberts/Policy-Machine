@@ -123,7 +123,7 @@ public class AnalyticsService extends Service{
         }
 
         //only check if node is OA or O
-        if(node.getType().equals(NodeType.OA) || node.getType().equals(NodeType.O)) {
+        if(node.getType().equals(NodeType.OBJECT_ATTRIBUTE) || node.getType().equals(NodeType.OBJECT)) {
             if (user == null && process == 0) {
                 throw new MissingPermissionException("No User or Process found in checking permissions");
             }
@@ -178,7 +178,7 @@ public class AnalyticsService extends Service{
                     Node n = hsiter.next();
                     if (n.getType().equals(type)) {
                         queue.add(n);
-                    } else if (n.getType().equals(NodeType.PC)) {
+                    } else if (n.getType().equals(NodeType.POLICY_CLASS)) {
                         reachable.add(n);
                     }
                 }
@@ -205,7 +205,7 @@ public class AnalyticsService extends Service{
             Node node = getGraph().getNode(oaId);
 
             // Compute oa's required PCs by calling find_pc_set(sOaId).
-            HashSet hsReqPcs = inMemFindPcSet(node, NodeType.OA);
+            HashSet hsReqPcs = inMemFindPcSet(node, NodeType.OBJECT_ATTRIBUTE);
             // Extract oa's label.
             Hashtable htOaLabel = (Hashtable)htOa.get(oaId);
 
@@ -253,7 +253,7 @@ public class AnalyticsService extends Service{
                 // If the ua has ua -> oa edges
                 if (inMemUattrHasOpsets(crtNode)) {
                     // Find the set of PCs reachable from ua.
-                    HashSet<Node> hsUaPcs = inMemFindPcSet(crtNode, NodeType.UA);
+                    HashSet<Node> hsUaPcs = inMemFindPcSet(crtNode, NodeType.USER_ATTRIBUTE);
 
                     // From each discovered ua traverse the edges ua -> oa.
 
@@ -321,7 +321,7 @@ public class AnalyticsService extends Service{
                 Iterator descsIter = hsDescs.iterator();
                 while (descsIter.hasNext()) {
                     Node d = (Node) descsIter.next();
-                    if (d.getType().equals(NodeType.UA)) {
+                    if (d.getType().equals(NodeType.USER_ATTRIBUTE)) {
                         queue.add(d);
                     }
                 }
@@ -333,7 +333,7 @@ public class AnalyticsService extends Service{
         for (Enumeration keys = htReachableOas.keys(); keys.hasMoreElements() ;) {
             long sOaId = (long)keys.nextElement();
             // Compute {pc | oa ->+ pc}
-            HashSet hsOaPcs = inMemFindPcSet(getGraph().getNode(sOaId), NodeType.OA);
+            HashSet hsOaPcs = inMemFindPcSet(getGraph().getNode(sOaId), NodeType.OBJECT_ATTRIBUTE);
             // Extract oa's label.
             Hashtable htOaLabel = (Hashtable)htReachableOas.get(sOaId);
             // The label contains op1 -> pcs1, op2 -> pcs2,...

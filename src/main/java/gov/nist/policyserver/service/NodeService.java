@@ -33,7 +33,7 @@ public class NodeService extends Service{
 
         nodes.removeIf(node -> {
             try {
-                if(node.getType().equals(NodeType.O) || node.getType().equals(NodeType.OA)) {
+                if(node.getType().equals(NodeType.OBJECT) || node.getType().equals(NodeType.OBJECT_ATTRIBUTE)) {
                     analyticsService.checkPermissions(user, process, node.getId(), ANY_OPERATIONS);
                 }
                 return false;
@@ -304,12 +304,12 @@ public class NodeService extends Service{
         Node node = createNode(NO_BASE_ID, NEW_NODE_ID, name, type, properties);
 
         //if the node is a PC, create an OA and UA for PC admin
-        if (node.getType().equals(NodeType.PC)) {
+        if (node.getType().equals(NodeType.POLICY_CLASS)) {
             //create OA
-            Node oaNode = createNode(node.getId(), NEW_NODE_ID, node.getName(), NodeType.OA.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
+            Node oaNode = createNode(node.getId(), NEW_NODE_ID, node.getName(), NodeType.OBJECT_ATTRIBUTE.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
 
             //create UA
-            Node uaNode = createNode(node.getId(), NEW_NODE_ID, node.getName() + " admin", NodeType.UA.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
+            Node uaNode = createNode(node.getId(), NEW_NODE_ID, node.getName() + " admin", NodeType.USER_ATTRIBUTE.toString(), new Property[]{new Property(NAMESPACE_PROPERTY, node.getName())});
 
             //assign U to UA
             new AssignmentService().createAssignment(user.getId(), uaNode.getId());
@@ -468,7 +468,7 @@ public class NodeService extends Service{
 
         Node node = getNode(nodeId);
 
-        if(node.getType().equals(NodeType.OA) || node.getType().equals(NodeType.O)) {
+        if(node.getType().equals(NodeType.OBJECT_ATTRIBUTE) || node.getType().equals(NodeType.OBJECT)) {
             //check user can access the node
             analyticsService.checkPermissions(user, process, nodeId, ANY_OPERATIONS);
         }
@@ -577,7 +577,7 @@ public class NodeService extends Service{
         //check node exists
         Node node = getNode(nodeId);
 
-        if(node.getType().equals(NodeType.OA) || node.getType().equals(NodeType.O)) {
+        if(node.getType().equals(NodeType.OBJECT_ATTRIBUTE) || node.getType().equals(NodeType.OBJECT)) {
             //check user can delete the node
             analyticsService.checkPermissions(user, process, nodeId, DELETE_NODE);
         }
@@ -697,8 +697,8 @@ public class NodeService extends Service{
 
         HashSet<Node> nodes = new HashSet<>();
 
-        if(node.getType().equals(NodeType.PC)) {
-            HashSet<Node> uas = getChildrenOfType(nodeId, NodeType.UA.toString());
+        if(node.getType().equals(NodeType.POLICY_CLASS)) {
+            HashSet<Node> uas = getChildrenOfType(nodeId, NodeType.USER_ATTRIBUTE.toString());
             //add all uas because there are no associations on them
             nodes.addAll(uas);
 
@@ -709,7 +709,7 @@ public class NodeService extends Service{
                     nodes.add(entry.getTarget());
                 }
             }
-        } else if(node.getType().equals(NodeType.OA)) {
+        } else if(node.getType().equals(NodeType.OBJECT_ATTRIBUTE)) {
             //get all oas user has access to
             List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(nodeId, user.getId());
             for(PmAnalyticsEntry entry : accessibleChildren) {
@@ -717,7 +717,7 @@ public class NodeService extends Service{
                     nodes.add(entry.getTarget());
                 }
             }
-        } else if(node.getType().equals(NodeType.UA)) {
+        } else if(node.getType().equals(NodeType.USER_ATTRIBUTE)) {
             //add all children
             HashSet<Node> children = getChildrenOfType(node.getId(), null);
             nodes.addAll(children);

@@ -1,8 +1,6 @@
 package gov.nist.policyserver.service;
 
-import gov.nist.policyserver.common.Constants;
 import gov.nist.policyserver.exceptions.*;
-import gov.nist.policyserver.analytics.PmAnalyticsEntry;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.model.graph.nodes.Property;
@@ -13,7 +11,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.UUID;
 
 import static gov.nist.policyserver.common.Constants.DESCRIPTION_PROPERTY;
@@ -30,7 +27,7 @@ public class SessionService extends Service {
 
     public String createSession(String username, String password) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, PMAccessDeniedException, NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, ConfigurationException, NullTypeException, NodeIdExistsException, DatabaseException, AssignmentExistsException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         //authenticate
-        HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.U.toString(), null);
+        HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.USER.toString(), null);
         if (nodes.isEmpty()) {
             throw new NodeNotFoundException(username);
         }

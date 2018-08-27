@@ -1,11 +1,9 @@
 package gov.nist.policyserver.dao.sql;
 
 import gov.nist.policyserver.analytics.PmAnalytics;
-import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.dao.GraphDAO;
 import gov.nist.policyserver.exceptions.DatabaseException;
 import gov.nist.policyserver.exceptions.InvalidNodeTypeException;
-import gov.nist.policyserver.exceptions.InvalidProhibitionSubjectTypeException;
 import gov.nist.policyserver.exceptions.InvalidPropertyException;
 import gov.nist.policyserver.graph.PmGraph;
 import gov.nist.policyserver.model.graph.nodes.Node;
@@ -14,11 +12,7 @@ import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.policyserver.model.graph.relationships.Assignment;
 import gov.nist.policyserver.model.graph.relationships.Association;
 import gov.nist.policyserver.model.prohibitions.Prohibition;
-import gov.nist.policyserver.model.prohibitions.ProhibitionResource;
-import gov.nist.policyserver.model.prohibitions.ProhibitionSubject;
-import gov.nist.policyserver.model.prohibitions.ProhibitionSubjectType;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -56,7 +50,7 @@ public class SqlGraphDAO implements GraphDAO {
 
             List<Node> nodes = getNodes();
             for (Node node : nodes) {
-                if (!node.getType().equals(NodeType.OS)) {
+                if (!node.getType().equals(NodeType.OPERATION_SET)) {
                     graph.addNode(node);
                 }
             }
@@ -138,13 +132,13 @@ public class SqlGraphDAO implements GraphDAO {
                 String name = rs.getString(2);
                 NodeType type = NodeType.toNodeType(rs.getInt(3));
                 Node endNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
+                if(type.equals(NodeType.OPERATION_SET))continue;
 
                 id = rs.getInt(4);
                 name = rs.getString(5);
                 type = NodeType.toNodeType(rs.getInt(6));
                 Node startNode = new Node(id, name, type);
-                if(type.equals(NodeType.OS))continue;
+                if(type.equals(NodeType.OPERATION_SET))continue;
 
                 relationships.add(new Assignment(startNode, endNode));
             }

@@ -14,6 +14,7 @@ import gov.nist.policyserver.service.NodeService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -35,6 +36,17 @@ public class NLPMResource {
     }
 
     @POST
+    public Response nlpm(String[] statements) {
+        for(String stmt : statements) {
+            System.out.println(stmt);
+        }
+
+        return null;
+    }
+
+
+
+    /*@POST
     public Response grant(GrantRequest request) throws PmException, IOException, ClassNotFoundException, SQLException {
         //get the pc node
         Node pcNode = nodeService.getNode(request.getPcId());
@@ -82,5 +94,7 @@ public class NLPMResource {
         associationsService.createAssociation(subjectNode.getId(), oaNode.getId(), new HashSet<>(Arrays.asList(request.getOperations())), true);
 
         return new ApiResponse("Success!").toResponse();
-    }
+    }*/
+
+
 }

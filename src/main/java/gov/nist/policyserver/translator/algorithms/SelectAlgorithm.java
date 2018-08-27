@@ -14,10 +14,8 @@ import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.SelectUtils;
 
@@ -207,7 +205,7 @@ public class SelectAlgorithm extends Algorithm {
                 if(row.getRowName().equals(ROW_NOT_AVAILABLE)) {
                     continue;
                 }
-                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName(), NodeType.OA);
+                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName(), NodeType.OBJECT_ATTRIBUTE);
 
                 List<Column> columns = compositeTable.getSimpleTable(row.getTableName()).getColumns();
 
@@ -223,7 +221,7 @@ public class SelectAlgorithm extends Algorithm {
                     }
                     if (skip) continue;
 
-                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
+                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause
@@ -240,7 +238,7 @@ public class SelectAlgorithm extends Algorithm {
                 for (Column column : whereColumns) {
                     System.out.println("Checking column " + column + " in where clause");
                     if(columnInList(compositeTable.getSimpleTable(row.getTableName()).getColumns(), column)){
-                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
+                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
 
                         if (!checkColumn(columnPmId, rowPmId, FILE_READ)) {
                             okColumns.clear();

@@ -63,55 +63,55 @@ public class AssignmentService extends Service{
     }
 
     public void canAssign(Node child, Node user, long process) throws IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        if(child.getType().equals(NodeType.OA)) {
+        if(child.getType().equals(NodeType.OBJECT_ATTRIBUTE)) {
             analyticsService.checkPermissions(user, process, child.getId(), ASSIGN_OBJECT_ATTRIBUTE);
-        } else if(child.getType().equals(NodeType.O)) {
+        } else if(child.getType().equals(NodeType.OBJECT)) {
             analyticsService.checkPermissions(user, process, child.getId(), ASSIGN_OBJECT);
         }
     }
 
     public void canAssignTo(Node child, Node parent, Node user, long process) throws IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        if(child.getType().equals(NodeType.OA)) {
+        if(child.getType().equals(NodeType.OBJECT_ATTRIBUTE)) {
             analyticsService.checkPermissions(user, process, parent.getId(), ASSIGN_OBJECT_ATTRIBUTE_TO);
-        } else if(child.getType().equals(NodeType.O)) {
+        } else if(child.getType().equals(NodeType.OBJECT)) {
             analyticsService.checkPermissions(user, process, parent.getId(), ASSIGN_OBJECT_TO);
         }
     }
 
     public void isValidAssignment(NodeType childType, NodeType parentType) throws InvalidAssignmentException {
         switch (childType) {
-            case PC:
+            case POLICY_CLASS:
                 throw new InvalidAssignmentException(childType, parentType);
-            case OA:
+            case OBJECT_ATTRIBUTE:
                 switch (parentType) {
-                    case O:
-                    case UA:
-                    case U:
+                    case OBJECT:
+                    case USER_ATTRIBUTE:
+                    case USER:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case O:
+            case OBJECT:
                 switch (parentType) {
-                    case PC:
-                    case UA:
-                    case U:
+                    case POLICY_CLASS:
+                    case USER_ATTRIBUTE:
+                    case USER:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case UA:
+            case USER_ATTRIBUTE:
                 switch (parentType) {
-                    case OA:
-                    case O:
-                    case U:
+                    case OBJECT_ATTRIBUTE:
+                    case OBJECT:
+                    case USER:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case U:
+            case USER:
                 switch (parentType) {
-                    case OA:
-                    case PC:
-                    case O:
-                    case U:
+                    case OBJECT_ATTRIBUTE:
+                    case POLICY_CLASS:
+                    case OBJECT:
+                    case USER:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
@@ -144,7 +144,7 @@ public class AssignmentService extends Service{
         getGraph().createAssignment(child, parent);
 
         //if the parent is a PC and the child is an OA, create a Association for the super user on the child
-        if (parent.getType().equals(PC) && child.getType().equals(OA)) {
+        if (parent.getType().equals(POLICY_CLASS) && child.getType().equals(OBJECT_ATTRIBUTE)) {
             Node superUA = getSuperUA();
 
             //assign UA to PC
@@ -157,7 +157,7 @@ public class AssignmentService extends Service{
     }
 
     private Node getSuperUA() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidNodeTypeException, PropertyNotFoundException, NodeNotFoundException {
-        HashSet<Node> nodesOfType = getGraph().getNodesOfType(NodeType.UA);
+        HashSet<Node> nodesOfType = getGraph().getNodesOfType(NodeType.USER_ATTRIBUTE);
         for(Node node : nodesOfType) {
             if(node.getName().equals(SUPER_KEYWORD)) {
                 if(node.hasProperty(NAMESPACE_PROPERTY) && node.getProperty(NAMESPACE_PROPERTY).getValue().equals(SUPER_KEYWORD)) {
@@ -186,7 +186,7 @@ public class AssignmentService extends Service{
             throw new AssignmentDoesNotExistException(childId, parentId);
         }
 
-        if(child.getType().equals(NodeType.OA) || child.getType().equals(NodeType.O)) {
+        if(child.getType().equals(NodeType.OBJECT_ATTRIBUTE) || child.getType().equals(NodeType.OBJECT)) {
             //PERMISSION CHECK
             //check user can deassign the child node from the parent node
             //1. can assign TO parent node

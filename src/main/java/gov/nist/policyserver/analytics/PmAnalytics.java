@@ -1,6 +1,5 @@
 package gov.nist.policyserver.analytics;
 
-import gov.nist.policyserver.common.Constants;
 import gov.nist.policyserver.dao.DAOManager;
 import gov.nist.policyserver.exceptions.ConfigurationException;
 import gov.nist.policyserver.exceptions.DatabaseException;
@@ -486,7 +485,7 @@ public class PmAnalytics implements Serializable{
 
     private synchronized Node createVNode(HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         long id = new Random().nextLong();
-        Node vNode = new Node(id, "VNODE", NodeType.OA);
+        Node vNode = new Node(id, "VNODE", NodeType.OBJECT_ATTRIBUTE);
         getGraph().addNode(vNode);
         for(Node node : dc.keySet()){
             getGraph().addEdge(node, vNode, new Assignment<>(node, vNode));
@@ -495,11 +494,11 @@ public class PmAnalytics implements Serializable{
     }
 
     private synchronized HashSet<Node> getPolicyClasses() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.PC));
+        return new HashSet<>(getGraph().getNodesOfType(NodeType.POLICY_CLASS));
     }
 
     private synchronized HashSet<Node> getUsers() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.U));
+        return new HashSet<>(getGraph().getNodesOfType(NodeType.USER));
     }
 
     /**

@@ -4,8 +4,6 @@ import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
 import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.policyserver.translator.exceptions.PMAccessDeniedException;
-import gov.nist.policyserver.translator.exceptions.PolicyMachineException;
-import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.insert.Insert;
@@ -31,7 +29,7 @@ public class InsertAlgorithm extends Algorithm{
         Table table = insert.getTable();
 
         //get the columns the user has analytics to
-        long columnsContId = pmManager.getEntityId(table.getName(), "Columns", NodeType.OA);
+        long columnsContId = pmManager.getEntityId(table.getName(), "Columns", NodeType.OBJECT_ATTRIBUTE);
         List<Node> accColumns = pmManager.getAccessibleChildren(columnsContId, table.getName());
         List<String> accColumnNames = new ArrayList<>();
         for(Node node : accColumns) {

@@ -56,14 +56,14 @@ public class ConfigurationService extends Service{
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
                 new Property(Constants.DESCRIPTION_PROPERTY, "Policy Class for " + schema)
         };
-        Node pcNode = createNode(schema, NodeType.PC.toString(), properties);
+        Node pcNode = createNode(schema, NodeType.POLICY_CLASS.toString(), properties);
 
         properties = new Property[] {
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
                 new Property(Constants.DESCRIPTION_PROPERTY, "Base Object Attribute for " + schema)
         };
         // create the schema object attribute node
-        Node schemaNode = createNode(schema, NodeType.OA.toString(), properties);
+        Node schemaNode = createNode(schema, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
 
         //assign oa node to pc node
         assignmentService.createAssignment(schemaNode.getId(), pcNode.getId());
@@ -98,7 +98,7 @@ public class ConfigurationService extends Service{
                         new Property(NAMESPACE_PROPERTY, tableName),
                         new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_TABLE_PROPERTY)
                 };
-                Node tableNode = createNode(tableName, NodeType.OA.toString(), properties);
+                Node tableNode = createNode(tableName, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
 
                 //assign table node to policy class node
                 assignmentService.createAssignment(tableNode.getId(), schemaNode.getId());
@@ -108,7 +108,7 @@ public class ConfigurationService extends Service{
                         new Property(NAMESPACE_PROPERTY, tableName),
                         new Property(DESCRIPTION_PROPERTY, "Column container for " + tableName)
                 };
-                Node columnsNode = createNode(Constants.COLUMN_CONTAINER_NAME, NodeType.OA.toString(), properties);
+                Node columnsNode = createNode(Constants.COLUMN_CONTAINER_NAME, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
                 assignmentService.createAssignment(columnsNode.getId(), tableNode.getId());
 
                 //create columns
@@ -123,7 +123,7 @@ public class ConfigurationService extends Service{
                     properties = new Property[]{
                             new Property(NAMESPACE_PROPERTY, tableName)
                     };
-                    Node columnNode = createNode(columnName, NodeType.OA.toString(), properties);
+                    Node columnNode = createNode(columnName, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
 
                     //assign column node to table
                     assignmentService.createAssignment(columnNode.getId(), columnsNode.getId());
@@ -139,7 +139,7 @@ public class ConfigurationService extends Service{
                             new Property(NAMESPACE_PROPERTY, tableName),
                             new Property(DESCRIPTION_PROPERTY, "Row container for " + tableName)
                     };
-                    Node rowsNode = createNode(Constants.ROW_CONTAINER_NAME, NodeType.OA.toString(), properties);
+                    Node rowsNode = createNode(Constants.ROW_CONTAINER_NAME, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
                     assignmentService.createAssignment(rowsNode.getId(), tableNode.getId());
 
                     //get data from table
@@ -170,7 +170,7 @@ public class ConfigurationService extends Service{
                                 new Property(NAMESPACE_PROPERTY, tableName),
                                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY)
                         };
-                        Node rowNode = createNode(rowName, NodeType.OA.toString(), properties);
+                        Node rowNode = createNode(rowName, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
 
                         //assign row node to table
                         assignmentService.createAssignment(rowNode.getId(), rowsNode.getId());
@@ -179,7 +179,7 @@ public class ConfigurationService extends Service{
                         for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
                             //get column
                             String columnName = rs2MetaData.getColumnName(i);
-                            Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA, session, process);
+                            Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OBJECT_ATTRIBUTE, session, process);
 
 
                             //create data object node
@@ -188,7 +188,7 @@ public class ConfigurationService extends Service{
                                     new Property(NAMESPACE_PROPERTY, tableName),
                                     new Property(DESCRIPTION_PROPERTY, "Object in table=" + tableName + ", row=" + rowName + ", column=" + columnNode.getName())
                             };
-                            Node objectNode = createNode(objectName, NodeType.O.toString(), properties);
+                            Node objectNode = createNode(objectName, NodeType.OBJECT.toString(), properties);
 
                             //assign object to row and column
                             assignmentService.createAssignment(objectNode.getId(), rowNode.getId());
@@ -233,12 +233,12 @@ public class ConfigurationService extends Service{
             Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 
             //get table node
-            Node tableNode = nodeService.getNodeInNamespace(database, tableName, NodeType.OA, session, process);
+            Node tableNode = nodeService.getNodeInNamespace(database, tableName, NodeType.OBJECT_ATTRIBUTE, session, process);
 
             Table table = new Table();
             table.setNode(tableNode);
 
-            HashSet<Node> children = nodeService.getChildrenOfType(tableNode.getId(), NodeType.OA.toString());
+            HashSet<Node> children = nodeService.getChildrenOfType(tableNode.getId(), NodeType.OBJECT_ATTRIBUTE.toString());
 
             Node columnsNode = null;
             Node rowsNode = null;
@@ -255,7 +255,7 @@ public class ConfigurationService extends Service{
             }
 
             //get column Nodes
-            HashSet<Node> columnNodes = nodeService.getChildrenOfType(columnsNode.getId(), NodeType.OA.toString());
+            HashSet<Node> columnNodes = nodeService.getChildrenOfType(columnsNode.getId(), NodeType.OBJECT_ATTRIBUTE.toString());
 
             List<Column> columns = new ArrayList<>();
             String cols = "";
@@ -287,7 +287,7 @@ public class ConfigurationService extends Service{
             }
 
             //get all row nodes
-            HashSet<Node> rowNodes = nodeService.getChildrenOfType(rowsNode.getId(), NodeType.OA.toString());
+            HashSet<Node> rowNodes = nodeService.getChildrenOfType(rowsNode.getId(), NodeType.OBJECT_ATTRIBUTE.toString());
 
             //get row values
             String select = "select " + cols + " from " + tableName;
@@ -340,10 +340,10 @@ public class ConfigurationService extends Service{
                     String columnName = rs.getMetaData().getColumnName(i);
 
                     //get columnNode
-                    Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OA, session, process);
+                    Node columnNode = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OBJECT_ATTRIBUTE, session, process);
 
-                    HashSet<Node> colChildren = nodeService.getChildrenOfType(columnNode.getId(), NodeType.O.toString());
-                    HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowNode.getId(), NodeType.O.toString());
+                    HashSet<Node> colChildren = nodeService.getChildrenOfType(columnNode.getId(), NodeType.OBJECT.toString());
+                    HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowNode.getId(), NodeType.OBJECT.toString());
 
                     colChildren.retainAll(rowChildren);
 
@@ -395,11 +395,11 @@ public class ConfigurationService extends Service{
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OA, session, process);
+                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OBJECT_ATTRIBUTE, session, process);
                 }catch (Exception e){}
 
                 try {
-                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OA, session, process);
+                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OBJECT_ATTRIBUTE, session, process);
                 }catch (Exception e) {}
 
                 if(node == null) {
@@ -407,16 +407,16 @@ public class ConfigurationService extends Service{
                     if(parentNode == null) {
                         //create pc
                         System.out.println("*************** Parent node is null, creating one ***************");
-                        parentNode = nodeService.createNode(NEW_NODE_ID, NEW_NODE_ID, fileName, NodeType.PC.toString(), null);
+                        parentNode = nodeService.createNode(NEW_NODE_ID, NEW_NODE_ID, fileName, NodeType.POLICY_CLASS.toString(), null);
                     }
                     System.out.println("*************** Creating the node requeested ***************" + NEW_NODE_ID);
                     nodeService.createNode(parentNode.getId(), NEW_NODE_ID, fileName,
-                            file.endsWith("/") ? NodeType.OA.toString() : NodeType.O.toString(),
+                            file.endsWith("/") ? NodeType.OBJECT_ATTRIBUTE.toString() : NodeType.OBJECT.toString(),
                             new Property[]{
-                            new Property(NAMESPACE_PROPERTY, namespace),
-                            new Property("storage", "google"),
-                            new Property("uuid", fileId)
-                    });
+                                    new Property(NAMESPACE_PROPERTY, namespace),
+                                    new Property("storage", "google"),
+                                    new Property("uuid", fileId)
+                            });
                     System.out.println("creating node " + fileName + " (" + fileId + ") in namespace " + namespace);
                 }
             }
@@ -540,12 +540,10 @@ public class ConfigurationService extends Service{
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) {
+    public void load(String config) throws InvalidPropertyException, InvalidNodeTypeException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, IOException, ConfigurationException, NoSuchAlgorithmException, NullNameException, SQLException, NullTypeException, PropertyNotFoundException, AssociationExistsException, AssignmentExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
-        HashMap<Long, Node> nodesMap = new HashMap<>();
         HashSet<Node> nodes = graph.getNodes();
-        System.out.println("In load configuration method");
         for(Node node : nodes) {
             List<Property> properties = node.getProperties();
             Property[] propArr = null;
@@ -554,72 +552,22 @@ public class ConfigurationService extends Service{
                 propArr = properties.toArray(propArr);
             }
             System.out.println("Creating node " + node.getId() + "-" + node.getName() + "-" + node.getType().toString());
-            try {
-                getDaoManager().getNodesDAO().createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
-                nodesMap.put(node.getId(), node);
-            }
-            catch (IOException | SQLException | InvalidPropertyException | DatabaseException | ClassNotFoundException | InvalidNodeTypeException e) {
-                e.printStackTrace();
-            }
+            nodeService.createNode(node.getId(), node.getName(), node.getType().toString(), propArr);
         }
 
         HashSet<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
             // child - assigned to -> parent
             if(assignment != null) {
-                try {
-                    System.out.println("assignment: " + assignment.getChild() + "->" + assignment.getParent());
-                    Node child, parent;
-                    if (assignment.getChild() < 0) {
-                        child = nodeService.getNode(assignment.getChild());
-                    } else {
-                        child = nodesMap.get(assignment.getChild());
-                    }
-
-                    if (assignment.getParent() < 0) {
-                        parent = nodeService.getNode(assignment.getParent());
-                    } else {
-                        parent = nodesMap.get(assignment.getParent());
-                    }
-
-                    getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
-                }
-                catch (DatabaseException | IOException | NodeNotFoundException e) {
-                    e.printStackTrace();
-                }
-                catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-                catch (InvalidPropertyException e) {
-                    e.printStackTrace();
-                }
+                System.out.println("assignment: " + assignment.getChild() + "->" + assignment.getParent());
+                assignmentService.createAssignment(assignment.getChild(), assignment.getParent());
             }
         }
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
             System.out.println(association.getUa() + "-> " + association.getTarget());
-            try {
-                getDaoManager().getAssociationsDAO().createAssociation(association.getUa(), association.getTarget(), association.getOps(), association.isInherit());
-            }
-            catch (DatabaseException e) {
-                e.printStackTrace();
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            catch (InvalidPropertyException e) {
-                e.printStackTrace();
-            }
+            associationsService.createAssociation(association.getUa(), association.getTarget(), association.getOps(), association.isInherit());
         }
     }
 

@@ -21,10 +21,8 @@ import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrEvent;
 import gov.nist.policyserver.obligations.model.script.rule.event.time.EvrTime;
 import gov.nist.policyserver.obligations.model.script.rule.response.*;
 import gov.nist.policyserver.service.AssignmentService;
-import gov.nist.policyserver.service.NodeService;
 import gov.nist.policyserver.service.ProhibitionsService;
 import gov.nist.policyserver.service.Service;
-import org.joda.time.LocalDateTime;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,7 +30,6 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 
-import static gov.nist.policyserver.common.Constants.ANY_OPERATIONS;
 import static gov.nist.policyserver.common.Constants.NAMESPACE_PROPERTY;
 
 public class EvrService extends Service {
@@ -774,7 +771,7 @@ public class EvrService extends Service {
 
             //loop through the nodes that are included in the subject entity
             for(Node subjectNode : subjectNodes) {
-                if(!subjectNode.getType().equals(NodeType.UA)) {//can only grant analytics for ua
+                if(!subjectNode.getType().equals(NodeType.USER_ATTRIBUTE)) {//can only grant analytics for ua
                     continue;
                 }
 

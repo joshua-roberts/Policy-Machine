@@ -105,11 +105,11 @@ public class UpdateAlgorithm extends Algorithm {
                 Column::getColumnName).collect(Collectors.toList());
 
         for (String rowName : rows) {
-            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName, NodeType.OA);
+            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName, NodeType.OBJECT_ATTRIBUTE);
 
             //iterate through the requested columns and find the intersection of the current row and current column
             for (String columnName : reqColumns) {
-                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName, NodeType.OA);
+                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName, NodeType.OBJECT_ATTRIBUTE);
                 //if the intersection (an object) is in the accessible children add the COLUMN to a list
                 //else if not in accChildren, check if its in where clause
 
@@ -126,7 +126,7 @@ public class UpdateAlgorithm extends Algorithm {
             HashSet<Column> whereColumns = getWhereColumns(update.getWhere());
             for(Column column : whereColumns){
                 if(!reqColumns.contains(column.getColumnName())){
-                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName(), NodeType.OA);
+                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause

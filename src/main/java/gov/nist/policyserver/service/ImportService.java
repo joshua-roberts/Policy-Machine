@@ -1,6 +1,5 @@
 package gov.nist.policyserver.service;
 
-import com.sun.deploy.association.AssociationService;
 import gov.nist.policyserver.common.Constants;
 import gov.nist.policyserver.exceptions.*;
 import gov.nist.policyserver.model.graph.nodes.Node;
@@ -16,8 +15,8 @@ import java.util.*;
 
 import static gov.nist.policyserver.common.Constants.*;
 import static gov.nist.policyserver.dao.DAOManager.getDaoManager;
-import static gov.nist.policyserver.model.graph.nodes.NodeType.OA;
-import static gov.nist.policyserver.model.graph.nodes.NodeType.PC;
+import static gov.nist.policyserver.model.graph.nodes.NodeType.OBJECT_ATTRIBUTE;
+import static gov.nist.policyserver.model.graph.nodes.NodeType.POLICY_CLASS;
 
 public class ImportService {
 
@@ -41,18 +40,18 @@ public class ImportService {
 
             Node bucketNode;
             try {
-                bucketNode = nodeService.getNode(bucket, NodeType.OA.toString(), NAMESPACE_PROPERTY + "=" + bucket, session, process);
+                bucketNode = nodeService.getNode(bucket, NodeType.OBJECT_ATTRIBUTE.toString(), NAMESPACE_PROPERTY + "=" + bucket, session, process);
             }
             catch (UnexpectedNumberOfNodesException e) {
                 //create bucket pc
-                bucketNode = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, bucket, NodeType.PC.toString(),
+                bucketNode = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, bucket, NodeType.POLICY_CLASS.toString(),
                         new Property[]{
                                 new Property(BUCKET_PROPERTY, bucket),
                                 new Property(STORAGE_PROPERTY, storage)
                         });
 
                 //create bucket OA
-                bucketNode = nodeService.createNode(bucketNode.getId(), NEW_NODE_ID, bucket, NodeType.OA.toString(),
+                bucketNode = nodeService.createNode(bucketNode.getId(), NEW_NODE_ID, bucket, NodeType.OBJECT_ATTRIBUTE.toString(),
                         new Property[]{
                                 new Property(NAMESPACE_PROPERTY, bucket),
                                 new Property(STORAGE_PROPERTY, storage)
@@ -90,11 +89,11 @@ public class ImportService {
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OA, session, process);
+                    parentNode = nodeService.getNodeInNamespace(parentNamespace, parentName, NodeType.OBJECT_ATTRIBUTE, session, process);
                 }catch (Exception e){}
 
                 try {
-                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OA, session, process);
+                    node = nodeService.getNodeInNamespace(namespace, fileName, NodeType.OBJECT_ATTRIBUTE, session, process);
                 }catch (Exception e) {}
 
                 if(node == null) {
@@ -102,10 +101,10 @@ public class ImportService {
                     if(parentNode == null) {
                         //create pc
                         parentNode = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, parentName,
-                                NodeType.OA.toString(), null);
+                                NodeType.OBJECT_ATTRIBUTE.toString(), null);
                     }
                     nodeService.createNode(parentNode.getId(), NEW_NODE_ID, fileName,
-                            (i == split.length-1) ? NodeType.O.toString() : NodeType.OA.toString(),
+                            (i == split.length-1) ? NodeType.OBJECT.toString() : NodeType.OBJECT_ATTRIBUTE.toString(),
                             new Property[]{
                                     new Property(NAMESPACE_PROPERTY, namespace),
                                     new Property(STORAGE_PROPERTY, storage),
@@ -122,10 +121,10 @@ public class ImportService {
 
     public void importEntities(String kind, HashMap<String, Object>[] entities) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
         //create pc for kind
-        Node node = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, kind, NodeType.PC.toString(), null);
+        Node node = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, kind, NodeType.POLICY_CLASS.toString(), null);
 
         //create base OA for kind
-        node = nodeService.createNode(node.getId(), NEW_NODE_ID, kind, NodeType.OA.toString(), null);
+        node = nodeService.createNode(node.getId(), NEW_NODE_ID, kind, NodeType.OBJECT_ATTRIBUTE.toString(), null);
 
         //for each property, add object with property just the name NO VALUES
 
@@ -138,7 +137,7 @@ public class ImportService {
             }
 
             //create row node
-            Node entityNode = nodeService.createNode(node.getId(), NEW_NODE_ID, String.valueOf(id), NodeType.OA
+            Node entityNode = nodeService.createNode(node.getId(), NEW_NODE_ID, String.valueOf(id), NodeType.OBJECT_ATTRIBUTE
                             .toString(),
                     new Property[]{
                             new Property("kind", kind),
@@ -148,7 +147,7 @@ public class ImportService {
 
 
             for (String key : map.keySet()) {
-                nodeService.createNode(entityNode.getId(), NEW_NODE_ID, key, NodeType.O.toString(), new
+                nodeService.createNode(entityNode.getId(), NEW_NODE_ID, key, NodeType.OBJECT.toString(), new
                         Property[]{new Property("value", key)});
             }
         }
@@ -162,14 +161,14 @@ public class ImportService {
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
                 new Property(Constants.DESCRIPTION_PROPERTY, "Policy Class for " + schema)
         };
-        Node pcNode = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, schema, NodeType.PC.toString(), properties);
+        Node pcNode = nodeService.createNode(NO_BASE_ID, NEW_NODE_ID, schema, NodeType.POLICY_CLASS.toString(), properties);
 
         properties = new Property[] {
                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY),
                 new Property(Constants.DESCRIPTION_PROPERTY, "Base Object Attribute for " + schema)
         };
         // create the schema object attribute node
-        Node schemaNode = nodeService.createNode(pcNode.getId(), NEW_NODE_ID, schema, NodeType.OA.toString(),
+        Node schemaNode = nodeService.createNode(pcNode.getId(), NEW_NODE_ID, schema, NodeType.OBJECT_ATTRIBUTE.toString(),
                 properties);
 
         try {
@@ -202,7 +201,8 @@ public class ImportService {
                         new Property(NAMESPACE_PROPERTY, schema),
                         new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_TABLE_PROPERTY)
                 };
-                Node tableNode = nodeService.createNode(schemaNode.getId(), NEW_NODE_ID, tableName, NodeType.OA.toString(),
+                Node tableNode = nodeService.createNode(schemaNode.getId(), NEW_NODE_ID, tableName, NodeType.OBJECT_ATTRIBUTE
+                                .toString(),
                         properties);
 
                 //create columns container
@@ -211,7 +211,7 @@ public class ImportService {
                         new Property(DESCRIPTION_PROPERTY, "Column container for " + tableName)
                 };
                 Node columnsNode = nodeService.createNode(tableNode.getId(), NEW_NODE_ID, Constants
-                                .COLUMN_CONTAINER_NAME, NodeType.OA.toString(), properties);
+                                .COLUMN_CONTAINER_NAME, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
                 //create columns
                 Statement stmt1 = conn.createStatement();
                 String colSql = "SELECT c.column_name FROM INFORMATION_SCHEMA.COLUMNS c WHERE c.table_name = '" + tableName + "' AND c.table_schema = '" + schema + "'";
@@ -225,7 +225,8 @@ public class ImportService {
                     properties = new Property[]{
                             new Property(NAMESPACE_PROPERTY, tableName)
                     };
-                    Node columnNode = nodeService.createNode(columnsNode.getId(), NEW_NODE_ID, columnName, NodeType.OA.toString(),
+                    Node columnNode = nodeService.createNode(columnsNode.getId(), NEW_NODE_ID, columnName, NodeType.OBJECT_ATTRIBUTE
+                                    .toString(),
                             properties);
                     columnNodes.put(columnName, columnNode);
 
@@ -241,7 +242,7 @@ public class ImportService {
                             new Property(DESCRIPTION_PROPERTY, "Row container for " + tableName)
                     };
                     Node rowsNode = nodeService.createNode(tableNode.getId(), NEW_NODE_ID, Constants.ROW_CONTAINER_NAME,
-                            NodeType.OA.toString(), properties);
+                            NodeType.OBJECT_ATTRIBUTE.toString(), properties);
 
                     //get data from table
                     String sql = "select " + columnSql + " from " + tableName;
@@ -271,7 +272,7 @@ public class ImportService {
                                 new Property(NAMESPACE_PROPERTY, tableName),
                                 new Property(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY)
                         };
-                        Node rowNode = nodeService.createNode(NEW_NODE_ID, rowName, NodeType.OA.toString(), properties);
+                        Node rowNode = nodeService.createNode(NEW_NODE_ID, rowName, NodeType.OBJECT_ATTRIBUTE.toString(), properties);
                         /*Node rowNode = nodeService.createNode(rowsNode.getId(), NEW_NODE_ID, rowName, NodeType.OA
                                         .toString(),
                                 properties);*/
@@ -292,7 +293,7 @@ public class ImportService {
                             };
                             /*Node objectNode = nodeService.createNode(rowNode.getId(), NEW_NODE_ID, objectName, NodeType.O.toString(),
                                     properties);*/
-                            Node objectNode = nodeService.createNode(NEW_NODE_ID, objectName, NodeType.O.toString(), properties);
+                            Node objectNode = nodeService.createNode(NEW_NODE_ID, objectName, NodeType.OBJECT.toString(), properties);
                             createAssignment(objectNode, rowNode);
 
                             //assign object to row and column
@@ -322,7 +323,7 @@ public class ImportService {
         getDaoManager().getGraphDAO().getGraph().createAssignment(child, parent);
 
         //if the parent is a PC and the child is an OA, create a Association for the super user on the child
-        if (parent.getType().equals(PC) && child.getType().equals(OA)) {
+        if (parent.getType().equals(POLICY_CLASS) && child.getType().equals(OBJECT_ATTRIBUTE)) {
             Node superUA = getSuperUA();
 
             //assign UA to PC
@@ -345,7 +346,7 @@ public class ImportService {
     }
 
     private Node getSuperUA() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidNodeTypeException, PropertyNotFoundException, NodeNotFoundException {
-        HashSet<Node> nodesOfType = getDaoManager().getGraphDAO().getGraph().getNodesOfType(NodeType.UA);
+        HashSet<Node> nodesOfType = getDaoManager().getGraphDAO().getGraph().getNodesOfType(NodeType.USER_ATTRIBUTE);
         for(Node node : nodesOfType) {
             if(node.getName().equals(SUPER_KEYWORD)) {
                 if(node.hasProperty(NAMESPACE_PROPERTY) && node.getProperty(NAMESPACE_PROPERTY).getValue().equals(SUPER_KEYWORD)) {

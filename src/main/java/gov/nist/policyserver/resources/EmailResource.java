@@ -32,7 +32,7 @@ public class EmailResource {
 
     @GET
     public Response getEmails(@QueryParam("box") String box,
-                             @QueryParam("session") String session) throws InvalidNodeTypeException, InvalidPropertyException,
+                              @QueryParam("session") String session) throws InvalidNodeTypeException, InvalidPropertyException,
             SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, UnexpectedNumberOfNodesException, NodeNotFoundException, NoUserParameterException {
         {
 
@@ -78,4 +78,4 @@ public class EmailResource {
 
         return null;
     }
-    }
+}

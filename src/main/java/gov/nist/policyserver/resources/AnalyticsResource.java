@@ -90,7 +90,7 @@ public class AnalyticsResource {
         Node targetNode = nodeService.getNode(targetParams.getFirst("name"), targetParams.getFirst("type"), targetParams.getFirst("properties"), session, process);
 
         //get the user node
-        Node userNode = nodeService.getNode(username, NodeType.U.toString(), null, session, process);
+        Node userNode = nodeService.getNode(username, NodeType.USER.toString(), null, session, process);
 
         return new ApiResponse(analyticsService.getUserPermissionsOn(targetNode.getId(), userNode.getId()).getOperations()).toResponse();
     }
@@ -107,7 +107,7 @@ public class AnalyticsResource {
         Node targetNode = nodeService.getNode(targetParams.getFirst("name"), targetParams.getFirst("type"), targetParams.getFirst("properties"), session, process);
 
         //get the user node
-        Node userNode = nodeService.getNode(username, NodeType.U.toString(), null, session, process);
+        Node userNode = nodeService.getNode(username, NodeType.USER.toString(), null, session, process);
 
         //get user permissions
         PmAnalyticsEntry userPerms = analyticsService.getUserPermissionsOn(targetNode.getId(), userNode.getId());
@@ -128,7 +128,7 @@ public class AnalyticsResource {
                                        @QueryParam("session") String session,
                                        @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
         //get user node
-        Node userNode = nodeService.getNode(username, NodeType.U.toString(), null, session, process);
+        Node userNode = nodeService.getNode(username, NodeType.USER.toString(), null, session, process);
 
         //get all accessible nodes
         List<PmAnalyticsEntry> accessibleNodes = analyticsService.getAccessibleNodes(userNode.getId());
@@ -148,17 +148,6 @@ public class AnalyticsResource {
         }
     }
 
-    /**
-     * Get POS
-     * @param session
-     * @param process
-     * @return
-     * @throws NodeNotFoundException
-     * @throws NoUserParameterException
-     * @throws SessionUserNotFoundException
-     * @throws ConfigurationException
-     * @throws SessionDoesNotExistException
-     */
     @Path("/sessions")
     @GET
     public Response getAccessibleNodes(@QueryParam("session") String session,
