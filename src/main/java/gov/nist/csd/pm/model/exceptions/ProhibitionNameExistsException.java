@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.policyserver.common.Constants;
+import gov.nist.csd.pm.model.Constants;
 
 public class ProhibitionNameExistsException extends PmException {
     public ProhibitionNameExistsException(String prohibitionName) {

@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.policyserver.common.Constants;
+import gov.nist.csd.pm.model.Constants;
 
 public class AssociationExistsException extends PmException {
     public AssociationExistsException(long uaId, long targetId) {

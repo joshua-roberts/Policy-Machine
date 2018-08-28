@@ -36,4 +36,8 @@ public class ErrorCodes {
     public static final int ERR_MALFORMED_PDL                       = 6033;
     public static final int ERR_INVALID_ASSOCIATION                 = 6034;
     public static final int ERR_NODE_EXISTS                         = 6034;
+    public static final int ERR_NEO                                 = 7000;
+    public static final int ERR_MYSQL                               = 8000;
+    public static final int SUCCESS                                 = 9000;
+
 }

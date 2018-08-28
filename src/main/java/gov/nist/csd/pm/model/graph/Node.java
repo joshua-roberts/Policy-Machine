@@ -69,7 +69,7 @@ public class Node implements Serializable{
         return foundValue != null && foundValue.equals(value);
     }
 
-    public boolean hasProperty(String key){
+    public boolean hasPropertyKey(String key){
         return this.properties.get(key) != null;
     }
 
@@ -80,6 +80,10 @@ public class Node implements Serializable{
         }
 
         return foundValue;
+    }
+
+    public void addProperty(String key, String value) {
+        properties.put(key, value);
     }
 
     public String getContent() {

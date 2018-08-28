@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.policyserver.common.Constants;
-import gov.nist.policyserver.model.graph.nodes.Node;
+import gov.nist.csd.pm.model.Constants;
+import gov.nist.csd.pm.model.graph.Node;
 
 public class NodeIdExistsException extends PmException {
     public NodeIdExistsException(long id, Node node) {

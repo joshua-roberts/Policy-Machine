@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.policyserver.common.Constants;
+import gov.nist.csd.pm.model.Constants;
 
 public class AssignmentExistsException extends PmException {
     private static final String ASSIGNMENT_EXISTS_ERRMSG = "There is already an assignment between %d (start) and %d (end)";
