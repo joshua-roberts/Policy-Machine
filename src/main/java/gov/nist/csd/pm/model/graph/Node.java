@@ -26,8 +26,8 @@ public class Node implements Serializable{
 
         this.name = name;
         this.type = type;
-        properties = new HashMap<>();
-        this.id = hash(name, type, properties);
+        this.properties = new HashMap<>();
+        this.id = hashID(name, type, properties);
     }
 
     public Node(String name, NodeType type, HashMap<String, String> properties){
@@ -40,12 +40,52 @@ public class Node implements Serializable{
 
         this.name = name;
         this.type = type;
-        this.properties = properties;
-        this.id = hash(name, type, properties);
+        if(properties == null) {
+            this.properties = new HashMap<>();
+        } else {
+            this.properties = properties;
+        }
+        this.id = hashID(name, type, properties);
     }
 
-    private static long hash(String name, NodeType type, HashMap<String, String> properties) {
-        return name.hashCode() * type.hashCode() * properties.hashCode();
+    public Node(long id, String name, NodeType type) {
+        if(name == null){
+            throw new IllegalArgumentException("The name of a node cannot be null");
+        }
+        if(type == null){
+            throw new IllegalArgumentException("The type of a node cannot be null");
+        }
+
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.properties = new HashMap<>();
+    }
+
+    public Node(long id, String name, NodeType type, HashMap<String, String> properties) {
+        if(name == null){
+            throw new IllegalArgumentException("The name of a node cannot be null");
+        }
+        if(type == null){
+            throw new IllegalArgumentException("The type of a node cannot be null");
+        }
+
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        if(properties == null) {
+            this.properties = new HashMap<>();
+        } else {
+            this.properties = properties;
+        }
+    }
+
+    public static long hashID(String name, NodeType type, HashMap<String, String> properties) {
+        long propsHash = 0;
+        for (String key : properties.keySet()) {
+            propsHash ^= key.hashCode() ^ properties.get(key).hashCode();
+        }
+        return name.hashCode() ^ type.hashCode() ^ propsHash;
     }
 
     public long getID() {
@@ -86,6 +126,10 @@ public class Node implements Serializable{
         properties.put(key, value);
     }
 
+    public void setProperties(HashMap<String, String> properties) {
+        this.properties = properties;
+    }
+
     public String getContent() {
         return content;
     }
@@ -104,5 +148,27 @@ public class Node implements Serializable{
 
     public String toString() {
         return name + ":" + type + ":" + id + ":" + properties;
+    }
+
+    public static void main(String[] args) {
+        HashMap<String, String> props = new HashMap<>();
+        props.put("prop3", "value3");
+        props.put("prop2", "value2");
+        props.put("prop1", "value1");
+
+        String name = "name123";
+        String type = "UA";
+
+
+        long hash = 0;
+        for (String key : props.keySet()) {
+            // byte[] bytes = Bytes.concat(Bytes.key.hashCode(), props.get(key).hashCode());
+            hash ^= Long.hashCode(key.hashCode()) ^ Long.hashCode(props.get(key).hashCode());
+        }
+
+        long id = Long.hashCode(name.hashCode()) ^ Long.hashCode(type.hashCode()) ^ Long.hashCode(hash);
+        long id2 = name.hashCode() ^ type.hashCode() ^ hash;
+        System.out.println(id);
+        System.out.println(id2);
     }
 }

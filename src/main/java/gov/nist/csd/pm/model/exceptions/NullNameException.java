@@ -4,6 +4,6 @@ import gov.nist.csd.pm.model.Constants;
 
 public class NullNameException extends PmException {
     public NullNameException() {
-        super(Constants.ERR_NULL_NAME, "The server received a null name");
+        super(ErrorCodes.ERR_NULL_NAME, "The server received a null name");
     }
 }

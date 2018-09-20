@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pdp.translator.algorithms;
 
-import gov.nist.policyserver.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
+import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
 import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
@@ -38,7 +38,7 @@ public class UpdateAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, NodeNotFoundException, InvalidNodeTypeException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, InvalidEntityException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException {
+    public String run() throws SQLException, IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, NodeNotFoundException, InvalidNodeTypeException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, InvalidEntityException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException {
         //determine the rows that are going to be updated
         List<String> rows = getTargetRows();
 
@@ -100,16 +100,16 @@ public class UpdateAlgorithm extends Algorithm {
         this.select = select;
     }
 
-    private void checkRows(List<String> rows) throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidNodeTypeException, NodeNotFoundException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException {
+    private void checkRows(List<String> rows) throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidNodeTypeException, NodeNotFoundException, NoUserParameterException, NameInNamespaceNotFoundException, InvalidPropertyException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException, UnexpectedNumberOfNodesException {
         List<String> reqColumns = update.getColumns().stream().map(
                 Column::getColumnName).collect(Collectors.toList());
 
         for (String rowName : rows) {
-            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName, NodeType.OBJECT_ATTRIBUTE);
+            long rowPmId = pmManager.getEntityId(update.getTable().getName(), rowName, NodeType.OA);
 
             //iterate through the requested columns and find the intersection of the current row and current column
             for (String columnName : reqColumns) {
-                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName, NodeType.OBJECT_ATTRIBUTE);
+                long columnPmId = pmManager.getEntityId(update.getTable().getName(), columnName, NodeType.OA);
                 //if the intersection (an object) is in the accessible children add the COLUMN to a list
                 //else if not in accChildren, check if its in where clause
 
@@ -126,7 +126,7 @@ public class UpdateAlgorithm extends Algorithm {
             HashSet<Column> whereColumns = getWhereColumns(update.getWhere());
             for(Column column : whereColumns){
                 if(!reqColumns.contains(column.getColumnName())){
-                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
+                    long columnPmId = pmManager.getEntityId(update.getTable().getName(), column.getColumnName(), NodeType.OA);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause

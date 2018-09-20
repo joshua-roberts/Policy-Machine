@@ -273,15 +273,15 @@
                 </div>
             </div>
         </div>
-        <div id="/nodes/{nodeId}">
-            <h3>/nodes/{nodeId}</h3>
+        <div id="/nodes/{nodeID}">
+            <h3>/nodes/{nodeID}</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeId}-GET')">GET</button>
-                    <button class="btn btn-warning" onclick="showEndpoint('/nodes/{nodeId}-PUT')">PUT</button>
-                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeId}-DELETE')">DELETE</button>
+                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeID}-GET')">GET</button>
+                    <button class="btn btn-warning" onclick="showEndpoint('/nodes/{nodeID}-PUT')">PUT</button>
+                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeID}-DELETE')">DELETE</button>
                 </div>
-                <div id="/nodes/{nodeId}-GET" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}-GET" style="display: none; padding: 15px">
                     <p>
                         Get the node with the given ID
                     </p>
@@ -299,7 +299,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">nodeId</td>
+                            <td style="min-width: 40px">nodeID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -317,10 +317,10 @@
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}-GET-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":{"id":1234,"name":"Node123","type":"OA","description":"this is a description","properties":[{"key":"namespace","value":"my_namespace","valid":true}]}};
-                                document.getElementById('/nodes/{nodeId}-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -333,7 +333,7 @@
                         <li>6007 - The provided Subject Type was invalid</li>
                     </ul>
                 </div>
-                <div id="/nodes/{nodeId}-PUT" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}-PUT" style="display: none; padding: 15px">
                     <p>
                         Update the node with the given ID
                     </p>
@@ -351,7 +351,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">nodeId</td>
+                            <td style="min-width: 40px">nodeID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -398,18 +398,18 @@
                             <p>
                                 PUT .. /pm/api/nodes/1234
                             </p>
-                            <pre id="/nodes/{nodeId}-PUT-request" style="background-color: lightgrey; height: 162px"></pre>
+                            <pre id="/nodes/{nodeID}-PUT-request" style="background-color: lightgrey; height: 162px"></pre>
                             <script>
                                 var json = {'description':'this is an UPDATED description'};
-                                document.getElementById('/nodes/{nodeId}-PUT-request').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}-PUT-request').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}-PUT-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}-PUT-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":{"id":1234,"name":"Node123","type":"OA","description":"this is an UPDATED description","properties":[{"key":"namespace","value":"my_namespace","valid":true}]}};
-                                document.getElementById('/nodes/{nodeId}-PUT-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}-PUT-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -426,7 +426,7 @@
                         <li>6015 - A property with the given key, value pair was not found</li>
                     </ul>
                 </div>
-                <div id="/nodes/{nodeId}-DELETE" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}-DELETE" style="display: none; padding: 15px">
                     <p>
                         Delete the node with the given ID
                     </p>
@@ -444,7 +444,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">nodeId</td>
+                            <td style="min-width: 40px">nodeID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -461,10 +461,10 @@
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"Node successfully deleted"};
-                                document.getElementById('/nodes/{nodeId}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -481,13 +481,13 @@
                 </div>
             </div>
         </div>
-        <div id="/nodes/{nodeId}/properties/{key}">
-            <h3>/nodes/{nodeId}/properties/{key}</h3>
+        <div id="/nodes/{nodeID}/properties/{key}">
+            <h3>/nodes/{nodeID}/properties/{key}</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeId}/properties/{key}-DELETE')">DELETE</button>
+                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeID}/properties/{key}-DELETE')">DELETE</button>
                 </div>
-                <div id="/nodes/{nodeId}/properties/{key}-DELETE" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}/properties/{key}-DELETE" style="display: none; padding: 15px">
                     <p>
                         Delete the property of the node with the given key
                     </p>
@@ -505,7 +505,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="">nodeId</td>
+                            <td style="">nodeID</td>
                             <td style="">long</td>
                             <td style="">path</td>
                             <td style="">yes</td>
@@ -529,10 +529,10 @@
                     </div>
                     <div class="col-lg-6">
                         <h5>Example Response</h5>
-                        <pre id="/nodes/{nodeId}/properties/{key}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
+                        <pre id="/nodes/{nodeID}/properties/{key}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                         <script>
                             var json = {"code":9000,"message":"Success","entity":"The property was successfully deleted"};
-                            document.getElementById('/nodes/{nodeId}/properties/{key}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
+                            document.getElementBId('/nodes/{nodeID}/properties/{key}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                         </script>
                     </div>
                 </div>
@@ -550,14 +550,14 @@
                 </div>
             </div>
         </div>
-        <div id="/nodes/{nodeId}/children">
-            <h3>/nodes/{nodeId}/children</h3>
+        <div id="/nodes/{nodeID}/children">
+            <h3>/nodes/{nodeID}/children</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeId}/children-GET')">GET</button>
-                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeId}/children-DELETE')">DELETE</button>
+                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeID}/children-GET')">GET</button>
+                    <button class="btn btn-danger" onclick="showEndpoint('/nodes/{nodeID}/children-DELETE')">DELETE</button>
                 </div>
-                <div id="/nodes/{nodeId}/children-GET" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}/children-GET" style="display: none; padding: 15px">
                     <p>
                         Get the nodes that are assigned to the node with the given ID
                     </p>
@@ -575,7 +575,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="">nodeId</td>
+                            <td style="">nodeID</td>
                             <td style="">long</td>
                             <td style="">path</td>
                             <td style="">yes</td>
@@ -596,12 +596,12 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                GET .. /nodes/{nodeId}/children?type=OA
+                                GET .. /nodes/{nodeID}/children?type=OA
                             </p>
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}/children-GET-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}/children-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":[
                                         {
@@ -617,7 +617,7 @@
                                             "description": "node description"
                                         }
                                     ]};
-                                document.getElementById('/nodes/{nodeId}/children-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}/children-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -628,7 +628,7 @@
                         <li>6009 - A user parameter was expected but none was received</li>
                     </ul>
                 </div>
-                <div id="/nodes/{nodeId}/children-DELETE" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}/children-DELETE" style="display: none; padding: 15px">
                     <p>
                         Delete the nodes that are assigned to the node with the given ID
                     </p>
@@ -646,7 +646,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="">nodeId</td>
+                            <td style="">nodeID</td>
                             <td style="">long</td>
                             <td style="">path</td>
                             <td style="">yes</td>
@@ -667,15 +667,15 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                DELETE .. /nodes/{nodeId}/children?type=OA
+                                DELETE .. /nodes/{nodeID}/children?type=OA
                             </p>
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}/children-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}/children-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"The children of the node were all deleted"};
-                                document.getElementById('/nodes/{nodeId}/children-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}/children-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -693,13 +693,13 @@
                 </div>
             </div>
         </div>
-        <div id="/nodes/{nodeId}/parents">
-            <h3>/nodes/{nodeId}/parents</h3>
+        <div id="/nodes/{nodeID}/parents">
+            <h3>/nodes/{nodeID}/parents</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeId}/parents-GET')">GET</button>
+                    <button class="btn btn-success" onclick="showEndpoint('/nodes/{nodeID}/parents-GET')">GET</button>
                 </div>
-                <div id="/nodes/{nodeId}/parents-GET" style="display: none; padding: 15px">
+                <div id="/nodes/{nodeID}/parents-GET" style="display: none; padding: 15px">
                     <p>
                         Get nodes based on the provided search parameters
                     </p>
@@ -717,7 +717,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">nodeId</td>
+                            <td style="min-width: 40px">nodeID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -735,13 +735,13 @@
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/nodes/{nodeId}/parents-GET-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/nodes/{nodeID}/parents-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {'code':9000,'message':'Success','entity':[
                                         {'id':1,'name':'node1','type':'OA','description':'','properties':[{'key':'namespace','value':'my_namespace','valid':true}]},
                                         {'id':2,'name':'node2','type':'OA','description':'','properties':[{'key':'namespace','value':'my_namespace','valid':true}]},
                                         {'id':3,'name':'node3','type':'OA','description':'','properties':[{'key':'namespace','value':'my_namespace','valid':true}]}]};
-                                document.getElementById('/nodes/{nodeId}/parents-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/nodes/{nodeID}/parents-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -772,7 +772,7 @@
                 </div>
                 <div id="/assignments-GET" style="display: none; padding: 15px">
                     <p>
-                        Return true or false if the assignment exists between the childId and the parentId
+                        Return true or false if the assignment exists between the childID and the parentID
                     </p>
                     <h5>Parameters</h5>
                     <table class="table table-hover table-sm">
@@ -788,7 +788,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">childId</td>
+                            <td style="min-width: 40px">childID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">yes</td>
@@ -796,7 +796,7 @@
                             <td>1234</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">parentId</td>
+                            <td style="min-width: 40px">parentID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">yes</td>
@@ -809,7 +809,7 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                GET .. /pm/api/assignments?childId=1234&parentId=123
+                                GET .. /pm/api/assignments?childID=1234&parentID=123
                             </p>
                         </div>
                         <div class="col-lg-6">
@@ -817,7 +817,7 @@
                             <pre id="/assignments-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {'code':9000,'message':'Success','entity':true};
-                                document.getElementById('/assignments-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/assignments-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -844,7 +844,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">childId</td>
+                            <td style="min-width: 40px">childID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">body</td>
                             <td style="max-width: 5px">yes</td>
@@ -852,7 +852,7 @@
                             <td>1234</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">parentId</td>
+                            <td style="min-width: 40px">parentID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">body</td>
                             <td style="max-width: 5px">yes</td>
@@ -869,8 +869,8 @@
                             </p>
                             <pre id="/assignments-POST-request" style="background-color: lightgrey; height: 162px"></pre>
                             <script>
-                                var json = {'childId':1234,'parentId':123};
-                                document.getElementById('/assignments-POST-request').innerHTML = JSON.stringify(json, undefined, 2);
+                                var json = {'childID':1234,'parentID':123};
+                                document.getElementBId('/assignments-POST-request').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                         <div class="col-lg-6">
@@ -878,7 +878,7 @@
                             <pre id="/assignments-POST-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"Assignment was successfully created"};
-                                document.getElementById('/assignments-POST-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/assignments-POST-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -912,7 +912,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">childId</td>
+                            <td style="min-width: 40px">childID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">yes</td>
@@ -920,7 +920,7 @@
                             <td>1234</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">parentId</td>
+                            <td style="min-width: 40px">parentID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">yes</td>
@@ -933,7 +933,7 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                DELETE .. /pm/api/assignments?childId=1234&parentId=123
+                                DELETE .. /pm/api/assignments?childID=1234&parentID=123
                             </p>
                         </div>
                         <div class="col-lg-6">
@@ -941,7 +941,7 @@
                             <pre id="/assignments-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"Assignment was successfully deleted"};
-                                document.getElementById('/assignments-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/assignments-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -989,7 +989,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">targetId</td>
+                            <td style="min-width: 40px">targetID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">no</td>
@@ -1002,15 +1002,15 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                GET .. /pm/api/associations?targetId=123
+                                GET .. /pm/api/associations?targetID=123
                             </p>
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
                             <pre id="/associations-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
-                                var json = {"code":9000,"message":"Success","entity":[{'uaId':'321','targetId':'123','ops':['read', 'write']},{'uaId':'4321','targetId':'123','ops':['read', 'write']}]};
-                                document.getElementById('/associations-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                var json = {"code":9000,"message":"Success","entity":[{'uaID':'321','targetID':'123','ops':['read', 'write']},{'uaID':'4321','targetID':'123','ops':['read', 'write']}]};
+                                document.getElementBId('/associations-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -1042,7 +1042,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">uaId</td>
+                            <td style="min-width: 40px">uaID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">body</td>
                             <td style="max-width: 5px">yes</td>
@@ -1050,7 +1050,7 @@
                             <td>123</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">targetId</td>
+                            <td style="min-width: 40px">targetID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">body</td>
                             <td style="max-width: 5px">yes</td>
@@ -1083,8 +1083,8 @@
                             </p>
                             <pre id="/associations-POST-request" style="background-color: lightgrey; height: 162px"></pre>
                             <script>
-                                var json = {'uaId':'123','targetId':'321','ops':['read', 'write']};
-                                document.getElementById('/associations-POST-request').innerHTML = JSON.stringify(json, undefined, 2);
+                                var json = {'uaID':'123','targetID':'321','ops':['read', 'write']};
+                                document.getElementBId('/associations-POST-request').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                         <div class="col-lg-6">
@@ -1092,7 +1092,7 @@
                             <pre id="/associations-POST-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"Association was successfully created"};
-                                document.getElementById('/associations-POST-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementBId('/associations-POST-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -1110,15 +1110,15 @@
                 </div>
             </div>
         </div>
-        <div id="/associations/{targetId}">
-            <h3>/associations/{targetId}</h3>
+        <div id="/associations/{targetID}">
+            <h3>/associations/{targetID}</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-warning" onclick="showEndpoint('/associations/{targetId}-PUT')">PUT</button>
+                    <button class="btn btn-warning" onclick="showEndpoint('/associations/{targetID}-PUT')">PUT</button>
                 </div>
-                <div id="/associations/{targetId}-PUT" style="display: none; padding: 15px">
+                <div id="/associations/{targetID}-PUT" style="display: none; padding: 15px">
                     <p>
-                        Update the operations of an Association between the targetId and the uaId.  The new associations will overwrite the existing ones.
+                        Update the operations of an Association between the targetID and the uaID.  The new associations will overwrite the existing ones.
                     </p>
                     <h5>Parameters</h5>
                     <table class="table table-hover table-sm">
@@ -1134,7 +1134,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">targetId</td>
+                            <td style="min-width: 40px">targetID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -1142,7 +1142,7 @@
                             <td>321</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">uaId</td>
+                            <td style="min-width: 40px">uaID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">body</td>
                             <td style="max-width: 5px">yes</td>
@@ -1202,13 +1202,13 @@
                 </div>
             </div>
         </div>
-        <div id="/associations/{targetId}/subjects/{subjectId}">
-            <h3>/associations/{targetId}/subjects/{subjectId}</h3>
+        <div id="/associations/{targetId}/subjects/{subjectID}">
+            <h3>/associations/{targetId}/subjects/{subjectID}</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-danger" onclick="showEndpoint('/associations/{targetId}/subjects/{subjectId}-DELETE')">DELETE</button>
+                    <button class="btn btn-danger" onclick="showEndpoint('/associations/{targetId}/subjects/{subjectID}-DELETE')">DELETE</button>
                 </div>
-                <div id="/associations/{targetId}/subjects/{subjectId}-DELETE" style="display: none; padding: 15px">
+                <div id="/associations/{targetId}/subjects/{subjectID}-DELETE" style="display: none; padding: 15px">
                     <p>
                         Delete the association between the Subject and the Target
                     </p>
@@ -1234,7 +1234,7 @@
                             <td>321</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">subjectId</td>
+                            <td style="min-width: 40px">subjectID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -1252,10 +1252,10 @@
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/associations/{targetId}/subjects/{subjectId}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/associations/{targetId}/subjects/{subjectID}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":"Successfully deleted Association"};
-                                document.getElementById('/associations/{targetId}/subjects/{subjectId}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementById('/associations/{targetId}/subjects/{subjectID}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -1274,13 +1274,13 @@
                 </div>
             </div>
         </div>
-        <div id="/associations/subjects/{subjectId}">
-            <h3>/associations/subjects/{subjectId}</h3>
+        <div id="/associations/subjects/{subjectID}">
+            <h3>/associations/subjects/{subjectID}</h3>
             <div>
                 <div class="row" style="padding: 0 20px; margin-bottom: 5px">
-                    <button class="btn btn-success" onclick="showEndpoint('/associations/subjects/{subjectId}-GET')">GET</button>
+                    <button class="btn btn-success" onclick="showEndpoint('/associations/subjects/{subjectID}-GET')">GET</button>
                 </div>
-                <div id="/associations/subjects/{subjectId}-GET" style="display: none; padding: 15px">
+                <div id="/associations/subjects/{subjectID}-GET" style="display: none; padding: 15px">
                     <p>
                         Get the Associations that a User Attribute is the subject of
                     </p>
@@ -1298,7 +1298,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">subjectId</td>
+                            <td style="min-width: 40px">subjectID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">path</td>
                             <td style="max-width: 5px">yes</td>
@@ -1316,10 +1316,10 @@
                         </div>
                         <div class="col-lg-6">
                             <h5>Example Response</h5>
-                            <pre id="/associations/subjects/{subjectId}-GET-response" style="background-color: lightgrey; height: 200px"></pre>
+                            <pre id="/associations/subjects/{subjectID}-GET-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
                                 var json = {"code":9000,"message":"Success","entity":[{'uaId':'123','targetId':'321','ops':['read', 'write']}]};
-                                document.getElementById('/associations/subjects/{subjectId}-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
+                                document.getElementById('/associations/subjects/{subjectID}-GET-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>
                     </div>
@@ -1345,7 +1345,7 @@
             <ul>
                 <li><strong>Name:</strong> The name of the Prohibition.  This is just an identifier for the Prohibition.</li>
                 <li><strong>Subject:</strong> The Subject is the entity that is being prohibited.  This can be a User, User Attribute, or Process.</li>
-                <li><strong>Resources:</strong> A resource consists of a resourceId and a boolean value indicating if we should take the complement of the resource.</li>
+                <li><strong>Resources:</strong> A resource consists of a resourceID and a boolean value indicating if we should take the complement of the resource.</li>
                 <li><strong>Operations:</strong> A list of the operations that are prohibited for a Subject on the Resources</li>
                 <li><strong>Intersection:</strong> A boolean value.  If true, apply the Prohibition to objects that are in each of the resources.  Otherwise, apply the Prohibition to objects in any of the resources</li>
             </ul>
@@ -1355,12 +1355,12 @@
                     {
                         "name": "string",
                         "subject": {
-                            "subjectId": "long",
+                            "subjectID": "long",
                             "subjectType": "[UA, U, P]"
                         },
                         "resources": [
                             {
-                                "resourceId": "long",
+                                "resourceID": "long",
                                 "complement": "boolean"
                             }
                         ],
@@ -1397,7 +1397,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td style="min-width: 40px">subjectId</td>
+                            <td style="min-width: 40px">subjectID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">no</td>
@@ -1405,7 +1405,7 @@
                             <td>1234</td>
                         </tr>
                         <tr>
-                            <td style="min-width: 40px">resourceId</td>
+                            <td style="min-width: 40px">resourceID</td>
                             <td style="max-width: 5px">long</td>
                             <td style="max-width: 5px">query</td>
                             <td style="max-width: 5px">no</td>
@@ -1418,7 +1418,7 @@
                         <div class="col-lg-6">
                             <h5>Example Request</h5>
                             <p>
-                                GET .. /pm/api/prohibitions?subjectId=1234&targetId=123
+                                GET .. /pm/api/prohibitions?subjectID=1234&targetId=123
                             </p>
                         </div>
                         <div class="col-lg-6">
@@ -1429,16 +1429,16 @@
                                         {
                                             "name": "prohibition123",
                                             "subject": {
-                                                "subjectId": "1234",
+                                                "subjectID": "1234",
                                                 "subjectType": "U"
                                             },
                                             "resources": [
                                                 {
-                                                    "resourceId": "123",
+                                                    "resourceID": "123",
                                                     "complement": "false"
                                                 },
                                                 {
-                                                    "resourceId": "567",
+                                                    "resourceID": "567",
                                                     "complement": "true"
                                                 }
                                             ],
@@ -1494,7 +1494,7 @@
                                 <script>
                                     var json = {
                                         "subject":{
-                                            "subjectId":23,
+                                            "subjectID":23,
                                             "subjectType":"UA"
                                         }
                                     };
@@ -1514,11 +1514,11 @@
                                     var json = {
                                         "resources":[
                                             {
-                                                "resourceId":15,
+                                                "resourceID":15,
                                                 "complement":true
                                             },
                                             {
-                                                "resourceId":352555,
+                                                "resourceID":352555,
                                                 "complement":false
                                             }
                                         ]
@@ -1556,16 +1556,16 @@
                                 var json = {
                                     "name":"prohibition123",
                                     "subject":{
-                                        "subjectId":23,
+                                        "subjectID":23,
                                         "subjectType":"UA"
                                     },
                                     "resources":[
                                         {
-                                            "resourceId":15,
+                                            "resourceID":15,
                                             "complement":true
                                         },
                                         {
-                                            "resourceId":352555,
+                                            "resourceID":352555,
                                             "complement":false
                                         }
                                     ],
@@ -1585,16 +1585,16 @@
                                 var json = {"code":9000,"message":"Success","entity":{
                                         "name":"prohibition123",
                                         "subject":{
-                                            "subjectId":23,
+                                            "subjectID":23,
                                             "subjectType":"UA"
                                         },
                                         "resources":[
                                             {
-                                                "resourceId":15,
+                                                "resourceID":15,
                                                 "complement":true
                                             },
                                             {
-                                                "resourceId":352555,
+                                                "resourceID":352555,
                                                 "complement":false
                                             }
                                         ],
@@ -1671,16 +1671,16 @@
                                         {
                                             "name": "prohibition123",
                                             "subject": {
-                                                "subjectId": "1234",
+                                                "subjectID": "1234",
                                                 "subjectType": "U"
                                             },
                                             "resources": [
                                                 {
-                                                    "resourceId": "123",
+                                                    "resourceID": "123",
                                                     "complement": "false"
                                                 },
                                                 {
-                                                    "resourceId": "567",
+                                                    "resourceID": "567",
                                                     "complement": "true"
                                                 }
                                             ],
@@ -1744,7 +1744,7 @@
                                 <script>
                                     var json = {
                                         "subject":{
-                                            "subjectId":77,
+                                            "subjectID":77,
                                             "subjectType":"UA"
                                         }
                                     };
@@ -1764,15 +1764,15 @@
                                     var json = {
                                         "resources":[
                                             {
-                                                "resourceId":15,
+                                                "resourceID":15,
                                                 "complement":true
                                             },
                                             {
-                                                "resourceId":352555,
+                                                "resourceID":352555,
                                                 "complement":false
                                             },
                                             {
-                                                "resourceId":321,
+                                                "resourceID":321,
                                                 "complement":false
                                             }
                                         ]
@@ -1810,20 +1810,20 @@
                                 var json = {
                                     "name":"prohibitionNEW",
                                     "subject":{
-                                        "subjectId":77,
+                                        "subjectID":77,
                                         "subjectType":"UA"
                                     },
                                     "resources":[
                                         {
-                                            "resourceId":15,
+                                            "resourceID":15,
                                             "complement":true
                                         },
                                         {
-                                            "resourceId":352555,
+                                            "resourceID":352555,
                                             "complement":false
                                         },
                                         {
-                                            "resourceId":321,
+                                            "resourceID":321,
                                             "complement":false
                                         }
                                     ],
@@ -1842,20 +1842,20 @@
                                 var json = {"code":9000,"message":"Success","entity":{
                                         "name":"prohibitionNEW",
                                         "subject":{
-                                            "subjectId":77,
+                                            "subjectID":77,
                                             "subjectType":"UA"
                                         },
                                         "resources":[
                                             {
-                                                "resourceId":15,
+                                                "resourceID":15,
                                                 "complement":true
                                             },
                                             {
-                                                "resourceId":352555,
+                                                "resourceID":352555,
                                                 "complement":false
                                             },
                                             {
-                                                "resourceId":321,
+                                                "resourceID":321,
                                                 "complement":false
                                             }
                                         ],

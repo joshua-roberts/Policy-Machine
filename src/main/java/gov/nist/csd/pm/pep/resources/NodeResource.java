@@ -2,21 +2,17 @@ package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
-import gov.nist.csd.pm.model.exceptions.InvalidEvrException;
+import gov.nist.csd.pm.pdp.services.NodeService;
 import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.NodeService;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import java.io.*;
+import javax.ws.rs.core.*;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 
 @Path("/nodes")
@@ -24,86 +20,55 @@ import java.util.HashSet;
 @Produces(MediaType.APPLICATION_JSON)
 public class NodeResource {
 
-    private NodeService      nodeService      = new NodeService();
+    private NodeService nodeService = new NodeService();
 
     @GET
-    public Response getNodes(@QueryParam("namespace") String namespace,
-                             @QueryParam("name") String name,
-                             @QueryParam("type") String type,
-                             @QueryParam("key") String key,
-                             @QueryParam("value") String value,
+    public Response getNodes(@Context UriInfo uriInfo,
                              @QueryParam("session") String session,
-                             @QueryParam("process") long process)
-            throws InvalidNodeTypeException, InvalidPropertyException,
-            SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+                             @QueryParam("process")
+                                     long process) throws SQLException, SessionDoesNotExistException, IOException, ClassNotFoundException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, InvalidNodeTypeException {
 
-        HashSet<Node> nodes = nodeService.getNodes(namespace, name, type, key, value, session, process);
+        MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+        HashMap<String, String> properties = new HashMap<>();
+        for (String key : queryParameters.keySet()) {
+            if (key.equalsIgnoreCase("name") || key.equalsIgnoreCase("type")) {
+                continue;
+            }
+
+            String value = queryParameters.getFirst(key);
+            properties.put(key, value);
+        }
+
+        HashSet<Node> nodes = nodeService.getNodes(queryParameters.getFirst("name"), queryParameters.getFirst("type"), properties, session, process);
 
         return new ApiResponse(nodes).toResponse();
     }
 
-    @Path("/{var1:target}")
-    @GET
-    public Response getNode(@PathParam("var1") PathSegment targetPs,
-                                       @QueryParam("session") String session,
-                                       @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, ConfigurationException, InvalidProhibitionSubjectTypeException, NoSubjectParameterException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException, MissingPermissionException {
-        //get the target node from matrix params
-        MultivaluedMap<String, String> targetParams = targetPs.getMatrixParameters();
-        Node targetNode = nodeService.getNode(
-                targetParams.getFirst("name"),
-                targetParams.getFirst("type"),
-                targetParams.getFirst("properties"),
-                session,
-                process);
-
-        return new ApiResponse(targetNode).toResponse();
-    }
-
+    @Path("/policies")
     @POST
-    public Response createNode(CreateNodeRequest request,
-                               @QueryParam("session") String session,
-                               @QueryParam("process") long process)
-            throws NullNameException, NullTypeException,
-            InvalidPropertyException, DatabaseException, InvalidNodeTypeException,
-            NodeNameExistsException, ConfigurationException, NodeIdExistsException,
-            NodeNotFoundException, InvalidAssignmentException, AssignmentExistsException,
-            IOException, ClassNotFoundException, SQLException,
-            UnexpectedNumberOfNodesException, AssociationExistsException,
-            SessionDoesNotExistException, SessionUserNotFoundException, PropertyNotFoundException {
-        Node node = nodeService.createNode(request.getName(), request.getType(), request.getProperties(), session, process);
+    public Response createPolicy(CreateNodeRequest request,
+                                 @QueryParam("session") String session,
+                                 @QueryParam("process")
+                                         long process) throws InvalidAssignmentException, UnexpectedNumberOfNodesException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, ClassNotFoundException, AssociationExistsException, DatabaseException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException {
+        Node node = nodeService.createPolicy(request.getName(), request.getProperties(), session, process);
 
         return new ApiResponse(node).toResponse();
     }
 
-    @Path("/{nodeId}")
+    @Path("/{nodeID}")
     @GET
-    public Response getNode(@PathParam("nodeId") long nodeId,
+    public Response getNode(@PathParam("nodeID") long nodeID,
                             @QueryParam("content") boolean content,
                             @QueryParam("session") String session,
-                            @QueryParam("process") long process) throws NodeNotFoundException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, PropertyNotFoundException, InvalidPropertyException, NullNameException, InvalidEvrException, InvalidEntityException, ProhibitionResourceExistsException, ProhibitionDoesNotExistException, InvalidNodeTypeException, ProhibitionNameExistsException {
-        Node node = nodeService.getNode(nodeId, content, session, process);
-        return new ApiResponse(node).toResponse();
-    }
-    
-
-
-    @Path("/{nodeId}")
-    @PUT
-    public Response updateNode(@PathParam("nodeId") long nodeId,
-                               CreateNodeRequest request,
-                               @QueryParam("content") boolean content,
-                               @QueryParam("session") String session,
-                               @QueryParam("process") long process)
-            throws NodeNotFoundException, DatabaseException, ConfigurationException,
-            SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException,
-            InvalidProhibitionSubjectTypeException, InvalidPropertyException, PropertyNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Node node = nodeService.updateNode(nodeId, request.getName(), request.getProperties(), request.getContent(), session, process);
+                            @QueryParam("process")
+                                    long process) throws NodeNotFoundException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, PropertyNotFoundException, InvalidPropertyException, NullNameException, InvalidEvrException, InvalidEntityException, ProhibitionResourceExistsException, ProhibitionDoesNotExistException, InvalidNodeTypeException, ProhibitionNameExistsException {
+        Node node = nodeService.getNode(nodeID, session, process);
         return new ApiResponse(node).toResponse();
     }
 
-    @Path("/{nodeId}")
+    @Path("/{nodeID}")
     @DELETE
-    public Response deleteNode(@PathParam("nodeId") long id,
+    public Response deleteNode(@PathParam("nodeID") long id,
                                @QueryParam("session") String session,
                                @QueryParam("process") long process)
             throws NodeNotFoundException, DatabaseException, ConfigurationException,
@@ -113,37 +78,25 @@ public class NodeResource {
         return new ApiResponse(ApiResponse.DELETE_NODE_SUCCESS).toResponse();
     }
 
-    @Path("/{nodeId}/properties/{key}")
-    @DELETE
-    public Response deleteNodeProperty(@PathParam("nodeId") long id,
-                                       @PathParam("key") String key,
-                                       @QueryParam("session") String session,
-                                       @QueryParam("process") long process)
-            throws DatabaseException, NodeNotFoundException, PropertyNotFoundException, ConfigurationException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
-        nodeService.deleteNodeProperty(id, key, session, process);
-        return new ApiResponse(ApiResponse.DELETE_NODE_PROPERTY_SUCCESS).toResponse();
-    }
-
-    @Path("{nodeId}/children")
+    @Path("{nodeID}/children")
     @POST
-    public Response createNodeIn(@PathParam("nodeId") long nodeId,
+    public Response createNodeIn(@PathParam("nodeID") long nodeID,
                                  CreateNodeRequest request,
                                  @QueryParam("content") boolean content,
                                  @QueryParam("session") String session,
                                  @QueryParam("process") long process)
             throws NullNameException, NullTypeException,
             InvalidPropertyException, DatabaseException, InvalidNodeTypeException,
-            NodeNameExistsException, ConfigurationException, NodeIdExistsException,
-            NodeNotFoundException, InvalidAssignmentException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Node node = nodeService.createNodeIn(nodeId,request.getName(), request.getType(), request.getProperties(), request.getContent(), session, process);
+            NodeNameExistsException, ConfigurationException, NodeIDExistsException,
+            NodeNotFoundException, InvalidAssignmentException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException {
+        Node node = nodeService.createNodeIn(nodeID, request.getName(), request.getType(), request.getProperties(), session, process);
         return new ApiResponse(node).toResponse();
     }
 
 
-
-    @Path("{nodeId}/children")
+    @Path("{nodeID}/children")
     @GET
-    public Response getNodeChildren(@PathParam("nodeId") long id,
+    public Response getNodeChildren(@PathParam("nodeID") long id,
                                     @QueryParam("type") String type,
                                     @QueryParam("session") String session,
                                     @QueryParam("process") long process)
@@ -151,9 +104,9 @@ public class NodeResource {
         return new ApiResponse(nodeService.getNodeChildren(id, type, session, process)).toResponse();
     }
 
-    @Path("/{nodeId}/children")
+    @Path("/{nodeID}/children")
     @DELETE
-    public Response deleteNodeChildren(@PathParam("nodeId") long id,
+    public Response deleteNodeChildren(@PathParam("nodeID") long id,
                                        @QueryParam("type") String type,
                                        @QueryParam("session") String session,
                                        @QueryParam("process") long process)
@@ -164,9 +117,9 @@ public class NodeResource {
         return new ApiResponse(ApiResponse.DELETE_NODE_CHILDREN_SUCESS).toResponse();
     }
 
-    @Path("/{nodeId}/parents")
+    @Path("/{nodeID}/parents")
     @GET
-    public Response getNodeParents(@PathParam("nodeId") long id,
+    public Response getNodeParents(@PathParam("nodeID") long id,
                                    @QueryParam("type") String type,
                                    @QueryParam("session") String session,
                                    @QueryParam("process") long process)

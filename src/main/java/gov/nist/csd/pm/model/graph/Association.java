@@ -41,14 +41,14 @@ public class Association<V> extends Assignment  implements Serializable {
 
     public static void checkAssociation(NodeType uaType, NodeType targetType) throws InvalidAssociationException {
         switch (uaType) {
-            case POLICY_CLASS:
-            case OBJECT_ATTRIBUTE:
-            case OBJECT:
-            case USER:
+            case PC:
+            case OA:
+            case O:
+            case U:
                 throw new InvalidAssociationException(uaType, targetType);
-            case USER_ATTRIBUTE:
+            case UA:
                 switch (targetType) {
-                    case OBJECT_ATTRIBUTE:
+                    case OA:
                         break;
                     default: throw new InvalidAssociationException(uaType, targetType);
                 }

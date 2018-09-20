@@ -5,15 +5,17 @@ import gov.nist.csd.pm.pep.requests.ConnectRequest;
 import gov.nist.csd.pm.pep.requests.ImportEntitiesRequest;
 import gov.nist.csd.pm.pep.requests.ImportFilesRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.ImportService;
+import gov.nist.csd.pm.pdp.services.ImportService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.Constants.SUCCESS;
+import static gov.nist.csd.pm.model.exceptions.PmException.SUCCESS;
 
 @Path("/import")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -26,7 +28,7 @@ public class ImportResource {
     @POST
     public Response importFiles(ImportFilesRequest request,
                                 @QueryParam("session") String session,
-                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
+                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException {
         importService.importFiles(request.getFiles(), request.getSource(), session, process);
         return new ApiResponse("Successfully imported " + request.getFiles().length + " files from " + request
                 .getSource()).toResponse();
@@ -34,7 +36,7 @@ public class ImportResource {
 
     @Path("entities")
     @POST
-    public Response importEntities(ImportEntitiesRequest request) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
+    public Response importEntities(ImportEntitiesRequest request) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, DatabaseException, ConfigurationException, SQLException, NullNameException, IOException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException {
         importService.importEntities(request.getKind(), request.getEntities());
 
         return null;
@@ -44,7 +46,7 @@ public class ImportResource {
     @POST
     public Response importData(@QueryParam("session") String session,
                                @QueryParam("process") long process,
-                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException {
+                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, MissingPermissionException, NoSubjectParameterException, NoSuchAlgorithmException, SessionUserNotFoundException, InvalidProhibitionSubjectTypeException, InvalidKeySpecException {
         String host = request.getHost();
         int port = request.getPort();
         String schema = request.getSchema();

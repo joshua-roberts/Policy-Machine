@@ -4,6 +4,6 @@ import gov.nist.csd.pm.model.Constants;
 
 public class MissingPermissionException extends PmException {
     public MissingPermissionException(String message) {
-        super(Constants.ERR_MISSING_PERMISSIONS, message);
+        super(ErrorCodes.ERR_MISSING_PERMISSIONS, message);
     }
 }

@@ -3,9 +3,8 @@ package gov.nist.csd.pm.demos.cloud;
 import com.google.gson.Gson;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.policyserver.model.graph.nodes.Property;
 import gov.nist.csd.pm.pep.requests.UpdateContentRequest;
-import gov.nist.csd.pm.pep.services.AnalyticsService;
+import gov.nist.csd.pm.pdp.services.AnalyticsService;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -20,6 +19,50 @@ import static gov.nist.csd.pm.model.Constants.PATH_PROPERTY;
 
 public class ContentHelper {
 
+    /*
+    if(content != null) {
+            analyticsService.checkPermissions(user, process, node.getID(), FILE_WRITE);
+
+            ImportFile importFile = ContentHelper.createNodeContents(user, process, node, content);
+            if(importFile != null) {
+                node.setContent(content);
+
+                //update node properties
+                HashMap<String, String> nodeProperties = node.getProperties();
+                for (String key : properties.keySet()) {
+                    switch (key) {
+                        case BUCKET_PROPERTY:
+                            //addNodeProperty(node.getID(), BUCKET_PROPERTY, importFile.getBucket());
+                            break;
+                        case PATH_PROPERTY:
+                            //addNodeProperty(node.getID(), PATH_PROPERTY, importFile.getPath());
+                            break;
+                        case CONTENT_TYPE_PROPERTY:
+                            //addNodeProperty(node.getID(), CONTENT_TYPE_PROPERTY, importFile.getContentType());
+                            break;
+                        case SIZE_PROPERTY:
+                            //addNodeProperty(node.getID(), SIZE_PROPERTY, String.valueOf(importFile.getSize()));
+                            break;
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+        if(content) {
+            node.setContent(ContentHelper.getNodeContents(user, process, nodeID, node));
+
+            // process file read
+            evrService.processFileRead(node, user, process);
+        }
+     */
+
     private static AnalyticsService analyticsService = new AnalyticsService();
 
     public static String getNodeContents(Node user, long process, long id, Node node) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
@@ -27,14 +70,14 @@ public class ContentHelper {
 
         String content = null;
 
-        if(node.hasProperty(STORAGE_PROPERTY)) {
+        if(node.hasPropertyKey(STORAGE_PROPERTY)) {
             //get contents
             //1 determine where it is stored - storage_location=gcs or aws or local
-            Property storageProperty = node.getProperty(STORAGE_PROPERTY);
+            String storageProperty = node.getProperty(STORAGE_PROPERTY);
 
             //2 get the path
-            if(node.hasProperty(PATH_PROPERTY)) {
-                switch (storageProperty.getValue()) {
+            if(node.hasPropertyKey(PATH_PROPERTY)) {
+                switch (storageProperty) {
                     case GCS_STORAGE:
                         content = getGCSContents(node);
                         System.out.println(content);
@@ -61,7 +104,7 @@ public class ContentHelper {
         Client client = ClientBuilder.newClient();
         return client
                 .target(awsURI)
-                .queryParam("path", node.getProperty(PATH_PROPERTY).getValue())
+                .queryParam("path", node.getProperty(PATH_PROPERTY))
                 .request(MediaType.APPLICATION_JSON)
                 .get(String.class);
     }
@@ -71,26 +114,26 @@ public class ContentHelper {
         Client client = ClientBuilder.newClient();
         return client
                 .target(gcsURI)
-                .queryParam("path", node.getProperty(PATH_PROPERTY).getValue())
+                .queryParam("path", node.getProperty(PATH_PROPERTY))
                 .request(MediaType.APPLICATION_JSON)
                 .get(String.class);
     }
 
     public static ImportFile updateNodeContents(Node user, long process, Node node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        analyticsService.checkPermissions(user, process, node.getId(), FILE_WRITE);
+        analyticsService.checkPermissions(user, process, node.getID(), FILE_WRITE);
 
         //get contents
         //1 determine where it is stored - storage_location=gcs or aws or local
-        Property storageProperty = node.getProperty(STORAGE_PROPERTY);
+        String storageProperty = node.getProperty(STORAGE_PROPERTY);
 
         //2 get the path
-        switch (storageProperty.getValue()) {
+        switch (storageProperty) {
             case GCS_STORAGE:
-                return updateGCSContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return updateGCSContent(node.getProperty(PATH_PROPERTY), content);
             case AWS_STORAGE:
-                return updateAWSContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return updateAWSContent(node.getProperty(PATH_PROPERTY), content);
             case LOCAL_STORAGE:
-                return updateLocalContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return updateLocalContent(node.getProperty(PATH_PROPERTY), content);
         }
 
         return null;
@@ -176,19 +219,19 @@ public class ContentHelper {
         return new Gson().fromJson(json, ImportFile.class);
     }
     public static ImportFile createNodeContents(Node user, long process, Node node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        analyticsService.checkPermissions(user, process, node.getId(), FILE_WRITE);
+        analyticsService.checkPermissions(user, process, node.getID(), FILE_WRITE);
 
         //get contents
         //1 determine where it is stored - storage_location=gcs or aws or local
-        Property storageProperty = node.getProperty(STORAGE_PROPERTY);
+        String storageProperty = node.getProperty(STORAGE_PROPERTY);
 
-        switch (storageProperty.getValue()) {
+        switch (storageProperty) {
             case GCS_STORAGE:
-                return createGCSContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return createGCSContent(node.getProperty(PATH_PROPERTY), content);
             case AWS_STORAGE:
-                return createAWSContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return createAWSContent(node.getProperty(PATH_PROPERTY), content);
             case LOCAL_STORAGE:
-                return createLocalContent(node.getProperty(PATH_PROPERTY).getValue(), content);
+                return createLocalContent(node.getProperty(PATH_PROPERTY), content);
         }
 
         return null;

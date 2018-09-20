@@ -1,19 +1,19 @@
 package gov.nist.csd.pm.pep.requests;
 
 public     class GrantRequest {
-    long subjectId;
+    long subjectID;
     String[] operations;
-    long[] targetIds;
-    long pcId;
+    long[] targetIDs;
+    long pcID;
 
     public GrantRequest() {}
 
-    public long getSubjectId() {
-        return subjectId;
+    public long getSubjectID() {
+        return subjectID;
     }
 
-    public void setSubjectId(long subjectId) {
-        this.subjectId = subjectId;
+    public void setSubjectID(long subjectID) {
+        this.subjectID = subjectID;
     }
 
     public String[] getOperations() {
@@ -24,19 +24,19 @@ public     class GrantRequest {
         this.operations = operations;
     }
 
-    public long[] getTargetIds() {
-        return targetIds;
+    public long[] getTargetIDs() {
+        return targetIDs;
     }
 
-    public void setTargetIds(long[] targetIds) {
-        this.targetIds = targetIds;
+    public void setTargetIDs(long[] targetIDs) {
+        this.targetIDs = targetIDs;
     }
 
-    public long getPcId() {
-        return pcId;
+    public long getPcID() {
+        return pcID;
     }
 
-    public void setPcId(long pcId) {
-        this.pcId = pcId;
+    public void setPcID(long pcID) {
+        this.pcID = pcID;
     }
 }

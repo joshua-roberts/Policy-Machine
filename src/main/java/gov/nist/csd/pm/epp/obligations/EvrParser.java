@@ -4,17 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.InvalidEvrException;
-import gov.nist.csd.pm.epp.obligations.model.*;
 import gov.nist.csd.pm.model.obligations.*;
 import gov.nist.csd.pm.model.obligations.script.EvrScript;
 import gov.nist.csd.pm.model.obligations.script.rule.event.*;
@@ -25,7 +21,6 @@ import gov.nist.csd.pm.model.obligations.script.rule.response.*;
 import gov.nist.csd.pm.model.exceptions.ConfigurationException;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
-import gov.nist.csd.pm.model.graph.nodes.Property;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -676,12 +671,12 @@ public class EvrParser {
         List<Node> childNodes = getChildNodes(entityNode);
         if(childNodes.isEmpty()) {
             //node
-            List<Property> propList = new ArrayList<>();
+            HashMap<String, String> propsMap = new HashMap<>();
             if(properties != null) {
                 String[] propArr = properties.getNodeValue().split(",");
                 for(String prop : propArr) {
                     String[] pieces = prop.split("=");
-                    propList.add(new Property(pieces[0], pieces[1]));
+                    propsMap.put(pieces[0], pieces[1]);
                 }
             }
 
@@ -702,9 +697,9 @@ public class EvrParser {
 
             System.out.println("\tname=" + entityName);
             System.out.println("\ttype=" + entityType);
-            System.out.println("\tproperties=" + propList);
+            System.out.println("\tproperties=" + propsMap);
 
-            evrEntity = new EvrEntity(entityName, entityType, propList, bComp);
+            evrEntity = new EvrEntity(entityName, entityType, propsMap, bComp);
 
             evrService.updateEntity(entityId, evrEntity);
         } else {

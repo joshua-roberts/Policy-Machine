@@ -1,11 +1,11 @@
 package gov.nist.csd.pm.pep.requests;
 
 public class AddResourceToProhibitionRequest {
-    long resourceId;
+    long resourceID;
     boolean compliment;
 
-    public long getResourceId() {
-        return resourceId;
+    public long getResourceID() {
+        return resourceID;
     }
 
     public boolean isCompliment() {

@@ -5,18 +5,16 @@ import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
 import java.io.Serializable;
 
 public enum NodeType implements Serializable {
-    CONNECTOR("C"),
-    OBJECT_ATTRIBUTE("OA"),
-    USER_ATTRIBUTE("UA"),
-    USER("U"),
-    OBJECT("O"),
-    POLICY_CLASS("PC"),
-    PROHIBITION("D"),
-    OPERATION_SET("OS"),
-    SESSION("S");
+    C("C"),
+    OA("OA"),
+    UA("UA"),
+    U("U"),
+    O("O"),
+    PC("PC"),
+    P("P"),
+    OS("OS");
 
     //Node_Type ids
-
     public static final int C_ID  = 1;
     public static final int PC_ID = 2;
     public static final int UA_ID = 3;
@@ -40,56 +38,52 @@ public enum NodeType implements Serializable {
         }
         switch (type.toUpperCase()){
             case "C":
-                return NodeType.CONNECTOR;
+                return NodeType.C;
             case "OA":
-                return NodeType.OBJECT_ATTRIBUTE;
+                return NodeType.OA;
             case "UA":
-                return NodeType.USER_ATTRIBUTE;
+                return NodeType.UA;
             case "U":
-                return NodeType.USER;
+                return NodeType.U;
             case "O":
-                return NodeType.OBJECT;
+                return NodeType.O;
             case "PC":
-                return NodeType.POLICY_CLASS;
+                return NodeType.PC;
             case "D":
-                return NodeType.PROHIBITION;
+                return NodeType.P;
             case "OS":
-                return NodeType.OPERATION_SET;
-            case "S":
-                return NodeType.SESSION;
+                return NodeType.OS;
             default:
                 throw new InvalidNodeTypeException(type);
         }
     }
 
-    public static NodeType toNodeType(int typeId) throws InvalidNodeTypeException {
-        if(typeId <= 0 || typeId > 7){
-            throw new InvalidNodeTypeException(typeId);
+    public static NodeType toNodeType(int typeID) throws InvalidNodeTypeException {
+        if(typeID <= 0 || typeID > 7){
+            throw new InvalidNodeTypeException(typeID);
         }
 
-        switch(typeId){
+        switch(typeID){
             case 1:
-                return NodeType.CONNECTOR;
+                return NodeType.C;
             case 2:
-                return NodeType.POLICY_CLASS;
+                return NodeType.PC;
             case 3:
-                return NodeType.USER_ATTRIBUTE;
+                return NodeType.UA;
             case 4:
-                return NodeType.USER;
+                return NodeType.U;
             case 5:
-                return NodeType.OBJECT_ATTRIBUTE;
+                return NodeType.OA;
             case 6:
-                return NodeType.OBJECT;
+                return NodeType.O;
             case 7:
-                return NodeType.OPERATION_SET;
-            case 8:
-                return NodeType.SESSION;
+                return NodeType.OS;
             default:
-                throw new InvalidNodeTypeException(typeId);
+                throw new InvalidNodeTypeException(typeID);
         }
     }
 
-    public static int toNodeTypeId(String type) throws InvalidNodeTypeException {
+    public static int toNodeTypeID(String type) throws InvalidNodeTypeException {
         if(type == null){
             throw new InvalidNodeTypeException(type);
         }

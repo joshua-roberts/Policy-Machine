@@ -2,11 +2,11 @@ package gov.nist.csd.pm.pdp.translator.algorithms;
 
 import gov.nist.csd.pm.epp.obligations.EvrManager;
 import gov.nist.csd.pm.model.exceptions.*;
+import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pdp.analytics.PmAnalyticsEntry;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.pep.services.AnalyticsService;
-import gov.nist.csd.pm.pep.services.NodeService;
+import gov.nist.csd.pm.pdp.services.AnalyticsService;
+import gov.nist.csd.pm.pdp.services.NodeService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +14,8 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.csd.pm.pip.DAOManager.getDaoManager;
+import static gov.nist.csd.pm.model.Constants.NAMESPACE_PROPERTY;
+import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
 
 public class PmManager {
     public static final String GET_ENTITY_ID = "getEntityId";
@@ -53,7 +54,7 @@ public class PmManager {
 
     private Node getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         try {
-            HashSet<Node> nodes = nodeService.getNodes(null, username, NodeType.USER.toString(), null);
+            HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
             if(!nodes.isEmpty()) {
                 return nodes.iterator().next();
             }else {
@@ -70,9 +71,11 @@ public class PmManager {
         return pmUser;
     }
 
-    public long getEntityId(String namespace, String name, NodeType type) throws InvalidNodeTypeException,
-            NameInNamespaceNotFoundException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException {
-        return nodeService.getNodeInNamespace(namespace, name, type).getID();
+    public long getEntityId(String namespace, String name, NodeType type) throws InvalidNodeTypeException, InvalidPropertyException,
+            ClassNotFoundException, SQLException, DatabaseException, IOException, UnexpectedNumberOfNodesException {
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put(NAMESPACE_PROPERTY, namespace);
+        return nodeService.getNode(name, type.toString(), properties).getID();
     }
 
     public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
@@ -110,8 +113,8 @@ public class PmManager {
     }
 
     public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        HashSet<Node> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.OBJECT.toString());
-        HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.OBJECT.toString());
+        HashSet<Node> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.O.toString());
+        HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.O.toString());
         columnChildren.retainAll(rowChildren);
         if(!columnChildren.isEmpty()) {
             return columnChildren.iterator().next();
@@ -121,7 +124,9 @@ public class PmManager {
     }
 
     public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        Node node = nodeService.getNodeInNamespace(tableName, columnName, NodeType.OBJECT_ATTRIBUTE);
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put(NAMESPACE_PROPERTY, tableName);
+        Node node = nodeService.getNode(columnName, NodeType.OA.toString(), properties);
         if(node == null) {
             throw new NodeNotFoundException("Could not find column object attribute for " + tableName);
         }
@@ -139,7 +144,9 @@ public class PmManager {
     }
 
     public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        HashSet<Node> nodes = nodeService.getNodes(tableName, "Rows", NodeType.OBJECT_ATTRIBUTE.toString(), null);
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put(NAMESPACE_PROPERTY, tableName);
+        HashSet<Node> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException("Could not find row object attribute for table " + tableName);
         }

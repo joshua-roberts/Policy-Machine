@@ -1,19 +1,18 @@
 package gov.nist.csd.pm.pep.requests;
 
-import gov.nist.policyserver.model.graph.nodes.Property;
+import java.util.HashMap;
 
 public class CreateNodeRequest {
-    long       id;
-    String     name;
-    String     type;
-    Property[] properties;
-    String content;
+    long    id;
+    String  name;
+    String  type;
+    HashMap<String, String> properties;
 
-    public long getId() {
+    public long getID() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setID(long id) {
         this.id = id;
     }
 
@@ -33,19 +32,11 @@ public class CreateNodeRequest {
         this.type = type;
     }
 
-    public Property[] getProperties() {
+    public HashMap<String, String> getProperties() {
         return properties;
     }
 
-    public void setProperties(Property[] properties) {
+    public void setProperties(HashMap<String, String> properties) {
         this.properties = properties;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 }

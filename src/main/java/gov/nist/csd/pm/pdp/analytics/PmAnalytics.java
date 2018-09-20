@@ -7,8 +7,8 @@ import gov.nist.csd.pm.model.graph.Assignment;
 import gov.nist.csd.pm.model.graph.Association;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
-import gov.nist.csd.pm.pip.DAOManager;
-import gov.nist.csd.pm.pdp.PmGraph;
+import gov.nist.csd.pm.pip.dao.DAOManager;
+import gov.nist.csd.pm.pip.graph.PmGraph;
 import gov.nist.csd.pm.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
@@ -426,7 +426,11 @@ public class PmAnalytics implements Serializable{
             Assignment edge = uaEdges.iterator().next();
             if(edge instanceof Association){
                 Association assoc = (Association) edge;
+
+                //get existing ops
                 HashSet ops = d.get(edge.getParent());
+
+                //if no existing ops, set ops equal to the ops in this association
                 if(ops == null) {
                     ops = assoc.getOps();
                 }
@@ -445,10 +449,10 @@ public class PmAnalytics implements Serializable{
         return d;
     }
 
-    private synchronized void dfs(Node w, HashMap<Node, HashMap<Node, HashSet<String>>> D, HashMap<Node, HashSet<String>> dc) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    private synchronized void dfs(Node w, HashMap<Node, HashMap<Node, HashSet<String>>> D, HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         D.put(w, new HashMap<>());
         //for loop through nodes
-        //if node is not in D, recrusive call to dfs
+        //if node is not in D, recursive call to dfs
 
         Set<Assignment> assignments = getGraph().outgoingEdgesOf(w);
 
@@ -484,8 +488,7 @@ public class PmAnalytics implements Serializable{
     }
 
     private synchronized Node createVNode(HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        long id = new Random().nextLong();
-        Node vNode = new Node(id, "VNODE", NodeType.OBJECT_ATTRIBUTE);
+        Node vNode = new Node("VNODE", NodeType.OA);
         getGraph().addNode(vNode);
         for(Node node : dc.keySet()){
             getGraph().addEdge(node, vNode, new Assignment<>(node, vNode));
@@ -494,11 +497,11 @@ public class PmAnalytics implements Serializable{
     }
 
     private synchronized HashSet<Node> getPolicyClasses() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.POLICY_CLASS));
+        return new HashSet<>(getGraph().getNodesOfType(NodeType.PC));
     }
 
     private synchronized HashSet<Node> getUsers() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.USER));
+        return new HashSet<>(getGraph().getNodesOfType(NodeType.U));
     }
 
     /**
@@ -553,10 +556,10 @@ public class PmAnalytics implements Serializable{
             boolean subjectInDeny;
 
             if(prohibition.getSubject().getSubjectType().equals(ProhibitionSubjectType.P)) {
-                subjectInDeny = prohibition.getSubject().getSubjectId()==subjectId;
+                subjectInDeny = prohibition.getSubject().getSubjectID()==subjectId;
             } else {
-                subjectInDeny = (prohibition.getSubject().getSubjectId()==subjectId) ||
-                        getGraph().getAscesndants(prohibition.getSubject().getSubjectId()).contains(getGraph().getNode(subjectId));
+                subjectInDeny = (prohibition.getSubject().getSubjectID()==subjectId) ||
+                        getGraph().getAscesndants(prohibition.getSubject().getSubjectID()).contains(getGraph().getNode(subjectId));
             }
 
             if(subjectInDeny){
@@ -566,7 +569,7 @@ public class PmAnalytics implements Serializable{
                 HashMap<ProhibitionResource, HashSet<Node>> drAscendants = new HashMap<>();
                 HashSet<Node> nodes = new HashSet<>();
                 for (ProhibitionResource dr : resources) {
-                    HashSet<Node> ascendants = getGraph().getAscesndants(dr.getResourceId());
+                    HashSet<Node> ascendants = getGraph().getAscesndants(dr.getResourceID());
                     drAscendants.put(dr, ascendants);
                     nodes.addAll(ascendants);
                 }

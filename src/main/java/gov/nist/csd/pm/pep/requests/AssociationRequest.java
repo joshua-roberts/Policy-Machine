@@ -3,25 +3,24 @@ package gov.nist.csd.pm.pep.requests;
 import java.util.HashSet;
 
 public class AssociationRequest {
-    long            uaId;
-    long            targetId;
+    long            uaID;
+    long            targetID;
     HashSet<String> ops;
-    boolean         inherit;
 
-    public long getUaId() {
-        return uaId;
+    public long getUaID() {
+        return uaID;
     }
 
-    public void setUaId(long uaId) {
-        this.uaId = uaId;
+    public void setUaID(long uaID) {
+        this.uaID = uaID;
     }
 
-    public long getTargetId() {
-        return targetId;
+    public long getTargetID() {
+        return targetID;
     }
 
-    public void setTargetId(long targetId) {
-        this.targetId = targetId;
+    public void setTargetID(long targetID) {
+        this.targetID = targetID;
     }
 
     public HashSet<String> getOps() {
@@ -30,13 +29,5 @@ public class AssociationRequest {
 
     public void setOps(HashSet<String> ops) {
         this.ops = ops;
-    }
-
-    public boolean isInherit() {
-        return inherit;
-    }
-
-    public void setInherit(boolean inherit) {
-        this.inherit = inherit;
     }
 }

@@ -5,7 +5,7 @@ import gov.nist.csd.pm.pep.requests.ConnectRequest;
 import gov.nist.csd.pm.pep.requests.DataRequest;
 import gov.nist.csd.pm.pep.requests.SetIntervalRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.ConfigurationService;
+import gov.nist.csd.pm.pdp.services.ConfigurationService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.Constants.SUCCESS;
+import static gov.nist.csd.pm.model.exceptions.ErrorCodes.SUCCESS;
 
 @Path("/configuration")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -56,7 +56,7 @@ public class ConfigurationResource {
     @POST
     public Response importData(@QueryParam("session") String session,
                                @QueryParam("process") long process,
-                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException {
+                               ConnectRequest request) throws DatabaseException, ConfigurationException, InvalidNodeTypeException, InvalidPropertyException, AssignmentExistsException, NodeNotFoundException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException, InvalidAssociationException {
         String host = request.getHost();
         int port = request.getPort();
         String schema = request.getSchema();
@@ -87,7 +87,7 @@ public class ConfigurationResource {
     @POST
     public Response uploadFiles(String[] files,
                                 @QueryParam("session") String session,
-                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIdExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIdException, PropertyNotFoundException {
+                                @QueryParam("process") long process) throws InvalidPropertyException, AssignmentExistsException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, NoSuchAlgorithmException, NullNameException, ConfigurationException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
         configService.uploadFiles(files, session, process);
         return new ApiResponse(SUCCESS).toResponse();
     }

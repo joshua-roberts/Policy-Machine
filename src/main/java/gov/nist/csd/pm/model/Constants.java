@@ -89,4 +89,6 @@ public class Constants {
     public static final int NEW_NODE_ID              = 0;
     public static final int NO_BASE_ID               = 0;
     public static final String COMMA_DELIMETER       = ",\\s*";
+
+    public static final int NUM_META_NODES = 3;
 }

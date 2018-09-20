@@ -1,41 +1,42 @@
 {
-   "nodes":[
+   "nodes":
+   [
       {
-         "id":-1,
+         "id":1,
          "name":"Super PC",
          "type":"PC"
       },
       {
-         "id":-2,
+         "id":2,
          "name":"super",
          "type":"UA",
-         "properties": [
+         "properties": 
             {
                 "key": "namespace",
                 "value": "super"
             }
-         ]
+         
       },
       {
-         "id":-3,
+         "id":3,
          "name":"super",
          "type":"U",
-         "properties": [
+         "properties": 
             {
                 "key": "password",
                 "value": "super"
             }
-         ]
       }
    ],
-   "assignments":[
+   "assignments":
+   [
       {
-         "child":-2,
-         "parent":-1
+         "child":2,
+         "parent":1
       },
       {
-         "child":-3,
-         "parent":-2
+         "child":3,
+         "parent":2
       }
    ],
    "associations":[]

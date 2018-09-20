@@ -32,38 +32,38 @@ public class Assignment<V> extends DefaultEdge implements Serializable {
 
     public static void checkAssignment(NodeType childType, NodeType parentType) throws InvalidAssignmentException {
         switch (childType) {
-            case POLICY_CLASS:
+            case PC:
                 throw new InvalidAssignmentException(childType, parentType);
-            case OBJECT_ATTRIBUTE:
+            case OA:
                 switch (parentType) {
-                    case OBJECT:
-                    case USER_ATTRIBUTE:
-                    case USER:
+                    case O:
+                    case UA:
+                    case U:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case OBJECT:
+            case O:
                 switch (parentType) {
-                    case POLICY_CLASS:
-                    case USER_ATTRIBUTE:
-                    case USER:
+                    case PC:
+                    case UA:
+                    case U:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case USER_ATTRIBUTE:
+            case UA:
                 switch (parentType) {
-                    case OBJECT_ATTRIBUTE:
-                    case OBJECT:
-                    case USER:
+                    case OA:
+                    case O:
+                    case U:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
-            case USER:
+            case U:
                 switch (parentType) {
-                    case OBJECT_ATTRIBUTE:
-                    case POLICY_CLASS:
-                    case OBJECT:
-                    case USER:
+                    case OA:
+                    case PC:
+                    case O:
+                    case U:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;

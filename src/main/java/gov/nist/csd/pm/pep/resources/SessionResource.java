@@ -3,7 +3,7 @@ package gov.nist.csd.pm.pep.resources;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.pep.requests.CreateSessionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.SessionService;
+import gov.nist.csd.pm.pdp.services.SessionService;
 import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
 
 import javax.ws.rs.*;
@@ -24,7 +24,7 @@ public class SessionResource {
     public Response createSession(CreateSessionRequest request)
             throws NullNameException, NodeNameExistsInNamespaceException, NodeNameExistsException,
             NodeNotFoundException, DatabaseException, InvalidNodeTypeException,
-            InvalidPropertyException, ConfigurationException, NullTypeException, NodeIdExistsException,
+            InvalidPropertyException, ConfigurationException, NullTypeException, NodeIDExistsException,
             AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException,
             PMAccessDeniedException, PropertyNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         String username = request.getUsername();
@@ -33,9 +33,9 @@ public class SessionResource {
         return new ApiResponse(sessionService.createSession(username, password)).toResponse();
     }
 
-    @Path("/{sessionId}")
+    @Path("/{sessionID}")
     @DELETE
-    public Response deleteSession(@PathParam("sessionId") String sessionId) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    public Response deleteSession(@PathParam("sessionID") String sessionId) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         sessionService.deleteSession(sessionId);
         return new ApiResponse(ApiResponse.DELETE_SESSION_SUCCESS).toResponse();
     }

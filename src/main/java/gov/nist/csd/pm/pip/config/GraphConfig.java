@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pip.config;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.model.graph.NodeType;
 
 import java.io.*;
 import java.sql.*;
@@ -197,7 +197,7 @@ public class GraphConfig {
     public void createNode(String id, String name, String type){
         try{
             Statement stmt = conn.createStatement();
-            stmt.execute("insert into node values ("+id+", '"+ NodeType.toNodeTypeId(type)+"', '"+name+"', '');");
+            stmt.execute("insert into node values ("+id+", '"+ NodeType.toNodeTypeID(type)+"', '"+name+"', '');");
         }catch(SQLException | InvalidNodeTypeException e) {
             e.printStackTrace();
         }

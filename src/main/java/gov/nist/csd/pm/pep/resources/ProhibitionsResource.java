@@ -3,7 +3,7 @@ package gov.nist.csd.pm.pep.resources;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.pep.requests.CreateProhibitionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.ProhibitionsService;
+import gov.nist.csd.pm.pdp.services.ProhibitionsService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -26,8 +26,8 @@ public class ProhibitionsResource {
     }
 
     @GET
-    public Response getProhibitions(@QueryParam("subjectId") long subjectId, @QueryParam("resourceId") long resourceId) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new ApiResponse(prohibitionsService.getProhibitions(subjectId, resourceId)).toResponse();
+    public Response getProhibitions(@QueryParam("subjectID") long subjectID, @QueryParam("resourceID") long resourceID) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        return new ApiResponse(prohibitionsService.getProhibitions(subjectID, resourceID)).toResponse();
     }
 
     @Path("/{prohibitionName}")

@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pdp.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
 import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;
 import gov.nist.csd.pm.pdp.translator.model.row.CompositeRow;
@@ -47,7 +47,7 @@ public class SelectAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, JSQLParserException, PMAccessDeniedException, PolicyMachineException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException {
+    public String run() throws SQLException, JSQLParserException, PMAccessDeniedException, PolicyMachineException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
         log("SELECT: " + plainSelect);
 
@@ -191,7 +191,7 @@ public class SelectAlgorithm extends Algorithm {
         System.out.println(compositeTable);
     }
 
-    private Hashtable groupRows() throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException {
+    private Hashtable groupRows() throws IOException, PolicyMachineException, PMAccessDeniedException, JSQLParserException, InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, DatabaseException, SQLException, UnexpectedNumberOfNodesException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
@@ -205,7 +205,7 @@ public class SelectAlgorithm extends Algorithm {
                 if(row.getRowName().equals(ROW_NOT_AVAILABLE)) {
                     continue;
                 }
-                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName(), NodeType.OBJECT_ATTRIBUTE);
+                long rowPmId = pmManager.getEntityId(row.getTableName(), row.getRowName(), NodeType.OA);
 
                 List<Column> columns = compositeTable.getSimpleTable(row.getTableName()).getColumns();
 
@@ -221,7 +221,7 @@ public class SelectAlgorithm extends Algorithm {
                     }
                     if (skip) continue;
 
-                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
+                    long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause
@@ -238,7 +238,7 @@ public class SelectAlgorithm extends Algorithm {
                 for (Column column : whereColumns) {
                     System.out.println("Checking column " + column + " in where clause");
                     if(columnInList(compositeTable.getSimpleTable(row.getTableName()).getColumns(), column)){
-                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OBJECT_ATTRIBUTE);
+                        long columnPmId = pmManager.getEntityId(row.getTableName(), column.getColumnName(), NodeType.OA);
 
                         if (!checkColumn(columnPmId, rowPmId, FILE_READ)) {
                             okColumns.clear();

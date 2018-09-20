@@ -4,8 +4,8 @@ import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pep.requests.AssociationRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.services.AnalyticsService;
-import gov.nist.csd.pm.pep.services.AssociationsService;
+import gov.nist.csd.pm.pdp.services.AnalyticsService;
+import gov.nist.csd.pm.pdp.services.AssociationsService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -28,7 +28,7 @@ public class AssociationsResource {
     public Response createAssociation(AssociationRequest request,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process)
-            throws NodeNotFoundException, AssociationExistsException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
+            throws NodeNotFoundException, AssociationExistsException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException, InvalidAssociationException {
         //PERMISSION CHECK
         //get user from username
         Node user = permissionsService.getSessionUser(session);
@@ -41,7 +41,7 @@ public class AssociationsResource {
         //2. can create an association for the subject
         //permissionsService.checkPermissions(user, process, request.getUaId(), ASSIGN);
 
-        associationsService.createAssociation(request.getUaId(), request.getTargetID(), request.getOps(), request.isInherit());
+        associationsService.createAssociation(request.getUaID(), request.getTargetID(), request.getOps());
 
         return new ApiResponse(ApiResponse.CREATE_ASSOCIATION_SUCCESS).toResponse();
     }
@@ -76,7 +76,7 @@ public class AssociationsResource {
         //2. can update an association for the subject
         //permissionsService.checkPermissions(user, process, request.getUaId(), UPDATE_ASSOCIATION);
 
-        associationsService.updateAssociation(targetId, request.getUaId(), request.getOps(), request.isInherit());
+        associationsService.updateAssociation(targetId, request.getUaID(), request.getOps());
         return new ApiResponse(ApiResponse.UPDATE_ASSOCIATION_SUCCESS).toResponse();
     }
 

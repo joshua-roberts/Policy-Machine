@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.policyserver.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -29,7 +29,7 @@ public class InsertAlgorithm extends Algorithm{
         Table table = insert.getTable();
 
         //get the columns the user has analytics to
-        long columnsContId = pmManager.getEntityId(table.getName(), "Columns", NodeType.OBJECT_ATTRIBUTE);
+        long columnsContId = pmManager.getEntityId(table.getName(), "Columns", NodeType.OA);
         List<Node> accColumns = pmManager.getAccessibleChildren(columnsContId, table.getName());
         List<String> accColumnNames = new ArrayList<>();
         for(Node node : accColumns) {

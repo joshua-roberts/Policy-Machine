@@ -2,14 +2,13 @@ package gov.nist.csd.pm.epp.obligations;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.InvalidEvrException;
-import gov.nist.csd.pm.epp.obligations.model.*;
 import gov.nist.csd.pm.model.obligations.EvrEntity;
 import gov.nist.csd.pm.model.obligations.script.EvrScript;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.pep.services.AnalyticsService;
-import gov.nist.csd.pm.pep.services.AssignmentService;
-import gov.nist.csd.pm.pep.services.NodeService;
-import gov.nist.csd.pm.pep.services.ProhibitionsService;
+import gov.nist.csd.pm.pdp.services.AnalyticsService;
+import gov.nist.csd.pm.pdp.services.AssignmentService;
+import gov.nist.csd.pm.pdp.services.NodeService;
+import gov.nist.csd.pm.pdp.services.ProhibitionsService;
 import gov.nist.csd.pm.pdp.translator.algorithms.DbManager;
 import org.xml.sax.SAXException;
 

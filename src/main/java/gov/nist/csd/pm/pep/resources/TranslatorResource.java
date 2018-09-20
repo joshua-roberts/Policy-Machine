@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.pep.services.TranslatorService;
+import gov.nist.csd.pm.pdp.services.TranslatorService;
 import gov.nist.csd.pm.pep.requests.TranslateRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;

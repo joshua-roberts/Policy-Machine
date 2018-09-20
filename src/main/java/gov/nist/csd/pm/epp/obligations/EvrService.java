@@ -19,9 +19,9 @@ import gov.nist.csd.pm.model.obligations.script.rule.event.EvrTarget;
 import gov.nist.csd.pm.model.obligations.script.rule.event.time.EvrEvent;
 import gov.nist.csd.pm.model.obligations.script.rule.event.time.EvrTime;
 import gov.nist.csd.pm.model.obligations.script.rule.response.*;
-import gov.nist.csd.pm.pep.services.AssignmentService;
-import gov.nist.csd.pm.pep.services.ProhibitionsService;
-import gov.nist.csd.pm.pep.services.Service;
+import gov.nist.csd.pm.pdp.services.AssignmentService;
+import gov.nist.csd.pm.pdp.services.ProhibitionsService;
+import gov.nist.csd.pm.pdp.services.Service;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -209,9 +209,9 @@ public class EvrService extends Service {
         HashSet<Node> nodes = getGraph().getNodes();
         String namespace = "";
         if(properties != null) {
-            for (Property prop : properties) {
-                if (prop.getKey().equals(NAMESPACE_PROPERTY)) {
-                    namespace = prop.getValue();
+            for (String key : properties.keySet()) {
+                if (key.equals(NAMESPACE_PROPERTY)) {
+                    namespace = properties.get(key);
                 }
             }
         }
@@ -221,8 +221,7 @@ public class EvrService extends Service {
         if(namespace != null && !namespace.isEmpty()){
             nodes.removeIf(node -> {
                 try {
-                    return !node.hasProperty(NAMESPACE_PROPERTY) || !node.getProperty(NAMESPACE_PROPERTY).getValue()
-                            .equalsIgnoreCase(fNamespace);
+                    return !node.hasPropertyKey(NAMESPACE_PROPERTY) || !node.getProperty(NAMESPACE_PROPERTY).equalsIgnoreCase(fNamespace);
                 }
                 catch (PropertyNotFoundException e) {
                     return true;
@@ -243,8 +242,8 @@ public class EvrService extends Service {
         //check property match
         if(properties != null && !properties.isEmpty()) {
             nodes.removeIf(node -> {
-                for (Property prop : properties) {
-                    if(node.hasProperty(prop)) {
+                for (String key : properties.keySet()) {
+                    if(node.hasProperty(key, properties.get(key))) {
                         return false;
                     }
                 }
@@ -476,7 +475,9 @@ public class EvrService extends Service {
             throw new InvalidEvrException("Second parameter for function 'getNodeWithProperty' should be a value");
         }
 
-        HashSet<Node> nodes = getNodes(null, null, Collections.singletonList(new Property(propName.getName(), propValue.getName())));
+        HashMap<String, String> properties = new HashMap<>();
+        properties.put(propName.getName(), propValue.getName());
+        HashSet<Node> nodes = getNodes(null, null, properties);
 
         List<EvrEntity> evrEntities = new ArrayList<>();
         for(Node node : nodes) {
@@ -770,7 +771,7 @@ public class EvrService extends Service {
 
             //loop through the nodes that are included in the subject entity
             for(Node subjectNode : subjectNodes) {
-                if(!subjectNode.getType().equals(NodeType.USER_ATTRIBUTE)) {//can only grant analytics for ua
+                if(!subjectNode.getType().equals(NodeType.UA)) {//can only grant analytics for ua
                     continue;
                 }
 

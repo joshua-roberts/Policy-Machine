@@ -7,7 +7,7 @@ public class ErrorCodes {
     public static final int ERR_NULL_ID                             = 6004;
     public static final int ERR_ASSIGNMENT_EXISTS                   = 6005;
     public static final int ERR_INVALID_PROPERTY                    = 6006;
-    public static final int ERR_INVALID_PROHIBITION_SUBJECTTYPE     = 6007;
+    public static final int ERR_INVALID_PROHIBITION_SUBJECT_TYPE    = 6007;
     public static final int ERR_NODE_NOT_FOUND                      = 6008;
     public static final int ERR_NO_USER_PARAMETER                   = 6009;
     public static final int ERR_ASSOCIATION_DOES_NOT_EXIST          = 6010;

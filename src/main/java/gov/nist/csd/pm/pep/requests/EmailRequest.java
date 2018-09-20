@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public class EmailRequest {
-    private int emailNodeId;
+    private int emailNodeID;
     private String emailBody;
     private String emailSubject;
     private String recipient;
@@ -12,12 +12,12 @@ public class EmailRequest {
     private Timestamp timestamp;
     private List<Integer> attachments;
 
-    public int getEmailNodeId() {
-        return emailNodeId;
+    public int getEmailNodeID() {
+        return emailNodeID;
     }
 
-    public void setEmailNodeId(int emailNodeId) {
-        this.emailNodeId = emailNodeId;
+    public void setEmailNodeID(int emailNodeID) {
+        this.emailNodeID = emailNodeID;
     }
 
     public String getEmailBody() {

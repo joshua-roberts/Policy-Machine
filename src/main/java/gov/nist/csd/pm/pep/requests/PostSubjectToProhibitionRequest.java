@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pep.requests;
 
 public class PostSubjectToProhibitionRequest {
-    long subjectId;
+    long subjectID;
     String subjectType;
-    public long getSubjectId(){
-        return subjectId;
+    public long getSubjectID(){
+        return subjectID;
     }
     public String getSubjectType(){
         return subjectType;

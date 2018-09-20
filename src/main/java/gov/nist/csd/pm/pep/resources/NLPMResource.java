@@ -2,10 +2,9 @@ package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.model.exceptions.ConfigurationException;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.PmException;
-import gov.nist.csd.pm.pep.services.AssignmentService;
-import gov.nist.csd.pm.pep.services.AssociationsService;
-import gov.nist.csd.pm.pep.services.NodeService;
+import gov.nist.csd.pm.pdp.services.AssignmentService;
+import gov.nist.csd.pm.pdp.services.AssociationsService;
+import gov.nist.csd.pm.pdp.services.NodeService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -37,11 +36,11 @@ public class NLPMResource {
     /*@POST
     public Response grant(GrantRequest request) throws PmException, IOException, ClassNotFoundException, SQLException {
         //get the pc node
-        Node pcNode = nodeService.getNode(request.getPcId());
+        Node pcNode = nodeService.getNode(request.getPcID());
 
 
         //get the subjectNode
-        Node subjectNode = nodeService.getNode(request.getSubjectId());
+        Node subjectNode = nodeService.getNode(request.getSubjectID());
 
         //generate a random name to give generated UA and OA
         String genName = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
@@ -68,7 +67,7 @@ public class NLPMResource {
                 });
 
         //assign all target nodes to oaNode
-        for(long target : request.getTargetIds()) {
+        for(long target : request.getTargetIDs()) {
             assignmentService.createAssignment(target, oaNode.getID());
         }
 

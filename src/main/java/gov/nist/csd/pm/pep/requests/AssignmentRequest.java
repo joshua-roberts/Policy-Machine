@@ -1,22 +1,22 @@
 package gov.nist.csd.pm.pep.requests;
 
 public class AssignmentRequest {
-    private long childId;
-    private long parentId;
+    private long childID;
+    private long parentID;
 
-    public long getChildId() {
-        return childId;
+    public long getChildID() {
+        return childID;
     }
 
-    public void setChildId(long childId) {
-        this.childId = childId;
+    public void setChildID(long childID) {
+        this.childID = childID;
     }
 
-    public long getParentId() {
-        return parentId;
+    public long getParentID() {
+        return parentID;
     }
 
-    public void setParentId(long parentId) {
-        this.parentId = parentId;
+    public void setParentID(long parentID) {
+        this.parentID = parentID;
     }
 }
