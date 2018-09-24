@@ -17,7 +17,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>startup</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.StartupServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.StartupServlet</servlet-class>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 	<servlet-mapping>
@@ -26,7 +26,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>SetConnection</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.SetConnectionServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.SetConnectionServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>SetConnection</servlet-name>
@@ -34,7 +34,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>SetInterval</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.SetIntervalServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.SetIntervalServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>SetInterval</servlet-name>
@@ -42,7 +42,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>LoadConfigurationScript</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.LoadConfigurationScriptServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.LoadConfigurationScriptServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>LoadConfigurationScript</servlet-name>
@@ -50,7 +50,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>SaveConfigurationScript</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.SaveConfigurationScriptServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.SaveConfigurationScriptServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>SaveConfigurationScript</servlet-name>
@@ -58,7 +58,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>LoadEvr</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.SaveConfigurationScriptServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.SaveConfigurationScriptServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>LoadEvr</servlet-name>
@@ -66,7 +66,7 @@
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>Reset</servlet-name>
-		<servlet-class>gov.nist.policyserver.servlets.ResetServlet</servlet-class>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.ResetServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Reset</servlet-name>

@@ -1,0 +1,68 @@
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <name>script</name>
+    <rules>
+        <rule>
+            <label>top secret</label>
+            <event>
+                <subject/><!--any user-->
+                <op-spec>
+                    <op>file read</op>
+                </op-spec>
+                <target>
+                    <entity/><!--any object-->
+                    <container intersection="false">
+                        <entity name="Top Secret OA" type="OA"/>
+                    </container>
+                </target>
+            </event>
+            <response>
+                <deny>
+                    <subject>
+                        <process>
+                            <function name="current_process"/>
+                        </process>
+                    </subject>
+                    <op-spec>
+                        <op>file write</op>
+                    </op-spec>
+                    <target>
+                        <container>
+                            <entity name="Top Secret OA" type="OA" complement="true"/>
+                        </container>
+                    </target>
+                </deny>
+            </response>
+        </rule>
+        <rule>
+            <label>secret</label>
+            <event>
+                <subject/><!--any user-->
+                <op-spec>
+                    <op>select</op>
+                </op-spec>
+                <target>
+                    <entity/><!--any object-->
+                    <container>
+                        <entity name="S" type="OA"/>
+                    </container>
+                </target>
+            </event>
+            <response>
+                <deny>
+                    <subject>
+                        <process>
+                            <function name="current_process"/>
+                        </process>
+                    </subject>
+                    <op-spec>
+                        <op>update</op>
+                    </op-spec>
+                    <target>
+                        <entity name="S" type="OA" complement="true"/>
+                    </target>
+                </deny>
+            </response>
+        </rule>
+    </rules>
+</script>
+
