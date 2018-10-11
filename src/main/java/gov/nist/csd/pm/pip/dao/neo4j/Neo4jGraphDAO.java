@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pip.dao.neo4j;
 
 import com.google.gson.Gson;
+import gov.nist.csd.pm.model.Constants;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
 import gov.nist.csd.pm.model.graph.Assignment;
@@ -133,7 +134,7 @@ public class Neo4jGraphDAO implements GraphDAO {
     public List<Association> getAssociations() throws DatabaseException {
         List<Association> associations = new ArrayList<>();
 
-        String cypher = "match(ua:UA)-[a:association]->(oa:OA) return ua,oa,a.operations,a.inherit;";
+        String cypher = "match(ua:UA)-[a:association]->(oa:OA) return ua,oa,a.operations";
         ResultSet rs = neo4j.execute(cypher);
         try {
             while (rs.next()) {
@@ -152,7 +153,7 @@ public class Neo4jGraphDAO implements GraphDAO {
 
     @Override
     public void reset() throws DatabaseException {
-        String cypher = "match(n) where n.id > 0 detach delete n";
+        String cypher = "match(n) detach delete n";
         neo4j.execute(cypher);
     }
 

@@ -99,16 +99,16 @@ public class DAOManager {
             graphDAO = new Neo4jGraphDAO(ctx);
             applicationDAO = new ApplicationDAO(ctx);
         } else {
-            /*nodesDAO = new SQLNodesDAO(connection);
-            assignmentsDAO = new SQLAssignmentsDAO(connection);
-            associationsDAO = new SQLAssociationsDAO(connection);
-            obligationsDAO = new SQLObligationsDAO(connection);
-            prohibitionsDAO = new SQLProhibitionsDAO(connection);
-            sessionsDAO = new SQLSessionsDAO(connection);
-            graphDAO = new SQLGraphDAO(connection);
-            applicationDAO = new ApplicationDAO();
+            nodesDAO = new SQLNodesDAO(ctx);
+            assignmentsDAO = new SQLAssignmentsDAO(ctx);
+            associationsDAO = new SQLAssociationsDAO(ctx);
+            obligationsDAO = new SQLObligationsDAO(ctx);
+            prohibitionsDAO = new SQLProhibitionsDAO(ctx);
+            sessionsDAO = new SQLSessionsDAO(ctx);
+            graphDAO = new SQLGraphDAO(ctx);
+            applicationDAO = new ApplicationDAO(ctx);
 
-            System.out.println("DAO initialized");*/
+            System.out.println("DAO initialized");
         }
     }
 

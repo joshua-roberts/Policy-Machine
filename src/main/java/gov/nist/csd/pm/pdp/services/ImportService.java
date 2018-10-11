@@ -270,7 +270,7 @@ public class ImportService {
                         /*Node rowNode = nodeService.createNode(rowsNode.getID(), NEW_NODE_ID, rowName, NodeType.OA
                                         .toString(),
                                 properties);*/
-                        createAssignment(rowNode, rowsNode);
+                        assignmentService.createAssignment(rowNode, rowsNode);
 
                         //create data objects, assign to row and column
                         for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
@@ -287,10 +287,10 @@ public class ImportService {
                             /*Node objectNode = nodeService.createNode(rowNode.getID(), NEW_NODE_ID, objectName, NodeType.O.toString(),
                                     properties);*/
                             Node objectNode = nodeService.createNode(NEW_NODE_ID, objectName, NodeType.O.toString(), properties);
-                            createAssignment(objectNode, rowNode);
+                            assignmentService.createAssignment(objectNode, rowNode);
 
                             //assign object to row and column
-                            createAssignment(objectNode, columnNode);
+                            assignmentService.createAssignment(objectNode, columnNode);
                         }
                     }
                 }
@@ -305,28 +305,6 @@ public class ImportService {
         }
         catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, DatabaseException, InvalidPropertyException, IOException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException {
-        //create assignment in database
-        getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
-
-        //create assignment in nodes
-        getDaoManager().getGraphDAO().getGraph().createAssignment(child, parent);
-
-        //if the parent is a PC and the child is an OA, create a Association for the super user on the child
-        if (parent.getType().equals(PC) && child.getType().equals(OA)) {
-            Node superUA = getSuperUA();
-
-            //assign UA to PC
-            if(!assignmentService.isAssigned(superUA.getID(), parent.getID())) {
-                createAssignment(superUA, parent);
-            }
-
-            //create Association
-            createAssociation(superUA.getID(), child.getID(),
-                    new HashSet<>(Collections.singleton(ALL_OPS)));
         }
     }
 

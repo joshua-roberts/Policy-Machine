@@ -9,7 +9,6 @@ import java.util.HashSet;
 
 public interface ProhibitionsDAO {
 
-
     void createProhibition(String prohibitionName, HashSet<String> operations, boolean intersection, ProhibitionResource[] resources, ProhibitionSubject subject) throws DatabaseException;
 
     void deleteProhibition(String prohibitionName) throws DatabaseException;

@@ -109,7 +109,9 @@ public class AssignmentService extends Service{
             Node superUA = getSuperUA();
 
             //assign UA to PC
-            createAssignment(superUA, parent);
+            if(!isAssigned(superUA.getID(), parent.getID())) {
+                createAssignment(superUA, parent);
+            }
 
             //create Association
             associationsService.createAssociation(superUA.getID(), child.getID(),

@@ -348,7 +348,6 @@ public class ConfigurationService extends Service{
 
     public void uploadFiles(String[] files, String session, long process) throws NullNameException, NodeIDExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         for(String file : files) {
-            System.out.println("*************** In uploadFiles ***************");
             String[] split = file.split("/");
             for(int i = 0; i < split.length; i++) {
                 String fileStr = split[i];
@@ -392,10 +391,8 @@ public class ConfigurationService extends Service{
                     //create node
                     if(parentNode == null) {
                         //create pc
-                        System.out.println("*************** Parent node is null, creating one ***************");
                         parentNode = nodeService.createPolicy(fileName, null, session, process);
                     }
-                    System.out.println("*************** Creating the node requested ***************" + NEW_NODE_ID);
                     HashMap<String, String> properties = new HashMap<>();
                     properties.put(NAMESPACE_PROPERTY, namespace);
                     properties.put("storage", "google");
@@ -475,71 +472,49 @@ public class ConfigurationService extends Service{
         }
     }
 
-    class ConfigAssignNode {
-        String name;
-        String namespace;
-
-        public ConfigAssignNode(String name, String namespace) {
-            this.name = name;
-            this.namespace = namespace;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getNamespace() {
-            return namespace;
-        }
-    }
-
     public String save() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         HashSet<Node> nodes = getGraph().getNodes();
-        //remove meta data nodes (ids are less than NUM_META_NODES)
-        nodes.removeIf(node -> node.getID() <= NUM_META_NODES);
 
         HashSet<Assignment> assignments = getGraph().getAssignments();
         HashSet<JsonAssignment> jsonAssignments = new HashSet<>();
         for(Assignment assignment : assignments) {
-            if(assignment.getParent().getID() <= NUM_META_NODES && assignment.getChild().getID() <= NUM_META_NODES) {// filter meta data assignments
-                jsonAssignments.add(new JsonAssignment(assignment.getChild().getID(), assignment.getParent().getID()));
-            }
+            jsonAssignments.add(new JsonAssignment(assignment.getChild().getID(), assignment.getParent().getID()));
         }
 
         List<Association> associations = getGraph().getAssociations();
         HashSet<JsonAssociation> jsonAssociations = new HashSet<>();
         for(Association association : associations) {
-            if (association.getChild().getID() <= NUM_META_NODES && association.getParent().getID() <= NUM_META_NODES) {//filter meta data association
-                jsonAssociations.add(new JsonAssociation(association.getChild().getID(),
-                        association.getParent().getID(), association.getOps()));
-            }
+            jsonAssociations.add(new JsonAssociation(association.getChild().getID(),
+                    association.getParent().getID(), association.getOps()));
         }
 
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) throws InvalidPropertyException, InvalidNodeTypeException, DatabaseException, InvalidKeySpecException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, IOException, ConfigurationException, NoSuchAlgorithmException, NullNameException, SQLException, NullTypeException, PropertyNotFoundException, AssociationExistsException, AssignmentExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, InvalidAssociationException {
+    public void load(String config) throws InvalidPropertyException, DatabaseException, ClassNotFoundException, IOException, SQLException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<Node> nodes = graph.getNodes();
+        HashMap<Long, Node> nodesMap = new HashMap<>();
         for(Node node : nodes) {
             HashMap<String, String> properties = node.getProperties();
-            nodeService.createNode(node.getID(), node.getName(), node.getType().toString(), properties);
+            getDaoManager().getNodesDAO().createNode(node.getID(), node.getName(), node.getType(), properties);
+            nodesMap.put(node.getID(), node);
         }
 
         HashSet<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
             // child - assigned to -> parent
             if(assignment != null) {
-                assignmentService.createAssignment(assignment.getChild(), assignment.getParent());
+                getDaoManager().getAssignmentsDAO().createAssignment(nodesMap.get(assignment.getChild()), nodesMap.get(assignment.getParent()));
             }
         }
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
-            associationsService.createAssociation(association.getUa(), association.getTarget(), association.getOps());
+            getDaoManager().getAssociationsDAO().createAssociation(association.getUa(), association.getTarget(), association.getOps());
         }
     }
 
