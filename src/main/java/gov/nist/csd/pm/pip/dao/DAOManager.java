@@ -63,13 +63,13 @@ public class DAOManager {
             graphDAO = new Neo4jGraphDAO(ctx);
             applicationDAO = new ApplicationDAO(ctx);
         } else {
-            nodesDAO = new SqlNodesDAO(ctx);
-            assignmentsDAO = new SqlAssignmentsDAO(ctx);
-            associationsDAO = new SqlAssociationsDAO(ctx);
-            obligationsDAO = new SqlObligationsDAO(ctx);
-            prohibitionsDAO = new SqlProhibitionsDAO(ctx);
-            sessionsDAO = new SqlSessionsDAO(ctx);
-            graphDAO = new SqlGraphDAO(ctx);
+            nodesDAO = new SQLNodesDAO(ctx);
+            assignmentsDAO = new SQLAssignmentsDAO(ctx);
+            associationsDAO = new SQLAssociationsDAO(ctx);
+            obligationsDAO = new SQLObligationsDAO(ctx);
+            prohibitionsDAO = new SQLProhibitionsDAO(ctx);
+            sessionsDAO = new SQLSessionsDAO(ctx);
+            graphDAO = new SQLGraphDAO(ctx);
             applicationDAO = new ApplicationDAO(ctx);
         }
 
@@ -99,13 +99,13 @@ public class DAOManager {
             graphDAO = new Neo4jGraphDAO(ctx);
             applicationDAO = new ApplicationDAO(ctx);
         } else {
-            /*nodesDAO = new SqlNodesDAO(connection);
-            assignmentsDAO = new SqlAssignmentsDAO(connection);
-            associationsDAO = new SqlAssociationsDAO(connection);
-            obligationsDAO = new SqlObligationsDAO(connection);
-            prohibitionsDAO = new SqlProhibitionsDAO(connection);
-            sessionsDAO = new SqlSessionsDAO(connection);
-            graphDAO = new SqlGraphDAO(connection);
+            /*nodesDAO = new SQLNodesDAO(connection);
+            assignmentsDAO = new SQLAssignmentsDAO(connection);
+            associationsDAO = new SQLAssociationsDAO(connection);
+            obligationsDAO = new SQLObligationsDAO(connection);
+            prohibitionsDAO = new SQLProhibitionsDAO(connection);
+            sessionsDAO = new SQLSessionsDAO(connection);
+            graphDAO = new SQLGraphDAO(connection);
             applicationDAO = new ApplicationDAO();
 
             System.out.println("DAO initialized");*/

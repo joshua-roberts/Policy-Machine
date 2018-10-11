@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.pdp.translator.algorithms;
+package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.epp.obligations.EvrManager;
 import gov.nist.csd.pm.model.exceptions.*;

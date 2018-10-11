@@ -526,7 +526,6 @@ public class ConfigurationService extends Service{
         HashSet<Node> nodes = graph.getNodes();
         for(Node node : nodes) {
             HashMap<String, String> properties = node.getProperties();
-            System.out.println(node);
             nodeService.createNode(node.getID(), node.getName(), node.getType().toString(), properties);
         }
 
@@ -534,14 +533,12 @@ public class ConfigurationService extends Service{
         for(JsonAssignment assignment : assignments) {
             // child - assigned to -> parent
             if(assignment != null) {
-                System.out.println("assignment: " + assignment.getChild() + "->" + assignment.getParent());
                 assignmentService.createAssignment(assignment.getChild(), assignment.getParent());
             }
         }
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
-            System.out.println(association.getUa() + "-> " + association.getTarget());
             associationsService.createAssociation(association.getUa(), association.getTarget(), association.getOps());
         }
     }

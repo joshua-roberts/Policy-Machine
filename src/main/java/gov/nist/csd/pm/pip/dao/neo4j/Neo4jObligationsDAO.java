@@ -30,19 +30,13 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
     public static final  String DENY_ACTION_TAG        = "deny_action";
     public static final  String DELETE_ACTION_TAG      = "delete_action";
 
-    public static void main(String[] args) throws SQLException, DatabaseException, IOException, ClassNotFoundException {
-        Driver driver = new org.neo4j.jdbc.Driver();
-        DriverManager.registerDriver(driver);
-        Connection connection = DriverManager.getConnection("jdbc:neo4j:http://localhost:7474", "neo4j", "root");
-        Neo4jObligationsDAO dao = new Neo4jObligationsDAO(new DatabaseContext("localhost", 7474, "neo4j", "root", ""));
-    }
-
-    private EvrManager      evrManager;
     private Neo4jConnection neo4j;
+    private EvrManager evrManager;
 
     public Neo4jObligationsDAO(DatabaseContext ctx) throws DatabaseException, SQLException, IOException, ClassNotFoundException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
         evrManager = new EvrManager();
+
 
         System.out.println("Building obligations...");
         buildObligations();
@@ -565,7 +559,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         }
     }
 
-    @Override
     public String createScript(String scriptName) throws DatabaseException, SQLException {
         String id = getEvrId();
 
@@ -591,7 +584,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return id;
     }
 
-    @Override
     public String createRule(String parentId, String parentLabel, String label) throws DatabaseException {
         String ruleId = getEvrId();
 
@@ -613,7 +605,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return ruleId;
     }
 
-    @Override
     public String createSubject(String ruleId, String parentLabel) throws DatabaseException {
         String subjectId = getEvrId();
 
@@ -624,7 +615,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return subjectId;
     }
 
-    @Override
     public String createPolicies(String ruleId, String parentLabel, boolean isOr) throws DatabaseException {
         String policiesId = getEvrId();
 
@@ -636,7 +626,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return policiesId;
     }
 
-    @Override
     public void createTime(String ruleId, EvrTime evrTime) throws DatabaseException {
         String timeId = getEvrId();
 
@@ -690,7 +679,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         neo4j.execute(cypher);
     }
 
-    @Override
     public String createTarget(String ruleId, String parentLabel) throws DatabaseException {
         String targetId = getEvrId();
 
@@ -712,7 +700,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return targetId;
     }
 
-    @Override
     public String createEntity(String parentId, String parentLabel, EvrEntity entity) throws DatabaseException {
         String entityId = getEvrId();
 
@@ -724,7 +711,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return entityId;
     }
 
-    @Override
     public void updateEntity(String entityId, EvrEntity entity) throws DatabaseException, InvalidEntityException {
         if (!entity.isList() && !entity.isFunction() && !entity.isProcess()) {
             //entity is a leaf -- base case
@@ -750,7 +736,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         }
     }
 
-    @Override
     public String createFunction(String parentId, String parentLabel, EvrFunction function) throws DatabaseException {
         String functionId = getEvrId();
 
@@ -761,7 +746,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return functionId;
     }
 
-    @Override
     public String createProcess(String parentId, String parentLabel) throws DatabaseException {
         String processId = getEvrId();
 
@@ -772,13 +756,11 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return processId;
     }
 
-    @Override
     public void updateProcess(String parentId, long process) throws DatabaseException {
         String cypher = "match(n:obligations:process{evr_id:'" + parentId + "'}) set n.name='" + process + "'";
         neo4j.execute(cypher);
     }
 
-    @Override
     public String addFunctionArg(String functionId) throws DatabaseException {
         String argId = getEvrId();
 
@@ -789,14 +771,12 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return argId;
     }
 
-    @Override
     public void addFunctionArgValue(String functionId, EvrArg arg) throws DatabaseException {
         String cypher = "match(n:obligations:function{evr_id:'" + functionId + "'}) " +
                 "create (n)<-[:arg]-(:obligations:arg{evr_id:'" + functionId + "', name:'" + arg.getValue() + "'})";
         neo4j.execute(cypher);
     }
 
-    @Override
     public String createCondition(String ruleId, boolean exists) throws DatabaseException {
         String conditionId = getEvrId();
 
@@ -808,7 +788,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return conditionId;
     }
 
-    @Override
     public String createAssignAction(String parentId, String parentLabel) throws DatabaseException {
         String assignActionId = getEvrId();
 
@@ -820,7 +799,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return assignActionId;
     }
 
-    @Override
     public String createAssignActionParam(String assignActionId, String param) throws DatabaseException {
         String paramId = getEvrId();
 
@@ -833,7 +811,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return paramId;
     }
 
-    @Override
     public String createGrantAction(String parentId, String parentLabel) throws DatabaseException {
         String grantActionId = getEvrId();
 
@@ -845,7 +822,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return grantActionId;
     }
 
-    @Override
     public void createOperations(String parentId, String parentType, HashSet<String> ops) throws DatabaseException {
         HashSet<String> opSet = new HashSet<>(ops);
 
@@ -856,7 +832,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         neo4j.execute(cypher);
     }
 
-    @Override
     public String createCreateAction(String parentId, String parentLabel) throws DatabaseException {
         String createActionId = getEvrId();
 
@@ -869,7 +844,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return createActionId;
     }
 
-    @Override
     public String createDenyAction(String parentId, String parentLabel) throws DatabaseException {
         String denyActionId = getEvrId();
 
@@ -882,7 +856,6 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return denyActionId;
     }
 
-    @Override
     public String createDeleteAction(String parentId, String parentLabel) throws DatabaseException {
         String deleteActionId = getEvrId();
 
@@ -895,13 +868,11 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         return deleteActionId;
     }
 
-    @Override
     public void deleteObligations() throws DatabaseException {
         String cypher = "match(n:obligations) detach delete n";
         neo4j.execute(cypher);
     }
 
-    @Override
     public void updateScript(String obligation, boolean enabled) throws DatabaseException {
         String cypher = "match(n:obligations:script{evr_id:'" + obligation + "'}) set n.enabled=" + enabled;
         neo4j.execute(cypher);

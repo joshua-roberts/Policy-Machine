@@ -1,6 +1,6 @@
-package gov.nist.csd.pm.pdp.translator.model.table;
+package gov.nist.csd.pm.demos.ndac.translator.model.table;
 
-import gov.nist.csd.pm.pdp.translator.model.row.CompositeRow;
+import gov.nist.csd.pm.demos.ndac.translator.model.row.CompositeRow;
 
 import java.util.ArrayList;
 import java.util.List;

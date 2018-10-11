@@ -4,7 +4,7 @@ import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.pep.requests.CreateSessionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pdp.services.SessionService;
-import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

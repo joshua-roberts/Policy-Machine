@@ -9,7 +9,7 @@ import gov.nist.csd.pm.pdp.services.AnalyticsService;
 import gov.nist.csd.pm.pdp.services.AssignmentService;
 import gov.nist.csd.pm.pdp.services.NodeService;
 import gov.nist.csd.pm.pdp.services.ProhibitionsService;
-import gov.nist.csd.pm.pdp.translator.algorithms.DbManager;
+import gov.nist.csd.pm.demos.ndac.translator.algorithms.DbManager;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;

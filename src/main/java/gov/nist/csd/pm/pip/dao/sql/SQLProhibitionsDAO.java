@@ -10,14 +10,14 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 import java.sql.*;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.pip.dao.sql.MySQLConnection.arrayToString;
-import static gov.nist.csd.pm.pip.dao.sql.MySQLConnection.setToString;
+import static gov.nist.csd.pm.pip.dao.sql.SQLConnection.arrayToString;
+import static gov.nist.csd.pm.pip.dao.sql.SQLConnection.setToString;
 
-public class SqlProhibitionsDAO implements ProhibitionsDAO {
-    private MySQLConnection mysql;
+public class SQLProhibitionsDAO implements ProhibitionsDAO {
+    private SQLConnection mysql;
 
-    public SqlProhibitionsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLProhibitionsDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override

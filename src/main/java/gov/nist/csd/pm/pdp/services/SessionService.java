@@ -3,7 +3,7 @@ package gov.nist.csd.pm.pdp.services;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
-import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;

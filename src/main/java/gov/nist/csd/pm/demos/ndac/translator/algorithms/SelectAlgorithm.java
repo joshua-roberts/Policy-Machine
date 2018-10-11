@@ -1,13 +1,13 @@
-package gov.nist.csd.pm.pdp.translator.algorithms;
+package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.NodeType;
-import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
-import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;
-import gov.nist.csd.pm.pdp.translator.model.row.CompositeRow;
-import gov.nist.csd.pm.pdp.translator.model.row.SimpleRow;
-import gov.nist.csd.pm.pdp.translator.model.table.CompositeTable;
-import gov.nist.csd.pm.pdp.translator.model.table.SimpleTable;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PolicyMachineException;
+import gov.nist.csd.pm.demos.ndac.translator.model.row.CompositeRow;
+import gov.nist.csd.pm.demos.ndac.translator.model.row.SimpleRow;
+import gov.nist.csd.pm.demos.ndac.translator.model.table.CompositeTable;
+import gov.nist.csd.pm.demos.ndac.translator.model.table.SimpleTable;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;

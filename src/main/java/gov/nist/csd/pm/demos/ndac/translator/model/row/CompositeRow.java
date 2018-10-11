@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.pdp.translator.model.row;
+package gov.nist.csd.pm.demos.ndac.translator.model.row;
 
 import java.util.ArrayList;
 import java.util.List;

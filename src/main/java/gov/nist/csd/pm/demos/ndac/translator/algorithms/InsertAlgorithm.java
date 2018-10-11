@@ -1,9 +1,9 @@
-package gov.nist.csd.pm.pdp.translator.algorithms;
+package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
-import gov.nist.csd.pm.pdp.translator.exceptions.PMAccessDeniedException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.insert.Insert;

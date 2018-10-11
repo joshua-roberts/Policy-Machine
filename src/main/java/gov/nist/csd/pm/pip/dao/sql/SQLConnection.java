@@ -10,11 +10,11 @@ import java.util.HashSet;
 
 import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_MYSQL;
 
-public class MySQLConnection {
+public class SQLConnection {
 
     private Connection connection;
 
-    public MySQLConnection(String host, int port, String username, String password) throws DatabaseException {
+    public SQLConnection(String host, int port, String username, String password) throws DatabaseException {
         try {
             Driver driver = new org.neo4j.jdbc.Driver();
             DriverManager.registerDriver(driver);

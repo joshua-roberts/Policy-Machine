@@ -7,12 +7,12 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 import java.sql.*;
 import java.util.HashSet;
 
-public class SqlAssociationsDAO implements AssociationsDAO {
+public class SQLAssociationsDAO implements AssociationsDAO {
 
-    private MySQLConnection mysql;
+    private SQLConnection mysql;
 
-    public SqlAssociationsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLAssociationsDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
     @Override
     public synchronized void createAssociation(long uaId, long targetId, HashSet<String> operations) throws DatabaseException {

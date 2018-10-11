@@ -1,11 +1,10 @@
-package gov.nist.csd.pm.pdp.translator.algorithms;
+package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import net.sf.jsqlparser.schema.Column;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

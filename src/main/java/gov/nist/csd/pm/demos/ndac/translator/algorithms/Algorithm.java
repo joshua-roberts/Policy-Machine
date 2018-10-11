@@ -1,9 +1,9 @@
-package gov.nist.csd.pm.pdp.translator.algorithms;
+package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;

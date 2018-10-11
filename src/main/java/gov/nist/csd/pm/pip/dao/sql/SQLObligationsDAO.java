@@ -13,11 +13,11 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 import java.sql.SQLException;
 import java.util.HashSet;
 
-public class SqlObligationsDAO implements ObligationsDAO {
-    private MySQLConnection mysql;
+public class SQLObligationsDAO implements ObligationsDAO {
+    private SQLConnection mysql;
 
-    public SqlObligationsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLObligationsDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override

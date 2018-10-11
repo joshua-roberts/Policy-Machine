@@ -9,13 +9,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
-public class SqlSessionsDAO implements SessionsDAO {
+public class SQLSessionsDAO implements SessionsDAO {
 
     private HashMap<String, Long> sessions = new HashMap<>();
-    private MySQLConnection mysql;
+    private SQLConnection         mysql;
 
-    public SqlSessionsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLSessionsDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     public void createSession(String sessionId, long userId) throws SQLException {

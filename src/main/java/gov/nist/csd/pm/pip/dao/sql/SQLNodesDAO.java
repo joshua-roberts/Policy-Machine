@@ -9,12 +9,12 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 import java.sql.*;
 import java.util.HashMap;
 
-public class SqlNodesDAO implements NodesDAO {
+public class SQLNodesDAO implements NodesDAO {
 
-    private MySQLConnection mysql;
+    private SQLConnection mysql;
 
-    public SqlNodesDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLNodesDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override

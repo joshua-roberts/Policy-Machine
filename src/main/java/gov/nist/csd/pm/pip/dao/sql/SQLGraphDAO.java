@@ -21,14 +21,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-public class SqlGraphDAO implements GraphDAO {
+public class SQLGraphDAO implements GraphDAO {
 
-    private PmGraph         graph;
-    private PmAnalytics     analytics = new PmAnalytics();
-    private MySQLConnection mysql;
+    private PmGraph       graph;
+    private PmAnalytics   analytics = new PmAnalytics();
+    private SQLConnection mysql;
 
-    public SqlGraphDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLGraphDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
         buildGraph();
     }
 

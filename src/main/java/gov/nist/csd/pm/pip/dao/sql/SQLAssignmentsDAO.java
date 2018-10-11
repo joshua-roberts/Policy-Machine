@@ -7,12 +7,12 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 
 import java.sql.*;
 
-public class SqlAssignmentsDAO implements AssignmentsDAO {
+public class SQLAssignmentsDAO implements AssignmentsDAO {
 
-    private MySQLConnection mysql;
+    private SQLConnection mysql;
 
-    public SqlAssignmentsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new MySQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+    public SQLAssignmentsDAO(DatabaseContext ctx) throws DatabaseException {
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override

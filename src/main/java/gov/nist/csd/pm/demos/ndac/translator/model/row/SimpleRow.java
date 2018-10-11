@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.pdp.translator.model.row;
+package gov.nist.csd.pm.demos.ndac.translator.model.row;
 
 public class SimpleRow {
     private String rowName;

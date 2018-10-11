@@ -479,8 +479,8 @@ public class PmAnalytics implements Serializable{
 
         if(dc.containsKey(w)){
             HashMap<Node, HashSet<String>> pcSet = D.get(w);
+            HashSet<String> ops = dc.get(w);
             for(Node pcId : pcSet.keySet()){
-                HashSet<String> ops = dc.get(w);
                 D.get(w).get(pcId).addAll(ops);
             }
         }

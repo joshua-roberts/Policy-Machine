@@ -1,6 +1,6 @@
-package gov.nist.csd.pm.pdp.translator.model.table;
+package gov.nist.csd.pm.demos.ndac.translator.model.table;
 
-import gov.nist.csd.pm.pdp.translator.model.row.SimpleRow;
+import gov.nist.csd.pm.demos.ndac.translator.model.row.SimpleRow;
 import net.sf.jsqlparser.schema.Column;
 
 import java.util.ArrayList;

@@ -1,11 +1,10 @@
-package gov.nist.csd.pm.pep.resources;
+package gov.nist.csd.pm.demos.ndac.translator;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.pdp.services.TranslatorService;
 import gov.nist.csd.pm.pep.requests.TranslateRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pdp.translator.exceptions.PolicyMachineException;
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
 
 import javax.ws.rs.Consumes;
