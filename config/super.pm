@@ -12,8 +12,7 @@
          "type":"UA",
          "properties": 
             {
-                "key": "namespace",
-                "value": "super"
+                "namespace": "super"
             }
          
       },
@@ -23,8 +22,8 @@
          "type":"U",
          "properties": 
             {
-                "key": "password",
-                "value": "super"
+                "password": "super",
+                "test": "test"
             }
       }
    ],
