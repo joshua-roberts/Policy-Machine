@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="war" name="Policy-Machine-Dev:war">
-    <output-path>$PROJECT_DIR$/target</output-path>
-    <root id="archive" name="pm.war">
-      <element id="artifact" artifact-name="Policy-Machine-Dev:war exploded" />
-    </root>
-  </artifact>
-</component>
