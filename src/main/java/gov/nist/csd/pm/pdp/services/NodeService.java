@@ -23,7 +23,7 @@ public class NodeService extends Service{
     private        AnalyticsService  analyticsService  = new AnalyticsService();
     private        EvrService        evrService        =  new EvrService();
 
-    public HashSet<Node> getNodes(String name, String type, HashMap<String, String> properties, String session, long process)
+    public HashSet<Node> getNodes(String name, String type, Map<String, String> properties, String session, long process)
             throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
         Node user = getSessionUser(session);
 
@@ -44,7 +44,7 @@ public class NodeService extends Service{
         return nodes;
     }
 
-    public HashSet<Node> getNodes(String name, String type, HashMap<String, String> properties)
+    public HashSet<Node> getNodes(String name, String type, Map<String, String> properties)
             throws InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
@@ -75,7 +75,7 @@ public class NodeService extends Service{
         return nodes;
     }
 
-    public Node getNode(String name, String type, HashMap<String, String> properties)
+    public Node getNode(String name, String type, Map<String, String> properties)
             throws InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         HashSet<Node> nodes = getNodes(name, type, properties);
 
@@ -86,7 +86,7 @@ public class NodeService extends Service{
         return nodes.iterator().next();
     }
 
-    public Node createNodeIn(long baseID, String name, String type, HashMap<String, String> properties, String session, long process) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, NullNameException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, NodeIDExistsException, NodeNameExistsException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException, InvalidAssociationException {
+    public Node createNodeIn(long baseID, String name, String type, Map<String, String> properties, String session, long process) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, NullNameException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, NodeIDExistsException, NodeNameExistsException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException, InvalidAssociationException {
         Node user = getSessionUser(session);
 
         //check parent node exists
@@ -122,13 +122,13 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node createPolicy(String name, HashMap<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException {
+    public Node createPolicy(String name, Map<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException {
         Node user = getSessionUser(session);
 
         Node node = createNode(NEW_NODE_ID, name, NodeType.PC.toString(), properties);
 
         //create OA
-        HashMap<String, String> newProps = new HashMap<>();
+        Map<String, String> newProps = new HashMap<>();
         newProps.put(NAMESPACE_PROPERTY, node.getName());
         Node oaNode = createNode(NEW_NODE_ID, node.getName(), NodeType.OA.toString(), newProps);
 
@@ -146,9 +146,10 @@ public class NodeService extends Service{
         return node;
     }
 
-    protected Node createNode(long id, String name, String type, HashMap<String, String> properties) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException {
+    protected Node createNode(long id, String name, String type, Map<String, String> properties) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, InvalidKeySpecException, NoSuchAlgorithmException {
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
+
         Node newNode = getDaoManager().getNodesDAO().createNode(id, name, nt, properties);
 
         //add the node to the nodes
@@ -204,7 +205,7 @@ public class NodeService extends Service{
         getGraph().deleteNode(nodeID);
     }
 
-    public HashMap<String, String> getNodeProperties(long nodeID) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    public Map<String, String> getNodeProperties(long nodeID) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //get node
         Node node = getNode(nodeID);
 

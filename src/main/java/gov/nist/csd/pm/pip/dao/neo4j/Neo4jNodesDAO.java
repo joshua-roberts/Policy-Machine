@@ -6,7 +6,7 @@ import gov.nist.csd.pm.pip.dao.NodesDAO;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import static gov.nist.csd.pm.model.Constants.NEW_NODE_ID;
 
@@ -19,7 +19,7 @@ public class Neo4jNodesDAO implements NodesDAO {
     }
 
     @Override
-    public Node createNode(long id, String name, NodeType type, HashMap<String, String> properties) throws DatabaseException {
+    public Node createNode(long id, String name, NodeType type, Map<String, String> properties) throws DatabaseException {
         String cypher;
 
         if (id == NEW_NODE_ID) {

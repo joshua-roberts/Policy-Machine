@@ -28,7 +28,7 @@ public class ContentHelper {
                 node.setContent(content);
 
                 //update node properties
-                HashMap<String, String> nodeProperties = node.getProperties();
+                Map<String, String> nodeProperties = node.getProperties();
                 for (String key : properties.keySet()) {
                     switch (key) {
                         case BUCKET_PROPERTY:

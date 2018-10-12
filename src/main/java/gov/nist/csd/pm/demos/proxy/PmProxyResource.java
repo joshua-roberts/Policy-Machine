@@ -20,6 +20,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
 
@@ -81,11 +82,11 @@ public class PmProxyResource {
         if(execute) {
             //result set
             Gson gson = new Gson();
-            List<HashMap<String, String>> results = new ArrayList<>();
+            List<Map<String, String>> results = new ArrayList<>();
             ResultSet rs = stmt.getResultSet();
             ResultSetMetaData metaData = rs.getMetaData();
             while(rs.next()) {
-                HashMap<String, String> map = new HashMap<>();
+                Map<String, String> map = new HashMap<>();
                 int columnCount = metaData.getColumnCount();
                 for(int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);

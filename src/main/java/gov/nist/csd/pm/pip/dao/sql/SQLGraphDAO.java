@@ -28,7 +28,7 @@ public class SQLGraphDAO implements GraphDAO {
     private SQLConnection mysql;
 
     public SQLGraphDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
         buildGraph();
     }
 
@@ -46,6 +46,7 @@ public class SQLGraphDAO implements GraphDAO {
         try {
             graph = new PmGraph();
 
+            System.out.println("adding nodes to the graph");
             List<Node> nodes = getNodes();
             for (Node node : nodes) {
                 if (!node.getType().equals(NodeType.OS)) {
@@ -53,6 +54,7 @@ public class SQLGraphDAO implements GraphDAO {
                 }
             }
 
+            System.out.println("creating assignments in the graph");
             List<Assignment> assignments = getAssignments();
             for (Assignment assignment : assignments) {
                 Node start = assignment.getChild();
@@ -63,8 +65,8 @@ public class SQLGraphDAO implements GraphDAO {
                 graph.createAssignment(assignment.getChild(), assignment.getParent());
             }
 
-            List<Association> associations = null;
-            associations = getAssociations();
+            System.out.println("creating assocs in graph");
+            List<Association> associations = getAssociations();
             for (Association assoc : associations) {
                 graph.createAssociation(assoc.getChild(), assoc.getParent(), assoc.getOps());
             }
@@ -76,10 +78,11 @@ public class SQLGraphDAO implements GraphDAO {
 
     @Override
     public List<Node> getNodes() throws DatabaseException, InvalidNodeTypeException {
-        try {
+        try (
+                Statement stmt = mysql.getConnection().createStatement();
+                ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node")
+        ){
             List<Node> nodes = new ArrayList<>();
-            Statement stmt = mysql.getConnection().createStatement();
-            ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node");
             while (rs.next()) {
                 long id = rs.getInt(1);
                 nodes.add(getNode(id));
@@ -91,21 +94,25 @@ public class SQLGraphDAO implements GraphDAO {
     }
 
     private Node getNode(long id) throws SQLException, InvalidNodeTypeException, DatabaseException {
-        Statement stmt = mysql.getConnection().createStatement();
-        ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
-        rs.next();
-        String name = rs.getString(2);
-        NodeType type = NodeType.toNodeType(rs.getInt(3));
-        HashMap<String, String> properties = getNodeProps(id);
+        try (
+                Statement stmt = mysql.getConnection().createStatement();
+                ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
+        ) {
+            rs.next();
+            String name = rs.getString(2);
+            NodeType type = NodeType.toNodeType(rs.getInt(3));
+            Map<String, String> properties = getNodeProps(id);
 
-        return new Node(id, name, type, properties);
+            return new Node(id, name, type, properties);
+        }
     }
 
-    private HashMap<String, String> getNodeProps(long nodeID) throws DatabaseException {
-        try {
-            HashMap<String, String> props = new HashMap<>();
-            Statement stmt = mysql.getConnection().createStatement();
-            ResultSet propRs = stmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + nodeID);
+    private Map<String, String> getNodeProps(long nodeID) throws DatabaseException {
+        try (
+                Statement stmt = mysql.getConnection().createStatement();
+                ResultSet propRs = stmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + nodeID);
+        ) {
+            Map<String, String> props = new HashMap<>();
             while(propRs.next()){
                 String key = propRs.getString(1);
                 String value = propRs.getString(2);
@@ -120,20 +127,21 @@ public class SQLGraphDAO implements GraphDAO {
 
     @Override
     public List<Assignment> getAssignments() throws DatabaseException, InvalidNodeTypeException {
-        try{
-            List<Assignment> relationships = new ArrayList<>();
+        try(
             Statement stmt = mysql.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery("SELECT start_node_id,end_node_id FROM assignment join node a on start_node_id = a.node_id join node b on end_node_id=b.node_id where assignment.depth=1;");
+        ) {
+            List<Assignment> relationships = new ArrayList<>();
             while(rs.next()){
                 long id = rs.getLong(1);
-                Node endNode = getNode(id);
-                if(endNode.getType().equals(NodeType.OS))continue;
+                Node childNode = graph.getNode(id);
+                if(childNode == null)continue;// opsets are not added to the graph
 
-                id = rs.getLong(4);
-                Node startNode = getNode(id);
-                if(endNode.getType().equals(NodeType.OS))continue;
+                id = rs.getLong(2);
+                Node parentNode = graph.getNode(id);
+                if(parentNode == null)continue;
 
-                relationships.add(new Assignment(startNode, endNode));
+                relationships.add(new Assignment(childNode, parentNode));
             }
             return relationships;
         } catch(SQLException e){
@@ -143,20 +151,21 @@ public class SQLGraphDAO implements GraphDAO {
 
     @Override
     public List<Association> getAssociations() throws DatabaseException, InvalidNodeTypeException {
-        try{
-            List<Association> associations = new ArrayList<>();
+        try (
             Statement stmt = mysql.getConnection().createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT ua_id,a.name,a.node_type_id, get_operations(opset_id),oa_id,b.name,b.node_type_id FROM association join node a on ua_id = a.node_id join node b on oa_id=b.node_id");
+            ResultSet rs = stmt.executeQuery("SELECT ua_id, get_operations(opset_id),oa_id FROM association join node a on ua_id = a.node_id join node b on oa_id=b.node_id");
+        ) {
+            List<Association> associations = new ArrayList<>();
             while (rs.next()) {
                 long id = rs.getLong(1);
-                Node startNode = getNode(id);
+                Node uaID = graph.getNode(id);
 
-                HashSet<String> ops = new HashSet<>(Arrays.asList(rs.getString(4).split(",")));
+                HashSet<String> ops = new HashSet<>(Arrays.asList(rs.getString(2).split(",")));
 
-                id = rs.getInt(5);
-                Node endNode = getNode(id);
+                id = rs.getInt(3);
+                Node targetNode = graph.getNode(id);
 
-                associations.add(new Association(startNode, endNode, ops));
+                associations.add(new Association(uaID, targetNode, ops));
             }
             return associations;
         } catch(SQLException e){
@@ -166,13 +175,19 @@ public class SQLGraphDAO implements GraphDAO {
 
     @Override
     public void reset() throws DatabaseException {
-
+        try (
+            Statement stmt = mysql.getConnection().createStatement()
+        ){
+            stmt.executeUpdate("delete from node");
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public List<Prohibition> getProhibitions() throws DatabaseException {
-        List<Prohibition> prohibitions = new ArrayList<>();
-        try {
+        try (
             Statement stmt = mysql.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery("SELECT deny_name, abbreviation, user_attribute_id, is_intersection, " +
                     "object_attribute_id, object_complement, " +
@@ -181,50 +196,51 @@ public class SQLGraphDAO implements GraphDAO {
                     "WHERE deny.deny_id = deny_obj_attribute.deny_id " +
                     "AND deny.deny_id = deny_operation.deny_id " +
                     "AND deny_type.deny_type_id = deny.deny_type_id");
-
+        ) {
+            List<Prohibition> prohibitions = new ArrayList<>();
             while(rs.next()) {
                 //prohibitions and subject information
-                String deny_name = rs.getString(1);
-                String type_abbr = rs.getString(2);
-                int ua_id = rs.getInt(3);
+                String denyName = rs.getString(1);
+                String typeAbbr = rs.getString(2);
+                int uaID = rs.getInt(3);
                 boolean intersection = rs.getInt(4) == 1;
                 //resource information
-                int object_attribute_id = rs.getInt(5);
-                boolean object_complement = rs.getInt(6) == 1;
+                int oaID = rs.getInt(5);
+                boolean comp = rs.getInt(6) == 1;
                 //operation information
-                String operation_name = rs.getString(7);
+                String op = rs.getString(7);
 
-                Prohibition p = analytics.getProhibition(deny_name);
+                Prohibition p = analytics.getProhibition(denyName);
                 if (p == null) {
-                    ProhibitionSubject subject = new ProhibitionSubject(ua_id, ProhibitionSubjectType.toProhibitionSubjectType(type_abbr));
+                    ProhibitionSubject subject = new ProhibitionSubject(uaID, ProhibitionSubjectType.toProhibitionSubjectType(typeAbbr));
                     List<ProhibitionResource> resources = new ArrayList<>();
-                    resources.add(new ProhibitionResource(object_attribute_id, object_complement));
+                    resources.add(new ProhibitionResource(oaID, comp));
                     HashSet<String> operations = new HashSet<>();
-                    operations.add(operation_name);
+                    operations.add(op);
 
-                    p = new Prohibition(subject, resources, deny_name, operations, intersection);
+                    p = new Prohibition(subject, resources, denyName, operations, intersection);
                     analytics.addProhibition(p);
                 } else {
                     boolean found = false;
                     List<ProhibitionResource> prs = p.getResources();
                     for (ProhibitionResource pr: prs) {
-                        if (pr.getResourceID() == object_attribute_id) {
+                        if (pr.getResourceID() == oaID) {
                             found = true;
                         }
                     }
                     if (!found) {
-                        p.addResource(new ProhibitionResource(object_attribute_id, object_complement));
+                        p.addResource(new ProhibitionResource(oaID, comp));
                     }
                     HashSet<String> ops = p.getOperations();
-                    ops.add(operation_name);
+                    ops.add(op);
                     p.setOperations(ops);
                 }
             }
+            return prohibitions;
         } catch(SQLException e){
             throw new DatabaseException(e.getErrorCode(), e.getMessage());
         } catch (InvalidProhibitionSubjectTypeException e) {
             throw new DatabaseException(e.getErrorCode(), e.getMessage());
         }
-        return prohibitions;
     }
 }

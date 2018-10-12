@@ -11,6 +11,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 import static gov.nist.csd.pm.model.Constants.DESCRIPTION_PROPERTY;
@@ -46,7 +47,7 @@ public class SessionService extends Service {
         String sessionID = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
 
         //create session node
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(DESCRIPTION_PROPERTY, "Session for " + username);
 
 

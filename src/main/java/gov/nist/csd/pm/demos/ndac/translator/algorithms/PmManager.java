@@ -73,7 +73,7 @@ public class PmManager {
 
     public long getEntityId(String namespace, String name, NodeType type) throws InvalidNodeTypeException, InvalidPropertyException,
             ClassNotFoundException, SQLException, DatabaseException, IOException, UnexpectedNumberOfNodesException {
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, namespace);
         return nodeService.getNode(name, type.toString(), properties).getID();
     }
@@ -124,7 +124,7 @@ public class PmManager {
     }
 
     public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         Node node = nodeService.getNode(columnName, NodeType.OA.toString(), properties);
         if(node == null) {
@@ -144,7 +144,7 @@ public class PmManager {
     }
 
     public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         HashSet<Node> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {

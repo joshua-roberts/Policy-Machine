@@ -6,16 +6,17 @@ import gov.nist.csd.pm.model.graph.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EvrEntity {
-    private Node                    node;
-    private String                  name;
-    private String                  type;
-    private HashMap<String, String> properties;
-    private EvrFunction             function;
-    private EvrProcess              process;
-    private List<EvrEntity>         evrEntityList;
-    private boolean                 compliment;
+    private Node                node;
+    private String              name;
+    private String              type;
+    private Map<String, String> properties;
+    private EvrFunction         function;
+    private EvrProcess          process;
+    private List<EvrEntity>     evrEntityList;
+    private boolean             compliment;
 
     public EvrEntity() {
 
@@ -62,7 +63,7 @@ public class EvrEntity {
     }
 
     //node
-    public EvrEntity(String name, String type, HashMap<String, String> properties, boolean comp) {
+    public EvrEntity(String name, String type, Map<String, String> properties, boolean comp) {
         this.name = name;
         this.type = type;
         this.properties = properties;
@@ -104,7 +105,7 @@ public class EvrEntity {
         this.type = type;
     }
 
-    public HashMap<String, String> getProperties() {
+    public Map<String, String> getProperties() {
         if(properties == null) {
             if(isNode()) {
                 return node.getProperties();
@@ -114,7 +115,7 @@ public class EvrEntity {
         return properties;
     }
 
-    public void setProperties(HashMap<String, String> properties) {
+    public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 

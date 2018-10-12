@@ -5,13 +5,14 @@ import gov.nist.csd.pm.model.exceptions.*;;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public interface Graph {
-    Node createUser(String name, HashMap<String, String> properties) throws DatabaseException, NodeExistsException;
-    Node createUserAttribute(String name, HashMap<String, String> properties) throws DatabaseException, NodeExistsException;
-    Node createObject(String name, HashMap<String, String> properties) throws DatabaseException, NodeExistsException;
-    Node createObjectAttribute(String name, HashMap<String, String> properties) throws DatabaseException, NodeExistsException;
-    Node createPolicyClass(String name, HashMap<String, String> properties) throws DatabaseException, NodeExistsException;
+    Node createUser(String name, Map<String, String> properties) throws DatabaseException, NodeExistsException;
+    Node createUserAttribute(String name, Map<String, String> properties) throws DatabaseException, NodeExistsException;
+    Node createObject(String name, Map<String, String> properties) throws DatabaseException, NodeExistsException;
+    Node createObjectAttribute(String name, Map<String, String> properties) throws DatabaseException, NodeExistsException;
+    Node createPolicyClass(String name, Map<String, String> properties) throws DatabaseException, NodeExistsException;
 
     void deleteNode(long id) throws NodeNotFoundException, DatabaseException;
     Node getNode(long id) throws NodeNotFoundException, DatabaseException;

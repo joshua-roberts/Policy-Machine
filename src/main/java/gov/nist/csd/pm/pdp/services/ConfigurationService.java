@@ -48,7 +48,7 @@ public class ConfigurationService extends Service{
             throws DatabaseException, NodeNotFoundException, ConfigurationException, AssignmentExistsException,
             InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, SessionDoesNotExistException, SessionUserNotFoundException, InvalidAssociationException {
         //create the schema policy class node
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(Constants.SCHEMA_COMP_PROPERTY, SCHEMA_COMP_SCHEMA_PROPERTY);
         properties.put(Constants.DESCRIPTION_PROPERTY, "Policy Class for " + schema);
         Node pcNode = createNode(schema, NodeType.PC.toString(), properties);
@@ -168,7 +168,7 @@ public class ConfigurationService extends Service{
                         for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
                             //get column
                             String columnName = rs2MetaData.getColumnName(i);
-                            HashMap<String, String> searchProps = new HashMap<>();
+                            Map<String, String> searchProps = new HashMap<>();
                             searchProps.put(NAMESPACE_PROPERTY, tableName);
                             Node columnNode = nodeService.getNode(columnName, NodeType.OA.toString(), searchProps);
 
@@ -194,7 +194,7 @@ public class ConfigurationService extends Service{
         }
     }
 
-    private Node createNode(String name, String type, HashMap<String, String> properties) throws DatabaseException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException, SQLException, IOException, ClassNotFoundException {
+    private Node createNode(String name, String type, Map<String, String> properties) throws DatabaseException, InvalidPropertyException, ConfigurationException, InvalidNodeTypeException, SQLException, IOException, ClassNotFoundException {
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
         Node newNode = getDaoManager().getNodesDAO().createNode(0, name, nt, properties);
@@ -211,7 +211,7 @@ public class ConfigurationService extends Service{
             Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 
             //get table node
-            HashMap<String, String> searchProps = new HashMap<>();
+            Map<String, String> searchProps = new HashMap<>();
             searchProps.put(NAMESPACE_PROPERTY, tableName);
             Node tableNode = nodeService.getNode(tableName, NodeType.OA.toString(), searchProps);
 
@@ -376,13 +376,13 @@ public class ConfigurationService extends Service{
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    HashMap<String, String> searchProps = new HashMap<>();
+                    Map<String, String> searchProps = new HashMap<>();
                     searchProps.put(NAMESPACE_PROPERTY, parentNamespace);
                     parentNode = nodeService.getNode(parentName, NodeType.OA.toString(), searchProps);
                 }catch (Exception e){}
 
                 try {
-                    HashMap<String, String> searchProps = new HashMap<>();
+                    Map<String, String> searchProps = new HashMap<>();
                     searchProps.put(NAMESPACE_PROPERTY, namespace);
                     node = nodeService.getNode(fileName, NodeType.OA.toString(), searchProps);
                 }catch (Exception e) {}
@@ -393,7 +393,7 @@ public class ConfigurationService extends Service{
                         //create pc
                         parentNode = nodeService.createPolicy(fileName, null, session, process);
                     }
-                    HashMap<String, String> properties = new HashMap<>();
+                    Map<String, String> properties = new HashMap<>();
                     properties.put(NAMESPACE_PROPERTY, namespace);
                     properties.put("storage", "google");
                     properties.put("uuid", fileID);
@@ -493,13 +493,19 @@ public class ConfigurationService extends Service{
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) throws InvalidPropertyException, DatabaseException, ClassNotFoundException, IOException, SQLException {
+    public void load(String config) throws InvalidPropertyException, DatabaseException, ClassNotFoundException, IOException, SQLException, InvalidKeySpecException, NoSuchAlgorithmException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<Node> nodes = graph.getNodes();
         HashMap<Long, Node> nodesMap = new HashMap<>();
         for(Node node : nodes) {
-            HashMap<String, String> properties = node.getProperties();
+            Map<String, String> properties = node.getProperties();
+
+            //if a password is present encrypt it
+            if (properties != null && properties.get(PASSWORD_PROPERTY) != null) {
+                properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
+            }
+
             getDaoManager().getNodesDAO().createNode(node.getID(), node.getName(), node.getType(), properties);
             nodesMap.put(node.getID(), node);
         }
@@ -508,12 +514,14 @@ public class ConfigurationService extends Service{
         for(JsonAssignment assignment : assignments) {
             // child - assigned to -> parent
             if(assignment != null) {
+                System.out.println(assignment.getChild() + "-->" + assignment.getParent());
                 getDaoManager().getAssignmentsDAO().createAssignment(nodesMap.get(assignment.getChild()), nodesMap.get(assignment.getParent()));
             }
         }
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
+            System.out.println(association.getUa() + "-->" + association.getTarget() + association.getOps());
             getDaoManager().getAssociationsDAO().createAssociation(association.getUa(), association.getTarget(), association.getOps());
         }
     }
@@ -636,12 +644,11 @@ public class ConfigurationService extends Service{
         long       nodeID;
         String     name;
         String     type;
-        HashMap<String, String> properties;
+        Map<String, String> properties;
         List<JsonNode>          children;
 
-        public JsonNode(long id, String name, String type, HashMap<String, String> properties, List<JsonNode> children) {
-            //this.id = UUID.randomUUID().toString().toUpperCase().replaceAll("-", "");
-            this.id = new Integer((int)id).toString();
+        public JsonNode(long id, String name, String type, Map<String, String> properties, List<JsonNode> children) {
+            this.id = Integer.toString((int)id);
             this.nodeID = id;
             this.name = name;
             this.type = type;
@@ -673,11 +680,11 @@ public class ConfigurationService extends Service{
             this.type = type;
         }
 
-        public HashMap<String, String> getProperties() {
+        public Map<String, String> getProperties() {
             return properties;
         }
 
-        public void setProperties(HashMap<String, String> properties) {
+        public void setProperties(Map<String, String> properties) {
             this.properties = properties;
         }
 

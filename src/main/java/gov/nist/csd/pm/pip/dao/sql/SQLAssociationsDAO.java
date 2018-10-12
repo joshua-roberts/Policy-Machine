@@ -12,19 +12,18 @@ public class SQLAssociationsDAO implements AssociationsDAO {
     private SQLConnection mysql;
 
     public SQLAssociationsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
     @Override
     public synchronized void createAssociation(long uaId, long targetId, HashSet<String> operations) throws DatabaseException {
         String ops = "";
-        boolean result;
         for(String op : operations){
             ops += op + ",";
         }
         ops = ops.substring(0, ops.length()-1);
-        try {
-            System.out.println("Calling Create_Association Procedure");
+        try (
             CallableStatement stmt = mysql.getConnection().prepareCall("{call create_association(?,?,?,?)}");
+        ) {
             stmt.setLong(1, uaId);
             stmt.setLong(2, targetId);
             stmt.setString(3, ops);

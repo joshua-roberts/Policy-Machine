@@ -99,7 +99,7 @@
     </div>
 </div>
 
-<div style="width: 70%; margin: 2% 15%; background-color: white; padding: 10px">
+<div style="margin: 2% 15%; background-color: white; padding: 10px">
     <div class="row" style="margin: 0">
         <div id="neo4j" class="col col-lg-6 tile" style="padding: 10px 10px 10px 10px;">
             <div class="card text-white bg-primary" style="padding: 0;">

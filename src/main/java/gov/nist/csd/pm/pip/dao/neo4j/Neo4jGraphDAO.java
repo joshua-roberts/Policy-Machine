@@ -16,10 +16,7 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_NEO;
 
@@ -95,11 +92,11 @@ public class Neo4jGraphDAO implements GraphDAO {
         return nodes;
     }
 
-    private HashMap<String, String> getNodeProps(Node node) throws DatabaseException, InvalidPropertyException {
+    private Map<String, String> getNodeProps(Node node) throws DatabaseException, InvalidPropertyException {
         String cypher = "match(n:" + node.getType() + "{id:" + node.getID() + "}) return n";
         ResultSet rs = neo4j.execute(cypher);
         try {
-            HashMap<String, String> props = new HashMap<>();
+            Map<String, String> props = new HashMap<>();
             while(rs.next()){
                 String json = rs.getString(1);
                 props.putAll(neo4j.getPropertiesFromJson(json));

@@ -57,7 +57,7 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
 
         }
-        catch ( FileUploadException | InvalidPropertyException | DatabaseException | SQLException | ClassNotFoundException e) {
+        catch ( FileUploadException | InvalidPropertyException | DatabaseException | SQLException | ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

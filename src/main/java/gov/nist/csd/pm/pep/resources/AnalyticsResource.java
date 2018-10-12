@@ -24,8 +24,8 @@ public class AnalyticsResource {
     private AnalyticsService analyticsService = new AnalyticsService();
     private NodeService      nodeService      = new NodeService();
 
-    private HashMap<String, String> toPropertiesMap(MultivaluedMap<String, String> map) {
-        HashMap<String, String> properties = new HashMap<>();
+    private Map<String, String> toPropertiesMap(MultivaluedMap<String, String> map) {
+        Map<String, String> properties = new HashMap<>();
         for (String key : map.keySet()) {
             String value = map.getFirst(key);
             properties.put(key, value);
@@ -35,7 +35,7 @@ public class AnalyticsResource {
     }
 
     private Node getNode(MultivaluedMap<String, String> map, String session, long process) throws SQLException, SessionDoesNotExistException, IOException, ClassNotFoundException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, InvalidNodeTypeException, UnexpectedNumberOfNodesException {
-        HashMap<String, String> properties = toPropertiesMap(map);
+        Map<String, String> properties = toPropertiesMap(map);
         HashSet<Node> nodes = nodeService.getNodes(properties.get("name"), properties.get("type"), properties, session, process);
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();

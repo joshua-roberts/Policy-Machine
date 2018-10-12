@@ -201,7 +201,7 @@ public class EvrService extends Service {
         return false;
     }
 
-    private HashSet<Node> getNodes(String name, String type, HashMap<String, String> properties) throws InvalidPropertyException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    private HashSet<Node> getNodes(String name, String type, Map<String, String> properties) throws InvalidPropertyException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //get target node
         //get properties
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
@@ -475,7 +475,7 @@ public class EvrService extends Service {
             throw new InvalidEvrException("Second parameter for function 'getNodeWithProperty' should be a value");
         }
 
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         properties.put(propName.getName(), propValue.getName());
         HashSet<Node> nodes = getNodes(null, null, properties);
 

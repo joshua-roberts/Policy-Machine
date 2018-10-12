@@ -107,8 +107,8 @@ public class Neo4jConnection {
         return ids;
     }
 
-    public HashMap<String, String> strToPropertyMap(String propArr) {
-        HashMap<String, String> properties = new HashMap<>();
+    public Map<String, String> strToPropertyMap(String propArr) {
+        Map<String, String> properties = new HashMap<>();
 
         String[] propsStrArr = propArr.replaceAll("[\\[\\]\"]", "").split(COMMA_DELIMETER);
         if(!propsStrArr[0].isEmpty()){
@@ -138,8 +138,8 @@ public class Neo4jConnection {
         return gson.toJson(je);
     }
 
-    public HashMap<String, String> getPropertiesFromJson(String json) throws InvalidPropertyException {
-        HashMap<String, String> props = new HashMap<>();
+    public Map<String, String> getPropertiesFromJson(String json) throws InvalidPropertyException {
+        Map<String, String> props = new HashMap<>();
         JsonElement je = new JsonParser().parse(json);
         JsonObject jo = je.getAsJsonObject();
         Set<Map.Entry<String, JsonElement>> entries = jo.entrySet();

@@ -39,13 +39,13 @@ public class ImportService {
 
             Node bucketNode;
             try {
-                HashMap<String, String> searchProps = new HashMap<>();
+                Map<String, String> searchProps = new HashMap<>();
                 searchProps.put(NAMESPACE_PROPERTY, bucket);
                 bucketNode = nodeService.getNode(bucket, OA.toString(),searchProps);
             }
             catch (UnexpectedNumberOfNodesException e) {
                 //create bucket pc
-                HashMap<String, String> properties = new HashMap<>();
+                Map<String, String> properties = new HashMap<>();
                 properties.put(BUCKET_PROPERTY, bucket);
                 properties.put(STORAGE_PROPERTY, storage);
                 bucketNode = nodeService.createPolicy(bucket, properties, session, process);
@@ -88,13 +88,13 @@ public class ImportService {
                 Node node = null;
                 Node parentNode = null;
                 try {
-                    HashMap<String, String> searchProps = new HashMap<>();
+                    Map<String, String> searchProps = new HashMap<>();
                     searchProps.put(NAMESPACE_PROPERTY, parentNamespace);
                     parentNode = nodeService.getNode(parentName, NodeType.OA.toString(), searchProps);
                 }catch (Exception e){}
 
                 try {
-                    HashMap<String, String> searchProps = new HashMap<>();
+                    Map<String, String> searchProps = new HashMap<>();
                     searchProps.put(NAMESPACE_PROPERTY, namespace);
                     node = nodeService.getNode(fileName, NodeType.OA.toString(), searchProps);
                 }catch (Exception e) {}
@@ -105,7 +105,7 @@ public class ImportService {
                         parentNode = nodeService.createNodeIn(bucketNode.getID(), parentName,
                                 OA.toString(), null, session, process);
                     }
-                    HashMap<String, String> properties = new HashMap<>();
+                    Map<String, String> properties = new HashMap<>();
                     properties.put(NAMESPACE_PROPERTY, namespace);
                     properties.put(STORAGE_PROPERTY, storage);
                     properties.put(BUCKET_PROPERTY, bucket);
@@ -120,7 +120,7 @@ public class ImportService {
         }
     }
 
-    public void importEntities(String kind, HashMap<String, Object>[] entities) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException {
+    public void importEntities(String kind, HashMap<String, Object>[] entities) throws InvalidPropertyException, AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException {
         //create pc for kind
         Node pcNode = nodeService.createNode(NEW_NODE_ID, kind, PC.toString(), null);
 
@@ -140,7 +140,7 @@ public class ImportService {
             }
 
             //create row node
-            HashMap<String, String> properties = new HashMap<>();
+            Map<String, String> properties = new HashMap<>();
             properties.put("kind", kind);
                     properties.put("id", String.valueOf(id));
             Node entityNode = nodeService.createNode(NEW_NODE_ID, String.valueOf(id), OA.toString(), properties);
@@ -160,7 +160,7 @@ public class ImportService {
             throws DatabaseException, NodeNotFoundException, ConfigurationException, AssignmentExistsException,
             InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeNameExistsException, NodeNameExistsInNamespaceException, NodeIDExistsException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException {
         //create the schema policy class node
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
                 properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY);
                 properties.put(Constants.DESCRIPTION_PROPERTY, "Policy Class for " + schema);
 

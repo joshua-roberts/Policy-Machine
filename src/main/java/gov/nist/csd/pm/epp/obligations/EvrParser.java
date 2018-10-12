@@ -671,7 +671,7 @@ public class EvrParser {
         List<Node> childNodes = getChildNodes(entityNode);
         if(childNodes.isEmpty()) {
             //node
-            HashMap<String, String> propsMap = new HashMap<>();
+            Map<String, String> propsMap = new HashMap<>();
             if(properties != null) {
                 String[] propArr = properties.getNodeValue().split(",");
                 for(String prop : propArr) {

@@ -168,7 +168,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
             String type = rs.getString(2);
             type = (type.equalsIgnoreCase("null")) ? null : type;
 
-            HashMap<String, String> properties = neo4j.strToPropertyMap(rs.getString(3));
+            Map<String, String> properties = neo4j.strToPropertyMap(rs.getString(3));
             boolean complement = rs.getBoolean(4);
 
             return new EvrEntity(name, type, properties, complement);

@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/email")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -40,7 +41,7 @@ public class EmailResource {
             Node user = analyticsService.getSessionUser(session);
             System.out.println(" user is " + user.getName());
 
-            HashMap<String, String> properties = new HashMap<>();
+            Map<String, String> properties = new HashMap<>();
             properties.put("inbox",user.getName());
             Node inbox = nodeService.getNode(null, null, properties);
 

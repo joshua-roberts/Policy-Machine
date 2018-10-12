@@ -14,12 +14,11 @@ public class SQLConnection {
 
     private Connection connection;
 
-    public SQLConnection(String host, int port, String username, String password) throws DatabaseException {
+    public SQLConnection(String host, int port, String username, String password, String db) throws DatabaseException {
         try {
-            Driver driver = new org.neo4j.jdbc.Driver();
-            DriverManager.registerDriver(driver);
-            connection = DriverManager.getConnection("jdbc:neo4j:http://" + host + ":" + port + "", username, password);
-        } catch (SQLException e) {
+            Class.forName("com.mysql.jdbc.Driver");
+            connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + db, username, password);
+        } catch (SQLException | ClassNotFoundException e) {
             throw new DatabaseException(ERR_MYSQL, e.getMessage());
         }
     }

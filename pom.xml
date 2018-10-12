@@ -83,18 +83,17 @@
             <artifactId>neo4j</artifactId>
             <version>3.2.1</version>
         </dependency>
-
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-jdbc-driver</artifactId>
             <version>3.1.0</version>
         </dependency>
-        <!--<dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-jdbc</artifactId>
-            <version>3.1.0</version>
-        </dependency>-->
-
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>3.1.1</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -147,6 +146,7 @@
             <version>5.0.0-M4</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
     <properties>
         <jersey.version>2.16</jersey.version>

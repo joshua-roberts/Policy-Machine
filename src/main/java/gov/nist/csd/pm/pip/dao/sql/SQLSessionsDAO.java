@@ -15,7 +15,7 @@ public class SQLSessionsDAO implements SessionsDAO {
     private SQLConnection         mysql;
 
     public SQLSessionsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
     public void createSession(String sessionId, long userId) throws SQLException {

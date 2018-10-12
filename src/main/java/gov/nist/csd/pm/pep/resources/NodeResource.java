@@ -14,6 +14,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 @Path("/nodes")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -29,7 +30,7 @@ public class NodeResource {
                                      long process) throws SQLException, SessionDoesNotExistException, IOException, ClassNotFoundException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, InvalidNodeTypeException {
 
         MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-        HashMap<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>();
         for (String key : queryParameters.keySet()) {
             if (key.equalsIgnoreCase("name") || key.equalsIgnoreCase("type")) {
                 continue;
@@ -49,7 +50,7 @@ public class NodeResource {
     public Response createPolicy(CreateNodeRequest request,
                                  @QueryParam("session") String session,
                                  @QueryParam("process")
-                                         long process) throws InvalidAssignmentException, UnexpectedNumberOfNodesException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, ClassNotFoundException, AssociationExistsException, DatabaseException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException {
+                                         long process) throws InvalidAssignmentException, UnexpectedNumberOfNodesException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, ClassNotFoundException, AssociationExistsException, DatabaseException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         Node node = nodeService.createPolicy(request.getName(), request.getProperties(), session, process);
 
         return new ApiResponse(node).toResponse();

@@ -7,21 +7,21 @@ import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 
 import java.sql.*;
-import java.util.HashMap;
+import java.util.Map;
 
 public class SQLNodesDAO implements NodesDAO {
 
     private SQLConnection mysql;
 
     public SQLNodesDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
     @Override
-    public Node createNode(long id, String name, NodeType nodeType, HashMap<String, String> properties) throws DatabaseException {
-        try{
-            System.out.println("Creating node - calling create_node_fun " + id + "-" + name + "-" + nodeType.toString().toLowerCase());
-            CallableStatement cs = mysql.getConnection().prepareCall("{? = call create_node_fun(?,?,?)}");
+    public Node createNode(long id, String name, NodeType nodeType, Map<String, String> properties) throws DatabaseException {
+        try(
+            CallableStatement cs = mysql.getConnection().prepareCall("{? = call create_node_fun(?,?,?)}")
+        ) {
             cs.registerOutParameter(1, Types.INTEGER);
             cs.setLong(2, id);
             cs.setString(3, name);

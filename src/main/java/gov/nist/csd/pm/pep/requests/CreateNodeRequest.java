@@ -1,12 +1,12 @@
 package gov.nist.csd.pm.pep.requests;
 
-import java.util.HashMap;
+import java.util.Map;
 
 public class CreateNodeRequest {
-    long    id;
-    String  name;
-    String  type;
-    HashMap<String, String> properties;
+    long                id;
+    String              name;
+    String              type;
+    Map<String, String> properties;
 
     public long getID() {
         return id;
@@ -32,11 +32,11 @@ public class CreateNodeRequest {
         this.type = type;
     }
 
-    public HashMap<String, String> getProperties() {
+    public Map<String, String> getProperties() {
         return properties;
     }
 
-    public void setProperties(HashMap<String, String> properties) {
+    public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 }

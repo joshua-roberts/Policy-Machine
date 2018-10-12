@@ -1,14 +1,13 @@
 package gov.nist.csd.pm.pip.dao;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
 
-import java.util.HashMap;
+import java.util.Map;
 
 public interface NodesDAO {
-    Node createNode(long id, String name, NodeType nt, HashMap<String, String> properties) throws DatabaseException;
+    Node createNode(long id, String name, NodeType nt, Map<String, String> properties) throws DatabaseException;
 
     void updateNode(long nodeId, String name) throws DatabaseException;
 

@@ -3,7 +3,7 @@
    [
       {
          "id":1,
-         "name":"Super PC",
+         "name":"super",
          "type":"PC"
       },
       {

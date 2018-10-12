@@ -17,7 +17,7 @@ public class SQLProhibitionsDAO implements ProhibitionsDAO {
     private SQLConnection mysql;
 
     public SQLProhibitionsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
     @Override

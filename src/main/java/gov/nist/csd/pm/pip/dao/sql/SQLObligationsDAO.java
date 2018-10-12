@@ -17,7 +17,7 @@ public class SQLObligationsDAO implements ObligationsDAO {
     private SQLConnection mysql;
 
     public SQLObligationsDAO(DatabaseContext ctx) throws DatabaseException {
-        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
+        mysql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
     @Override

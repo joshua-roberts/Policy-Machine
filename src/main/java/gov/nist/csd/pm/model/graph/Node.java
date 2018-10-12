@@ -4,13 +4,17 @@ import gov.nist.csd.pm.model.exceptions.PropertyNotFoundException;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Node implements Serializable{
     private long                    id;
     private String                  name;
     private NodeType                type;
-    private HashMap<String, String> properties;
+    private Map<String, String> properties;
     private String                  content;
+    
+    private static final String NULL_NAME_ERR = "The name of a node cannot be null";
+    private static final String NULL_TYPE_ERR = "The type of a node cannot be null";
 
     public Node(){
         this.properties = new HashMap<>();
@@ -18,10 +22,10 @@ public class Node implements Serializable{
 
     public Node(String name, NodeType type){
         if(name == null){
-            throw new IllegalArgumentException("The name of a node cannot be null");
+            throw new IllegalArgumentException(NULL_NAME_ERR);
         }
         if(type == null){
-            throw new IllegalArgumentException("The type of a node annot be null");
+            throw new IllegalArgumentException(NULL_TYPE_ERR);
         }
 
         this.name = name;
@@ -30,12 +34,12 @@ public class Node implements Serializable{
         this.id = hashID(name, type, properties);
     }
 
-    public Node(String name, NodeType type, HashMap<String, String> properties){
+    public Node(String name, NodeType type, Map<String, String> properties){
         if(name == null){
-            throw new IllegalArgumentException("The name of a node cannot be null");
+            throw new IllegalArgumentException(NULL_NAME_ERR);
         }
         if(type == null){
-            throw new IllegalArgumentException("The type of a node cannot be null");
+            throw new IllegalArgumentException(NULL_TYPE_ERR);
         }
 
         this.name = name;
@@ -50,10 +54,10 @@ public class Node implements Serializable{
 
     public Node(long id, String name, NodeType type) {
         if(name == null){
-            throw new IllegalArgumentException("The name of a node cannot be null");
+            throw new IllegalArgumentException(NULL_NAME_ERR);
         }
         if(type == null){
-            throw new IllegalArgumentException("The type of a node cannot be null");
+            throw new IllegalArgumentException(NULL_TYPE_ERR);
         }
 
         this.id = id;
@@ -62,12 +66,12 @@ public class Node implements Serializable{
         this.properties = new HashMap<>();
     }
 
-    public Node(long id, String name, NodeType type, HashMap<String, String> properties) {
+    public Node(long id, String name, NodeType type, Map<String, String> properties) {
         if(name == null){
-            throw new IllegalArgumentException("The name of a node cannot be null");
+            throw new IllegalArgumentException(NULL_NAME_ERR);
         }
         if(type == null){
-            throw new IllegalArgumentException("The type of a node cannot be null");
+            throw new IllegalArgumentException(NULL_TYPE_ERR);
         }
 
         this.id = id;
@@ -80,7 +84,7 @@ public class Node implements Serializable{
         }
     }
 
-    public static long hashID(String name, NodeType type, HashMap<String, String> properties) {
+    public static long hashID(String name, NodeType type, Map<String, String> properties) {
         long propsHash = 0;
         for (String key : properties.keySet()) {
             propsHash ^= key.hashCode() ^ properties.get(key).hashCode();
@@ -100,7 +104,7 @@ public class Node implements Serializable{
         return type;
     }
 
-    public HashMap<String, String> getProperties() {
+    public Map<String, String> getProperties() {
         return properties;
     }
 
@@ -126,7 +130,7 @@ public class Node implements Serializable{
         properties.put(key, value);
     }
 
-    public void setProperties(HashMap<String, String> properties) {
+    public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 
@@ -148,27 +152,5 @@ public class Node implements Serializable{
 
     public String toString() {
         return name + ":" + type + ":" + id + ":" + properties;
-    }
-
-    public static void main(String[] args) {
-        HashMap<String, String> props = new HashMap<>();
-        props.put("prop3", "value3");
-        props.put("prop2", "value2");
-        props.put("prop1", "value1");
-
-        String name = "name123";
-        String type = "UA";
-
-
-        long hash = 0;
-        for (String key : props.keySet()) {
-            // byte[] bytes = Bytes.concat(Bytes.key.hashCode(), props.get(key).hashCode());
-            hash ^= Long.hashCode(key.hashCode()) ^ Long.hashCode(props.get(key).hashCode());
-        }
-
-        long id = Long.hashCode(name.hashCode()) ^ Long.hashCode(type.hashCode()) ^ Long.hashCode(hash);
-        long id2 = name.hashCode() ^ type.hashCode() ^ hash;
-        System.out.println(id);
-        System.out.println(id2);
     }
 }
