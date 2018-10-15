@@ -1,6 +1,6 @@
-package gov.nist.csd.pm.model.exceptions;
+package gov.nist.csd.pm.pep.response;
 
-public class ErrorCodes {
+public class ApiResponseCodes {
     public static final int ERR_ASSIGNMENT_DOES_NOT_EXIST           = 6001;
     public static final int ERR_PROHIBITION_NAME_EXISTS             = 6002;
     public static final int ERR_PROHIBITION_RESOURCE_EXISTS         = 6003;

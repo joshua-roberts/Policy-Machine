@@ -18,7 +18,7 @@ public class Neo4jAssociationsDAO implements AssociationsDAO {
     @Override
     public void createAssociation(long uaID, long targetID, HashSet<String> operations) throws DatabaseException {
         String ops = neo4j.setToCypherArray(operations);
-        String cypher = "MATCH (ua:UA{id:" + uaID + "}), (oa {id:" + targetID + "}) " +
+        String cypher = "MATCH (ua:UA{id:" + uaID + "}), (target{id:" + targetID + "}) " +
                 "CREATE (ua)-[:association{operations:" + ops + "}]->(target)";
         neo4j.execute(cypher);
     }
@@ -26,7 +26,7 @@ public class Neo4jAssociationsDAO implements AssociationsDAO {
     @Override
     public void updateAssociation(long uaID, long targetID, HashSet<String> ops) throws DatabaseException {
         String strOps = neo4j.setToCypherArray(ops);
-        String cypher = "MATCH (ua:UA {id:" + uaID + "})-[r:association]->(oa {id:" + targetID + "}) " +
+        String cypher = "MATCH (ua:UA {id:" + uaID + "})-[r:association]->(target{id:" + targetID + "}) " +
                 "SET r.operations=" + strOps;
         neo4j.execute(cypher);
     }

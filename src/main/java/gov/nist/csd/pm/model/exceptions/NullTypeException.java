@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.model.Constants;
+import gov.nist.csd.pm.pep.response.ApiResponseCodes;
 
 public class NullTypeException extends PmException {
     public NullTypeException() {
-        super(ErrorCodes.ERR_NULL_TYPE, "The server received a null type");
+        super(ApiResponseCodes.ERR_NULL_TYPE, "The server received a null type");
     }
 }

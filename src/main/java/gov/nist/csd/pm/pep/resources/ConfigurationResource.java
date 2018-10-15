@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.SUCCESS;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.SUCCESS;
 
 @Path("/configuration")
 @Consumes(MediaType.APPLICATION_JSON)

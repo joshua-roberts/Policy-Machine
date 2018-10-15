@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pip.dao.neo4j;
 
 import com.google.gson.Gson;
-import gov.nist.csd.pm.model.Constants;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
 import gov.nist.csd.pm.model.graph.Assignment;
@@ -18,7 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_NEO;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.ERR_NEO;
 
 public class Neo4jGraphDAO implements GraphDAO {
 

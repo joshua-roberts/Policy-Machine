@@ -3,7 +3,7 @@ package gov.nist.csd.pm.model.exceptions;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_INVALID_ASSIGNMENT;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.ERR_INVALID_ASSIGNMENT;
 
 public class InvalidAssignmentException extends PmException {
     public InvalidAssignmentException(Node child, Node parent){

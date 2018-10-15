@@ -108,7 +108,7 @@ public class NodeService extends Service{
         }
 
         //create Node
-        Node node = createNode(baseID, name, type, properties);
+        Node node = createNode(NEW_NODE_ID, name, type, properties);
 
         //create assignment
         try {
@@ -122,20 +122,21 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node createPolicy(String name, Map<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public Node createPolicy(String name, Map<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         Node user = getSessionUser(session);
+
+        if (properties == null) {
+            properties = new HashMap<>();
+        }
 
         Node node = createNode(NEW_NODE_ID, name, NodeType.PC.toString(), properties);
 
         //create OA
-        Map<String, String> newProps = new HashMap<>();
-        newProps.put(NAMESPACE_PROPERTY, node.getName());
-        Node oaNode = createNode(NEW_NODE_ID, node.getName(), NodeType.OA.toString(), newProps);
+        properties.put(NAMESPACE_PROPERTY, node.getName());
+        Node oaNode = createNodeIn(node.getID(), node.getName(), NodeType.OA.toString(), properties, session, process);
 
         //create UA
-        newProps.clear();
-        newProps.put(NAMESPACE_PROPERTY, node.getName());
-        Node uaNode = createNode(NEW_NODE_ID, node.getName() + " admin", NodeType.UA.toString(), newProps);
+        Node uaNode = createNodeIn(node.getID(), node.getName() + " admin", NodeType.UA.toString(), properties, session, process);
 
         //assign U to UA
         new AssignmentService().createAssignment(user.getID(), uaNode.getID());
@@ -179,6 +180,7 @@ public class NodeService extends Service{
 
         return node;
     }
+
 
     public void deleteNode(long nodeID, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException {
         Node user = getSessionUser(session);

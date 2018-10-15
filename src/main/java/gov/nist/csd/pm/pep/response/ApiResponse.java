@@ -4,7 +4,7 @@ import gov.nist.csd.pm.model.exceptions.PmException;
 
 import javax.ws.rs.core.Response;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.SUCCESS;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.SUCCESS;
 
 public class ApiResponse {
     private Integer code                                     = null;

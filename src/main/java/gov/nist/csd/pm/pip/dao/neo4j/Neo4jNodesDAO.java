@@ -1,11 +1,14 @@
 package gov.nist.csd.pm.pip.dao.neo4j;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.pep.response.ApiResponseCodes;
 import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pip.dao.NodesDAO;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 
 import static gov.nist.csd.pm.model.Constants.NEW_NODE_ID;
@@ -37,9 +40,16 @@ public class Neo4jNodesDAO implements NodesDAO {
                 propStr += String.format(", %s: '%s'", key, properties.get(key));
             }
         }
-        cypher += String.format(" set n += {%s}", propStr);
+        cypher += String.format(" set n += {%s} return n.id", propStr);
 
-        neo4j.execute(cypher);
+        ResultSet rs = neo4j.execute(cypher);
+        try {
+            rs.next();
+            id = rs.getLong(1);
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ApiResponseCodes.ERR_NEO, "error returning the new node's ID");
+        }
 
         return new Node(id, name, type, properties);
     }

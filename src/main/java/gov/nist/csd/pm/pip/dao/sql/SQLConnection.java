@@ -3,12 +3,11 @@ package gov.nist.csd.pm.pip.dao.sql;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_MYSQL;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.ERR_MYSQL;
 
 public class SQLConnection {
 

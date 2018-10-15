@@ -50,7 +50,7 @@ public class NodeResource {
     public Response createPolicy(CreateNodeRequest request,
                                  @QueryParam("session") String session,
                                  @QueryParam("process")
-                                         long process) throws InvalidAssignmentException, UnexpectedNumberOfNodesException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, ClassNotFoundException, AssociationExistsException, DatabaseException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+                                         long process) throws InvalidAssignmentException, UnexpectedNumberOfNodesException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, ClassNotFoundException, AssociationExistsException, DatabaseException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         Node node = nodeService.createPolicy(request.getName(), request.getProperties(), session, process);
 
         return new ApiResponse(node).toResponse();

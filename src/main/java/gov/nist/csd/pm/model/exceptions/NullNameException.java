@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.model.Constants;
+import gov.nist.csd.pm.pep.response.ApiResponseCodes;
 
 public class NullNameException extends PmException {
     public NullNameException() {
-        super(ErrorCodes.ERR_NULL_NAME, "The server received a null name");
+        super(ApiResponseCodes.ERR_NULL_NAME, "The server received a null name");
     }
 }

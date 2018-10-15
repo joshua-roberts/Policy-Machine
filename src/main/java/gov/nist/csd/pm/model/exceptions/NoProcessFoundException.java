@@ -1,11 +1,9 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.model.Constants;
-import gov.nist.csd.pm.model.exceptions.ErrorCodes;
-import gov.nist.csd.pm.model.exceptions.PmException;
+import gov.nist.csd.pm.pep.response.ApiResponseCodes;
 
 public class NoProcessFoundException extends PmException {
     public NoProcessFoundException() {
-        super(ErrorCodes.ERR_NO_PROCESS, "There was no process provided to the PM");
+        super(ApiResponseCodes.ERR_NO_PROCESS, "There was no process provided to the PM");
     }
 }

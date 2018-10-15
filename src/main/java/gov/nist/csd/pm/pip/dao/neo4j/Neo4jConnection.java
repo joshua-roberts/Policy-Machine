@@ -14,7 +14,7 @@ import java.sql.*;
 import java.util.*;
 
 import static gov.nist.csd.pm.model.Constants.COMMA_DELIMETER;
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_NEO;
+import static gov.nist.csd.pm.pep.response.ApiResponseCodes.ERR_NEO;
 
 
 public class Neo4jConnection {
