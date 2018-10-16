@@ -148,7 +148,7 @@ class NodeResourceTest extends PMTest {
         response = given().
                 contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace\"=\"pc1\"}}")
+                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace\":\"pc1\"}}")
                 .when()
                 .post(URI + "/policies" + "?session=" + sessionID);
         response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
@@ -160,9 +160,10 @@ class NodeResourceTest extends PMTest {
         response = given().
                 contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace=pc1\"}}")
+                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace\":\"pc1\"}}")
                 .when()
                 .post(URI + "/policies" + "?session=" + sessionID);
+        System.out.println(response.asString());
         response.then().body("code", Matchers.is(ApiResponseCodes.ERR_NODE_NAME_EXISTS_IN_NAMESPACE));
     }
 

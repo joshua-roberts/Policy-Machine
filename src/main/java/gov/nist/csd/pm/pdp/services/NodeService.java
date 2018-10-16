@@ -139,6 +139,7 @@ public class NodeService extends Service{
             properties = new HashMap<>();
         }
 
+        //create the pc node
         Node node = createNode(NEW_NODE_ID, name, NodeType.PC.toString(), properties);
 
         //create OA
