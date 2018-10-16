@@ -36,8 +36,10 @@ public class DAOManager {
     private DAOManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException, InvalidPropertyException {
         //deserialize
         FileInputStream fis = new FileInputStream("pm.conf");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        Properties props = (Properties) ois.readObject();
+        Properties props;
+        try (ObjectInputStream ois = new ObjectInputStream(fis)) {
+            props = (Properties) ois.readObject();
+        }
 
         //get properties
         database = props.getProperty("database");
@@ -146,13 +148,9 @@ public class DAOManager {
 
 
     private static DAOManager daoManager;
-    public static DAOManager getDaoManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException, InvalidPropertyException {
+    public static synchronized DAOManager getDaoManager() throws IOException, ClassNotFoundException, DatabaseException, SQLException, InvalidPropertyException {
         if(daoManager == null) {
-            synchronized(DAOManager.class) {
-                if (daoManager == null) {
-                    daoManager = new DAOManager();
-                }
-            }
+            daoManager = new DAOManager();
         }
         return daoManager;
     }
@@ -178,9 +176,8 @@ public class DAOManager {
     }
 
     private static void saveProperties(Properties props) {
-        try {
-            FileOutputStream fos = new FileOutputStream("pm.conf");
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+        try (FileOutputStream fos = new FileOutputStream("pm.conf");
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(props);
         }
         catch (IOException e) {

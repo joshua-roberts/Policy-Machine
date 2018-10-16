@@ -21,13 +21,12 @@ public class NodeService extends Service{
 
     private        AssignmentService assignmentService = new AssignmentService();
     private        AnalyticsService  analyticsService  = new AnalyticsService();
-    private        EvrService        evrService        =  new EvrService();
 
-    public HashSet<Node> getNodes(String name, String type, Map<String, String> properties, String session, long process)
+    public Set<Node> getNodes(String name, String type, Map<String, String> properties, String session, long process)
             throws InvalidNodeTypeException, InvalidPropertyException, ClassNotFoundException, SQLException, DatabaseException, IOException, SessionDoesNotExistException, SessionUserNotFoundException {
         Node user = getSessionUser(session);
 
-        HashSet<Node> nodes = getNodes(name, type, properties);
+        Set<Node> nodes = getNodes(name, type, properties);
 
         nodes.removeIf(node -> {
             try {
@@ -44,40 +43,51 @@ public class NodeService extends Service{
         return nodes;
     }
 
-    public HashSet<Node> getNodes(String name, String type, Map<String, String> properties)
+    public Set<Node> getNodes(String name, String type, Map<String, String> properties)
             throws InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
+        HashSet<Node> results = new HashSet<>();
         HashSet<Node> nodes = getGraph().getNodes();
+        for (Node node : nodes) {
+            // if the name is not empty and the node's name does not match, continue
+            if (name != null && !name.isEmpty() && !node.getName().equals(name)) {
+                continue;
+            }
 
-        //check name match
-        if(name != null){
-            nodes.removeIf(node -> !node.getName().equals(name));
-        }
+            //if the types don't match continue
+            if (!node.getType().equals(nodeType) && nodeType != null) {
+                continue;
+            }
 
-        //check type match
-        if(nodeType != null){
-            nodes.removeIf(node -> !node.getType().equals(nodeType));
-        }
-
-        //check property match
-        if(properties != null && !properties.isEmpty()) {
-            nodes.removeIf(node -> {
-                for (String key : properties.keySet()) {
-                    if(node.hasProperty(key, properties.get(key))) {
-                        return false;
+            // iterate over the properties and if the current node does not have any of the given properties, continue
+            boolean add = true;
+            if (properties != null) {
+                if (node.getProperties() == null) {
+                    add = false;
+                } else {
+                    for (String key : properties.keySet()) {
+                        String value = properties.get(key);
+                        String checkValue = node.getProperties().get(key);
+                        if (!value.equals(checkValue)) {
+                            add = false;
+                            break;
+                        }
                     }
                 }
-                return true;
-            });
+            }
+
+            if (add) {
+                results.add(node);
+            }
         }
 
-        return nodes;
+        return results;
     }
 
     public Node getNode(String name, String type, Map<String, String> properties)
             throws InvalidNodeTypeException, UnexpectedNumberOfNodesException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        HashSet<Node> nodes = getNodes(name, type, properties);
+        Set<Node> nodes = getNodes(name, type, properties);
 
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();
@@ -196,7 +206,7 @@ public class NodeService extends Service{
         deleteNode(nodeID);
     }
 
-    private void deleteNode(long nodeID) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
+    protected void deleteNode(long nodeID) throws NodeNotFoundException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check node exists
         getNode(nodeID);
 

@@ -138,7 +138,7 @@ public class Neo4jConnection {
         return gson.toJson(je);
     }
 
-    public Map<String, String> getPropertiesFromJson(String json) throws InvalidPropertyException {
+    public Map<String, String> getPropertiesFromJson(String json) {
         Map<String, String> props = new HashMap<>();
         JsonElement je = new JsonParser().parse(json);
         JsonObject jo = je.getAsJsonObject();

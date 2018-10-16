@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static gov.nist.csd.pm.model.Constants.DESCRIPTION_PROPERTY;
 import static gov.nist.csd.pm.model.Constants.PASSWORD_PROPERTY;
@@ -28,7 +25,7 @@ public class SessionService extends Service {
 
     public String createSession(String username, String password) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, PMAccessDeniedException, NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, ConfigurationException, NullTypeException, NodeIDExistsException, DatabaseException, AssignmentExistsException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
         //authenticate
-        HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
+        Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
             throw new NodeNotFoundException(username);
         }
@@ -45,11 +42,6 @@ public class SessionService extends Service {
 
         //create session id
         String sessionID = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-
-        //create session node
-        Map<String, String> properties = new HashMap<>();
-        properties.put(DESCRIPTION_PROPERTY, "Session for " + username);
-
 
         //create session
         getDaoManager().getSessionsDAO().createSession(sessionID, userNode.getID());

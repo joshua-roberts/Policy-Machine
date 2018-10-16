@@ -54,7 +54,7 @@ public class PmManager {
 
     private Node getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         try {
-            HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
+            Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
             if(!nodes.isEmpty()) {
                 return nodes.iterator().next();
             }else {
@@ -146,7 +146,7 @@ public class PmManager {
     public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
-        HashSet<Node> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
+        Set<Node> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException("Could not find row object attribute for table " + tableName);
         }

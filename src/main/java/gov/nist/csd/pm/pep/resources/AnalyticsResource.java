@@ -36,7 +36,7 @@ public class AnalyticsResource {
 
     private Node getNode(MultivaluedMap<String, String> map, String session, long process) throws SQLException, SessionDoesNotExistException, IOException, ClassNotFoundException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, InvalidNodeTypeException, UnexpectedNumberOfNodesException {
         Map<String, String> properties = toPropertiesMap(map);
-        HashSet<Node> nodes = nodeService.getNodes(properties.get("name"), properties.get("type"), properties, session, process);
+        Set<Node> nodes = nodeService.getNodes(properties.get("name"), properties.get("type"), properties, session, process);
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();
         }
@@ -110,7 +110,7 @@ public class AnalyticsResource {
         Node targetNode = getNode(targetParams, session, process);
 
         //get the user node
-        HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
+        Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();
         }
@@ -132,7 +132,7 @@ public class AnalyticsResource {
         Node targetNode = getNode(targetParams, session, process);
 
         //get the user node
-        HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
+        Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();
         }
@@ -159,7 +159,7 @@ public class AnalyticsResource {
                                        @QueryParam("process") long process) throws InvalidNodeTypeException, InvalidPropertyException, UnexpectedNumberOfNodesException, NodeNotFoundException, NoUserParameterException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException {
         //get user node
         //get the user node
-        HashSet<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
+        Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null, session, process);
         if(nodes.size() != 1) {
             throw new UnexpectedNumberOfNodesException();
         }

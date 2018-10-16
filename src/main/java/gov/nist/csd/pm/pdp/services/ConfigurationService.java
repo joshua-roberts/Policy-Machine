@@ -64,125 +64,128 @@ public class ConfigurationService extends Service{
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + schema, username, password);
-            Statement stmt = conn.createStatement();
-            stmt.execute("use " + schema);
-            ResultSet rs = stmt.executeQuery("show full tables where Table_Type = 'BASE TABLE'");
-            while(rs.next()){
-                List<String> keys = new ArrayList<>();
+            try (Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + schema, username, password)) {
+                Statement stmt = conn.createStatement();
+                stmt.execute("use " + schema);
+                ResultSet rs = stmt.executeQuery("show full tables where Table_Type = 'BASE TABLE'");
+                while (rs.next()) {
+                    List<String> keys = new ArrayList<>();
 
-                String tableName = rs.getString(1);
+                    String tableName = rs.getString(1);
 
-                //get primary keys to make name
-                PreparedStatement ps2 = conn.prepareStatement("SELECT k.COLUMN_NAME\n" +
-                        "FROM information_schema.table_constraints t\n" +
-                        "LEFT JOIN information_schema.key_column_usage k\n" +
-                        "USING(constraint_name,table_schema,table_name)\n" +
-                        "WHERE t.constraint_type='PRIMARY KEY'\n" +
-                        "    AND t.table_schema=DATABASE()\n" +
-                        "    AND t.table_name='" + tableName + "' order by ordinal_position;");
-                ResultSet rs3 = ps2.executeQuery();
-                while(rs3.next()){
-                    keys.add(rs3.getString(1));
-                }
+                    //get primary keys to make name
+                    PreparedStatement ps2 = conn.prepareStatement("SELECT k.COLUMN_NAME\n" +
+                            "FROM information_schema.table_constraints t\n" +
+                            "LEFT JOIN information_schema.key_column_usage k\n" +
+                            "USING(constraint_name,table_schema,table_name)\n" +
+                            "WHERE t.constraint_type='PRIMARY KEY'\n" +
+                            "    AND t.table_schema=DATABASE()\n" +
+                            "    AND t.table_name='" + tableName + "' order by ordinal_position;");
+                    ResultSet rs3 = ps2.executeQuery();
+                    while (rs3.next()) {
+                        keys.add(rs3.getString(1));
+                    }
 
-                //create table node
-                properties.clear();
-                properties.put(Constants.SCHEMA_NAME_PROPERTY, schema);
-                properties.put(NAMESPACE_PROPERTY, tableName);
-                properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_TABLE_PROPERTY);
-                Node tableNode = createNode(tableName, NodeType.OA.toString(), properties);
+                    //create table node
+                    properties.clear();
+                    properties.put(Constants.SCHEMA_NAME_PROPERTY, schema);
+                    properties.put(NAMESPACE_PROPERTY, tableName);
+                    properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_TABLE_PROPERTY);
+                    Node tableNode = createNode(tableName, NodeType.OA.toString(), properties);
 
-                //assign table node to policy class node
-                assignmentService.createAssignment(tableNode.getID(), schemaNode.getID());
+                    //assign table node to policy class node
+                    assignmentService.createAssignment(tableNode.getID(), schemaNode.getID());
 
-                //create columns container
-                properties.clear();
-                properties.put(NAMESPACE_PROPERTY, tableName);
-                properties.put(DESCRIPTION_PROPERTY, "Column container for " + tableName);
-                Node columnsNode = createNode(Constants.COLUMN_CONTAINER_NAME, NodeType.OA.toString(), properties);
-                assignmentService.createAssignment(columnsNode.getID(), tableNode.getID());
-
-                //create columns
-                Statement stmt1 = conn.createStatement();
-                String colSql = "SELECT c.column_name FROM INFORMATION_SCHEMA.COLUMNS c WHERE c.table_name = '" + tableName + "' AND c.table_schema = '" + schema + "'";
-                ResultSet rs1 = stmt1.executeQuery(colSql);
-                String columnSql = "";
-                while(rs1.next()){
-                    String columnName = rs1.getString(1);
-                    System.out.println("creating column " + columnName);
-
+                    //create columns container
                     properties.clear();
                     properties.put(NAMESPACE_PROPERTY, tableName);
-                    Node columnNode = createNode(columnName, NodeType.OA.toString(), properties);
+                    properties.put(DESCRIPTION_PROPERTY, "Column container for " + tableName);
+                    Node columnsNode = createNode(Constants.COLUMN_CONTAINER_NAME, NodeType.OA.toString(), properties);
+                    assignmentService.createAssignment(columnsNode.getID(), tableNode.getID());
 
-                    //assign column node to table
-                    assignmentService.createAssignment(columnNode.getID(), columnsNode.getID());
+                    //create columns
+                    Statement stmt1 = conn.createStatement();
+                    String colSql = "SELECT c.column_name FROM INFORMATION_SCHEMA.COLUMNS c WHERE c.table_name = '" + tableName + "' AND c.table_schema = '" + schema + "'";
+                    ResultSet rs1 = stmt1.executeQuery(colSql);
+                    String columnSql = "";
+                    while (rs1.next()) {
+                        String columnName = rs1.getString(1);
+                        System.out.println("creating column " + columnName);
 
-                    columnSql += columnName + ", ";
-                }
-                columnSql = columnSql.substring(0, columnSql.length()-2);
-
-                //create rows
-                if(!columnSql.isEmpty()){
-                    //create rows containers
-                    properties.clear();
-                    properties.put(NAMESPACE_PROPERTY, tableName);
-                    properties.put(DESCRIPTION_PROPERTY, "Row container for " + tableName);
-                    Node rowsNode = createNode(Constants.ROW_CONTAINER_NAME, NodeType.OA.toString(), properties);
-                    assignmentService.createAssignment(rowsNode.getID(), tableNode.getID());
-
-                    //get data from table
-                    String sql = "select " + columnSql + " from " + tableName;
-                    Statement stmt2 = conn.createStatement();
-                    ResultSet rs2 = stmt2.executeQuery(sql);
-                    ResultSetMetaData rs2MetaData = rs2.getMetaData();
-                    int numCols = rs2MetaData.getColumnCount();
-                    while(rs2.next()){
-                        //creating rows
-                        String rowName = "";
-                        for(int i = 1; i <= numCols; i++){
-                            String columnName = rs2MetaData.getColumnName(i);
-                            if(keys.contains(columnName)){
-                                String value = String.valueOf(rs2.getObject(i));
-                                if(rowName.isEmpty()){
-                                    rowName += value;
-                                }else{
-                                    rowName += "+" + value;
-                                }
-                            }
-                        }
-                        System.out.println("creating row " + rowName);
-
-
-                        //create row node
                         properties.clear();
                         properties.put(NAMESPACE_PROPERTY, tableName);
-                        properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY);
-                        Node rowNode = createNode(rowName, NodeType.OA.toString(), properties);
+                        Node columnNode = createNode(columnName, NodeType.OA.toString(), properties);
 
-                        //assign row node to table
-                        assignmentService.createAssignment(rowNode.getID(), rowsNode.getID());
+                        //assign column node to table
+                        assignmentService.createAssignment(columnNode.getID(), columnsNode.getID());
 
-                        //create data objects, assign to row and column
-                        for(int i = 1; i <= rs2MetaData.getColumnCount(); i++){
-                            //get column
-                            String columnName = rs2MetaData.getColumnName(i);
-                            Map<String, String> searchProps = new HashMap<>();
-                            searchProps.put(NAMESPACE_PROPERTY, tableName);
-                            Node columnNode = nodeService.getNode(columnName, NodeType.OA.toString(), searchProps);
+                        columnSql += columnName + ", ";
+                    }
+                    columnSql = columnSql.substring(0, columnSql.length() - 2);
+
+                    //create rows
+                    if (!columnSql.isEmpty()) {
+                        //create rows containers
+                        properties.clear();
+                        properties.put(NAMESPACE_PROPERTY, tableName);
+                        properties.put(DESCRIPTION_PROPERTY, "Row container for " + tableName);
+                        Node rowsNode = createNode(Constants.ROW_CONTAINER_NAME, NodeType.OA.toString(), properties);
+                        assignmentService.createAssignment(rowsNode.getID(), tableNode.getID());
+
+                        //get data from table
+                        String sql = "select " + columnSql + " from " + tableName;
+                        Statement stmt2 = conn.createStatement();
+                        ResultSet rs2 = stmt2.executeQuery(sql);
+                        ResultSetMetaData rs2MetaData = rs2.getMetaData();
+                        int numCols = rs2MetaData.getColumnCount();
+                        while (rs2.next()) {
+                            //creating rows
+                            String rowName = "";
+                            for (int i = 1; i <= numCols; i++) {
+                                String columnName = rs2MetaData.getColumnName(i);
+                                if (keys.contains(columnName)) {
+                                    String value = String.valueOf(rs2.getObject(i));
+                                    if (rowName.isEmpty()) {
+                                        rowName += value;
+                                    }
+                                    else {
+                                        rowName += "+" + value;
+                                    }
+                                }
+                            }
+                            System.out.println("creating row " + rowName);
 
 
-                            //create data object node
-                            String objectName = UUID.randomUUID().toString();
+                            //create row node
                             properties.clear();
                             properties.put(NAMESPACE_PROPERTY, tableName);
-                            properties.put(DESCRIPTION_PROPERTY, "Object in table=" + tableName + ", row=" + rowName + ", column=" + columnNode.getName());
-                            Node objectNode = createNode(objectName, NodeType.O.toString(), properties);
+                            properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_ROW_PROPERTY);
+                            Node rowNode = createNode(rowName, NodeType.OA.toString(), properties);
 
-                            //assign object to row and column
-                            assignmentService.createAssignment(objectNode.getID(), rowNode.getID());
-                            assignmentService.createAssignment(objectNode.getID(), columnNode.getID());
+                            //assign row node to table
+                            assignmentService.createAssignment(rowNode.getID(), rowsNode.getID());
+
+                            //create data objects, assign to row and column
+                            for (int i = 1; i <= rs2MetaData.getColumnCount(); i++) {
+                                //get column
+                                String columnName = rs2MetaData.getColumnName(i);
+                                Map<String, String> searchProps = new HashMap<>();
+                                searchProps.put(NAMESPACE_PROPERTY, tableName);
+                                Node columnNode = nodeService.getNode(columnName, NodeType.OA.toString(), searchProps);
+
+
+                                //create data object node
+                                String objectName = UUID.randomUUID().toString();
+                                properties.clear();
+                                properties.put(NAMESPACE_PROPERTY, tableName);
+                                properties.put(DESCRIPTION_PROPERTY, "Object in table=" + tableName + ", row=" + rowName + ", column=" + columnNode
+                                        .getName());
+                                Node objectNode = createNode(objectName, NodeType.O.toString(), properties);
+
+                                //assign object to row and column
+                                assignmentService.createAssignment(objectNode.getID(), rowNode.getID());
+                                assignmentService.createAssignment(objectNode.getID(), columnNode.getID());
+                            }
                         }
                     }
                 }
@@ -208,133 +211,145 @@ public class ConfigurationService extends Service{
     public Table getData(String host, int port, String username, String password, String database, String tableName, String session, long process) throws InvalidNodeTypeException, InvalidPropertyException, PropertyNotFoundException, NodeNotFoundException, NameInNamespaceNotFoundException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
+            Map<String, String> searchProps;
+            Table table;
+            List<String> keys;
+            HashSet<Node> rowNodes;
+            String select;
+            Statement stmt;
+            try (Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password)) {
 
-            //get table node
-            Map<String, String> searchProps = new HashMap<>();
-            searchProps.put(NAMESPACE_PROPERTY, tableName);
-            Node tableNode = nodeService.getNode(tableName, NodeType.OA.toString(), searchProps);
+                //get table node
+                searchProps = new HashMap<>();
+                searchProps.put(NAMESPACE_PROPERTY, tableName);
+                Node tableNode = nodeService.getNode(tableName, NodeType.OA.toString(), searchProps);
 
-            Table table = new Table();
-            table.setNode(tableNode);
+                table = new Table();
+                table.setNode(tableNode);
 
-            HashSet<Node> children = nodeService.getChildrenOfType(tableNode.getID(), NodeType.OA.toString());
+                HashSet<Node> children = nodeService.getChildrenOfType(tableNode.getID(), NodeType.OA.toString());
 
-            Node columnsNode = null;
-            Node rowsNode = null;
-            for(Node node : children){
-                if(node.getName().equals(Constants.COLUMN_CONTAINER_NAME)){
-                    columnsNode = node;
-                }else if(node.getName().equals(Constants.ROW_CONTAINER_NAME)){
-                    rowsNode = node;
+                Node columnsNode = null;
+                Node rowsNode = null;
+                for (Node node : children) {
+                    if (node.getName().equals(Constants.COLUMN_CONTAINER_NAME)) {
+                        columnsNode = node;
+                    }
+                    else if (node.getName().equals(Constants.ROW_CONTAINER_NAME)) {
+                        rowsNode = node;
+                    }
                 }
-            }
 
-            if(columnsNode == null || rowsNode == null){
-                throw new NodeNotFoundException(columnsNode == null ? Constants.COLUMN_CONTAINER_NAME : Constants.ROW_CONTAINER_NAME);
-            }
-
-            //get column Nodes
-            HashSet<Node> columnNodes = nodeService.getChildrenOfType(columnsNode.getID(), NodeType.OA.toString());
-
-            List<Column> columns = new ArrayList<>();
-            String cols = "";
-            for(Node col : columnNodes){
-                Column column = new Column(col, col.getName());
-                columns.add(column);
-
-                if(cols.isEmpty()){
-                    cols += col.getName();
-                }else{
-                    cols += "," + col.getName();
+                if (columnsNode == null || rowsNode == null) {
+                    throw new NodeNotFoundException(columnsNode == null ? Constants.COLUMN_CONTAINER_NAME : Constants.ROW_CONTAINER_NAME);
                 }
+
+                //get column Nodes
+                HashSet<Node> columnNodes = nodeService.getChildrenOfType(columnsNode.getID(), NodeType.OA.toString());
+
+                List<Column> columns = new ArrayList<>();
+                String cols = "";
+                for (Node col : columnNodes) {
+                    Column column = new Column(col, col.getName());
+                    columns.add(column);
+
+                    if (cols.isEmpty()) {
+                        cols += col.getName();
+                    }
+                    else {
+                        cols += "," + col.getName();
+                    }
+                }
+
+                table.setColumns(columns);
+
+                //get table keys
+                keys = new ArrayList<>();
+                PreparedStatement ps2 = conn.prepareStatement("SELECT k.COLUMN_NAME\n" +
+                        "FROM information_schema.table_constraints t\n" +
+                        "LEFT JOIN information_schema.key_column_usage k\n" +
+                        "USING(constraint_name,table_schema,table_name)\n" +
+                        "WHERE t.constraint_type='PRIMARY KEY'\n" +
+                        "    AND t.table_schema=DATABASE()\n" +
+                        "    AND t.table_name='" + tableName + "';");
+                ResultSet rs3 = ps2.executeQuery();
+                while (rs3.next()) {
+                    keys.add(rs3.getString(1));
+                }
+
+                //get all row nodes
+                rowNodes = nodeService.getChildrenOfType(rowsNode.getID(), NodeType.OA.toString());
+
+                //get row values
+                select = "select " + cols + " from " + tableName;
+                stmt = conn.createStatement();
             }
+            List<Row> rows;
+            try (ResultSet rs = stmt.executeQuery(select)) {
+                rows = new ArrayList<>();
+                int rowIndex = 0;
+                int numCols = rs.getMetaData().getColumnCount();
+                while (rs.next()) {
+                    Row row = new Row();
+                    String rowName = "";
+                    List<Object> rowValues = new ArrayList<>();
+                    for (int i = 1; i <= numCols; i++) {
+                        //add row value
+                        String value = String.valueOf(rs.getObject(i));
+                        rowValues.add(rs.getObject(i));
 
-            table.setColumns(columns);
+                        //get column name
+                        String columnName = rs.getMetaData().getColumnName(i);
 
-            //get table keys
-            List<String> keys = new ArrayList<>();
-            PreparedStatement ps2 = conn.prepareStatement("SELECT k.COLUMN_NAME\n" +
-                    "FROM information_schema.table_constraints t\n" +
-                    "LEFT JOIN information_schema.key_column_usage k\n" +
-                    "USING(constraint_name,table_schema,table_name)\n" +
-                    "WHERE t.constraint_type='PRIMARY KEY'\n" +
-                    "    AND t.table_schema=DATABASE()\n" +
-                    "    AND t.table_name='" + tableName + "';");
-            ResultSet rs3 = ps2.executeQuery();
-            while(rs3.next()){
-                keys.add(rs3.getString(1));
-            }
-
-            //get all row nodes
-            HashSet<Node> rowNodes = nodeService.getChildrenOfType(rowsNode.getID(), NodeType.OA.toString());
-
-            //get row values
-            String select = "select " + cols + " from " + tableName;
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(select);
-            List<Row> rows = new ArrayList<>();
-            int rowIndex = 0;
-            int numCols = rs.getMetaData().getColumnCount();
-            while(rs.next()){
-                Row row = new Row();
-                String rowName = "";
-                List<Object> rowValues = new ArrayList<>();
-                for(int i = 1; i <= numCols; i++){
-                    //add row value
-                    String value = String.valueOf(rs.getObject(i));
-                    rowValues.add(rs.getObject(i));
-
-                    //get column name
-                    String columnName = rs.getMetaData().getColumnName(i);
-
-                    //construct rowName
-                    if(keys.contains(columnName)){
-                        if(rowName.isEmpty()){
-                            rowName += value;
-                        }else{
-                            rowName += "+" + value;
+                        //construct rowName
+                        if (keys.contains(columnName)) {
+                            if (rowName.isEmpty()) {
+                                rowName += value;
+                            }
+                            else {
+                                rowName += "+" + value;
+                            }
                         }
                     }
-                }
-                row.setRowValues(rowValues);
+                    row.setRowValues(rowValues);
 
-                //get row node
-                Node rowNode = null;
-                for(Node rN : rowNodes){
-                    if(rN.getName().equals(rowName)){
-                        rowNode = rN;
+                    //get row node
+                    Node rowNode = null;
+                    for (Node rN : rowNodes) {
+                        if (rN.getName().equals(rowName)) {
+                            rowNode = rN;
+                        }
                     }
+
+                    if (rowNode == null) {
+                        throw new NodeNotFoundException(rowName);
+                    }
+
+                    row.setNode(rowNode);
+
+                    //now, get the objects that intersect the current row and columns
+                    List<Node> rowNodesList = new ArrayList<>();
+                    for (int i = 1; i <= numCols; i++) {
+                        //get column name
+                        String columnName = rs.getMetaData().getColumnName(i);
+
+                        //get columnNode
+                        searchProps.clear();
+                        searchProps.put(NAMESPACE_PROPERTY, tableName);
+                        Node columnNode = nodeService.getNode(columnName, NodeType.OA.toString(), searchProps);
+
+                        HashSet<Node> colChildren = nodeService.getChildrenOfType(columnNode.getID(), NodeType.O.toString());
+                        HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowNode.getID(), NodeType.O.toString());
+
+                        colChildren.retainAll(rowChildren);
+
+                        rowNodesList.add(colChildren.iterator().next());
+                    }
+
+                    row.setRowNodes(rowNodesList);
+
+                    rows.add(row);
                 }
-
-                if(rowNode == null){
-                    throw new NodeNotFoundException(rowName);
-                }
-
-                row.setNode(rowNode);
-
-                //now, get the objects that intersect the current row and columns
-                List<Node> rowNodesList = new ArrayList<>();
-                for(int i = 1; i <= numCols; i++) {
-                    //get column name
-                    String columnName = rs.getMetaData().getColumnName(i);
-
-                    //get columnNode
-                    searchProps.clear();
-                    searchProps.put(NAMESPACE_PROPERTY, tableName);
-                    Node columnNode = nodeService.getNode(columnName, NodeType.OA.toString(), searchProps);
-
-                    HashSet<Node> colChildren = nodeService.getChildrenOfType(columnNode.getID(), NodeType.O.toString());
-                    HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowNode.getID(), NodeType.O.toString());
-
-                    colChildren.retainAll(rowChildren);
-
-                    rowNodesList.add(colChildren.iterator().next());
-                }
-
-                row.setRowNodes(rowNodesList);
-
-                rows.add(row);
             }
             table.setRows(rows);
 
@@ -532,20 +547,20 @@ public class ConfigurationService extends Service{
     }
 
     public JsonNode getJsonGraph(String session, long process) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException {
-        HashSet<Node> cNodes = nodeService.getNodes("PM", "OA", null);
+        Set<Node> cNodes = nodeService.getNodes("PM", "OA", null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getID(), cNode.getName(), "C", cNode.getProperties(), getJsonNodes(cNode.getID()));
         return root;
     }
     public JsonNode getUserGraph(String session, long process) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException {
         System.out.println("in get user graph");
-        HashSet<Node> cNodes = nodeService.getNodes("PM", "OA", null);
+        Set<Node> cNodes = nodeService.getNodes("PM", "OA", null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getID(), cNode.getName(), "C", cNode.getProperties(), getJsonUserNodes(cNode.getID()));
         return root;
     }
     public JsonNode getObjGraph(String session, long process) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, SessionDoesNotExistException, SessionUserNotFoundException {
-        HashSet<Node> cNodes = nodeService.getNodes("PM", "OA", null);
+        Set<Node> cNodes = nodeService.getNodes("PM", "OA", null);
         Node cNode = cNodes.iterator().next();
         JsonNode root = new JsonNode((int)cNode.getID(), cNode.getName(), "C", cNode.getProperties(), getJsonObjNodes(cNode.getID()));
         return root;

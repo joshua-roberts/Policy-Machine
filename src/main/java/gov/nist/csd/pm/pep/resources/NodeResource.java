@@ -13,8 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Path("/nodes")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -32,7 +32,9 @@ public class NodeResource {
         MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
         Map<String, String> properties = new HashMap<>();
         for (String key : queryParameters.keySet()) {
-            if (key.equalsIgnoreCase("name") || key.equalsIgnoreCase("type")) {
+            if (key.equalsIgnoreCase("name") ||
+                    key.equalsIgnoreCase("type") ||
+                    key.equalsIgnoreCase("session")) {
                 continue;
             }
 
@@ -40,7 +42,7 @@ public class NodeResource {
             properties.put(key, value);
         }
 
-        HashSet<Node> nodes = nodeService.getNodes(queryParameters.getFirst("name"), queryParameters.getFirst("type"), properties, session, process);
+        Set<Node> nodes = nodeService.getNodes(queryParameters.getFirst("name"), queryParameters.getFirst("type"), properties, session, process);
 
         return new ApiResponse(nodes).toResponse();
     }

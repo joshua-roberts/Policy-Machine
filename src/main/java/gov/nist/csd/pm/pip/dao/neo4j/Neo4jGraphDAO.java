@@ -91,7 +91,7 @@ public class Neo4jGraphDAO implements GraphDAO {
         return nodes;
     }
 
-    private Map<String, String> getNodeProps(Node node) throws DatabaseException, InvalidPropertyException {
+    private Map<String, String> getNodeProps(Node node) throws DatabaseException {
         String cypher = "match(n:" + node.getType() + "{id:" + node.getID() + "}) return n";
         ResultSet rs = neo4j.execute(cypher);
         try {
@@ -135,6 +135,7 @@ public class Neo4jGraphDAO implements GraphDAO {
         try {
             while (rs.next()) {
                 Node startNode = neo4j.getNodeFromJson(rs.getString(1));
+                startNode.setProperties(getNodeProps(startNode));
                 Node endNode = neo4j.getNodeFromJson(rs.getString(2));
                 HashSet<String> ops = neo4j.getStringSetFromJson(rs.getString(3));
                 Association assoc = new Association(startNode, endNode, ops);
