@@ -242,13 +242,84 @@ class NodeResourceTest extends PMTest {
 
     @Test
     void getNodeChildren() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //get children of OA
+        Response response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}/children", idToLong(testGraph.get("oaID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        // check all the test nodes are there
+        List list = (List) res.getEntity();
+        try {
+            checkForNode(list, idToLong(testGraph.get("oID")));
+        }
+        catch (NodeNotFoundException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        //get children of non existing node
+        response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}/children", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
     }
 
     @Test
     void deleteNodeChildren() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //delete children of OA
+        Response response = given().queryParam("session", sessionID).delete(NODES_URI + "/{nodeID}/children", idToLong(testGraph.get("oaID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        //check that the object has been deleted from oa children
+        response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}/children", idToLong(testGraph.get("oaID")));
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        List list = (List) res.getEntity();
+        try {
+            checkForNode(list, idToLong(testGraph.get("oID")));
+            fail("object o1 was not deleted from the children of oa1");
+        }
+        catch (NodeNotFoundException e) {
+            // an exception here means the object was successfully deleted from the children
+        }
+
+        //delete children of non existing node
+        response = given().queryParam("session", sessionID).delete(NODES_URI + "/{nodeID}/children", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
     }
 
     @Test
     void getNodeParents() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //get children of OA
+        Response response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}/parents", idToLong(testGraph.get("oID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        // check all the test nodes are there
+        List list = (List) res.getEntity();
+        try {
+            checkForNode(list, idToLong(testGraph.get("oaID")));
+        }
+        catch (NodeNotFoundException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        //get children of non existing node
+        response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}/parents", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
     }
 }
