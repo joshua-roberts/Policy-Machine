@@ -361,7 +361,7 @@ public class ConfigurationService extends Service{
         }
     }
 
-    public void uploadFiles(String[] files, String session, long process) throws NullNameException, NodeIDExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public void uploadFiles(String[] files, String session, long process) throws NullNameException, NodeIDExistsException, NodeNameExistsInNamespaceException, NodeNameExistsException, NoSuchAlgorithmException, AssignmentExistsException, DatabaseException, InvalidNodeTypeException, InvalidPropertyException, InvalidKeySpecException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, PolicyClassNameExistsException {
         for(String file : files) {
             String[] split = file.split("/");
             for(int i = 0; i < split.length; i++) {
@@ -516,8 +516,11 @@ public class ConfigurationService extends Service{
         for(Node node : nodes) {
             Map<String, String> properties = node.getProperties();
 
-            //if a password is present encrypt it
-            if (properties != null && properties.get(PASSWORD_PROPERTY) != null) {
+            //if a password is present encrypt it if not already
+            // a password is considered not encrypted if the length is less then 163 (HASH_LENGTH)
+            if (properties != null &&
+                    properties.get(PASSWORD_PROPERTY) != null &&
+                    properties.get(PASSWORD_PROPERTY).length() < HASH_LENGTH) {
                 properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
             }
 
@@ -528,7 +531,9 @@ public class ConfigurationService extends Service{
         HashSet<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
             // child - assigned to -> parent
-            if(assignment != null) {
+            if(assignment != null &&
+                    nodesMap.get(assignment.getChild()) != null &&
+                    nodesMap.get(assignment.getParent()) != null) {
                 System.out.println(assignment.getChild() + "-->" + assignment.getParent());
                 getDaoManager().getAssignmentsDAO().createAssignment(nodesMap.get(assignment.getChild()), nodesMap.get(assignment.getParent()));
             }
@@ -536,8 +541,12 @@ public class ConfigurationService extends Service{
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
-            System.out.println(association.getUa() + "-->" + association.getTarget() + association.getOps());
-            getDaoManager().getAssociationsDAO().createAssociation(association.getUa(), association.getTarget(), association.getOps());
+            if(nodesMap.get(association.getUa()) != null &&
+                    nodesMap.get(association.getTarget()) != null) {
+                System.out.println(association.getUa() + "-->" + association.getTarget() + association.getOps());
+                getDaoManager().getAssociationsDAO()
+                        .createAssociation(association.getUa(), association.getTarget(), association.getOps());
+            }
         }
     }
 

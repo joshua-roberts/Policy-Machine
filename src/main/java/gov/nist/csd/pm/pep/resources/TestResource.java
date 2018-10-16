@@ -21,7 +21,7 @@ public class TestResource {
     @Path("/graph")
     @GET
     public Response getTestGraph(@QueryParam("session") String session,
-                                 @QueryParam("process") long process) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidAssignmentException, NoSubjectParameterException, NoSuchAlgorithmException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, MissingPermissionException, UnexpectedNumberOfNodesException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, InvalidAssociationException, InvalidKeySpecException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, AssociationExistsException {
+                                 @QueryParam("process") long process) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidAssignmentException, NoSubjectParameterException, NoSuchAlgorithmException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, MissingPermissionException, UnexpectedNumberOfNodesException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, InvalidAssociationException, InvalidKeySpecException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, AssociationExistsException, NodeNameExistsInNamespaceException, PolicyClassNameExistsException {
         return new ApiResponse(service.getTestGraph(session, process)).toResponse();
     }
 

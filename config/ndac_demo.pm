@@ -6355,7 +6355,7 @@
          "name":"bob",
          "type":"U",
          "properties":{
-            "password":"10085d0e213d42613649638b4cf2d7c8578a8fa2c4ff860a3b234206c1b2c95e00283cca6efb7b2063832030137437462d633ab57405a7e097c42c61e08af7be49b471c5c7834053e5b626f66ad089db2ec"
+            "password":"bob"
          }
       },
       {
@@ -6371,7 +6371,7 @@
          "name":"alice",
          "type":"U",
          "properties":{
-            "password":"100fc7ae32739b92bc1516a730f7cc49a2180c27c8d599bfeffbc38c8e2d95456ac693230eb5ec2f94dc841c3fc60cda9a8e01e39e68a66b477d85fe1bd16bc589268b35c1b9176c88b75a88a919302ae79"
+            "password":"alice"
          }
       },
       {
@@ -6396,7 +6396,7 @@
          "name":"emily",
          "type":"U",
          "properties":{
-            "password":"100b4526a27e4f78446ce119f97d43b1822cb2e950048a48a101f9dc490a07238201eb6f5c96499563f9a6868eb041e04e3415217f230fddbd0f9d7414ea4b82f22854bb6bf1fddb6d24a7640be1e953b1e"
+            "password":"emily"
          }
       },
       {
@@ -6404,7 +6404,7 @@
          "name":"lucy",
          "type":"U",
          "properties":{
-            "password":"1004f1e7bebbe98831adcc2038a42eb0fc41307ea2bf07ab6a7e62e0cd2f0b6147d9b7063985a76bd49c76ea3c1a4d1cc26154d111ebdce652f394aad04a9f31f08e1d2849bd559a151605f329d9e79ff48"
+            "password":"lucy"
          }
       },
       {
@@ -6420,7 +6420,7 @@
          "name":"chris",
          "type":"U",
          "properties":{
-            "password":"100aad9fb12e2a66ed9606f4e04eeeea51bfc3badfceb330cfe2685eaab6f6a4830227a6886a0b35bdc143610953304c24d70bcf99b7b56c7cab56eabf537184a742dae4ef7e9a65d9366beb732c3df0763"
+            "password":"chris"
          }
       },
       {
@@ -6445,7 +6445,7 @@
          "name":"betty",
          "type":"U",
          "properties":{
-            "password":"1009178381cb66f5f04b6a5bd13e8d8f1befe8c99cebdb7f2f1c79273ee2d1186f6d77b4595155aafb84dae11c07de544f0bcafdf422d99a408a2b2a2f8d4a58d790d5fc8c2000e4532bacde3a0550cee61"
+            "password":"betty"
          }
       },
       {

@@ -30,7 +30,7 @@ public class ImportService {
     }
 
     public void importFiles(ImportFile[] files, String storage, String session, long process) throws InvalidPropertyException,
-            AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException {
+            AssignmentExistsException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, NodeIDExistsException, NodeNameExistsException, NodeNameExistsInNamespaceException, IOException, ConfigurationException, SQLException, NullNameException, DatabaseException, NullTypeException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, NoBaseIDException, PropertyNotFoundException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException, PolicyClassNameExistsException {
         for(ImportFile importFile : files) {
             String name = importFile.getPath();
             String bucket = importFile.getBucket();
@@ -158,7 +158,7 @@ public class ImportService {
 
     public void importSql(String host, int port, String schema, String username, String password, String session, long process)
             throws DatabaseException, NodeNotFoundException, ConfigurationException, AssignmentExistsException,
-            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeNameExistsException, NodeNameExistsInNamespaceException, NodeIDExistsException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException {
+            InvalidPropertyException, InvalidNodeTypeException, NameInNamespaceNotFoundException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, NodeNameExistsException, NodeNameExistsInNamespaceException, NodeIDExistsException, NullTypeException, NullNameException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidAssociationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException, PolicyClassNameExistsException {
         //create the schema policy class node
         Map<String, String> properties = new HashMap<>();
                 properties.put(Constants.SCHEMA_COMP_PROPERTY, Constants.SCHEMA_COMP_SCHEMA_PROPERTY);

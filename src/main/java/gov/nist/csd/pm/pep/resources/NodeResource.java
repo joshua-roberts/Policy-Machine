@@ -58,7 +58,7 @@ public class NodeResource {
             PropertyNotFoundException, SQLException, InvalidPropertyException, InvalidAssociationException,
             SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, IOException,
             InvalidKeySpecException, NoSuchAlgorithmException, NoSubjectParameterException, MissingPermissionException,
-            InvalidProhibitionSubjectTypeException {
+            InvalidProhibitionSubjectTypeException, NodeNameExistsInNamespaceException, PolicyClassNameExistsException {
         Node node = nodeService.createPolicy(request.getName(), request.getProperties(), session, process);
 
         return new ApiResponse(node).toResponse();
@@ -97,7 +97,7 @@ public class NodeResource {
             throws NullNameException, NullTypeException,
             InvalidPropertyException, DatabaseException, InvalidNodeTypeException,
             NodeNameExistsException, ConfigurationException, NodeIDExistsException,
-            NodeNotFoundException, InvalidAssignmentException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException {
+            NodeNotFoundException, InvalidAssignmentException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, AssignmentExistsException, IOException, ClassNotFoundException, SQLException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NodeNameExistsInNamespaceException {
         Node node = nodeService.createNodeIn(nodeID, request.getName(), request.getType(), request.getProperties(), session, process);
         return new ApiResponse(node).toResponse();
     }

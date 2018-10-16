@@ -5,6 +5,7 @@ import gov.nist.csd.pm.pdp.analytics.PmAnalytics;
 import gov.nist.csd.pm.pip.dao.DAOManager;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.pip.graph.PmGraph;
+import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -49,6 +50,18 @@ public class Service {
         SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] hash = skf.generateSecret(spec).getEncoded();
         return iterations + toHex(salt) + toHex(hash);
+    }
+
+    public static void main(String[] args) {
+        try {
+            System.out.println(checkPasswordHash("1000a7a9f891957ded72e7cf7c30f8f1bdc24f29e0319c45ab9169b8183609035f86388287c4171050200db2efbf4a75a1214d6ff612c548be16ba5c20bf88fd8095220db621ea43e0c41d01d6657b33e6d", "super"));
+        }
+        catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     public static boolean checkPasswordHash(String stored, String toCheck) throws NoSuchAlgorithmException, InvalidKeySpecException{

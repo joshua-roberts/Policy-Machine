@@ -6,6 +6,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 
+import static io.restassured.RestAssured.delete;
 import static io.restassured.RestAssured.given;
 
 public class PMTest {
@@ -26,8 +27,7 @@ public class PMTest {
         return (String) res.getEntity();
     }
 
-    public void deleteNodes(String uuid) {
-        // get nodes with property uuid = uuid
-        // delete each node
+    public void deleteSession(String sessionID) {
+        delete(BASE_URI + "/sessions/" + sessionID);
     }
 }

@@ -4,6 +4,7 @@ import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
+import gov.nist.csd.pm.pep.response.ApiResponseCodes;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -23,7 +24,7 @@ public class SessionService extends Service {
         analyticsService = new AnalyticsService();
     }
 
-    public String createSession(String username, String password) throws InvalidNodeTypeException, InvalidPropertyException, NodeNotFoundException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, PMAccessDeniedException, NullNameException, NodeNameExistsException, NodeNameExistsInNamespaceException, ConfigurationException, NullTypeException, NodeIDExistsException, DatabaseException, AssignmentExistsException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
+    public String createSession(String username, String password) throws PmException, InvalidKeySpecException, NoSuchAlgorithmException, IOException, ClassNotFoundException, SQLException {
         //authenticate
         Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
@@ -33,11 +34,10 @@ public class SessionService extends Service {
         Node userNode = nodes.iterator().next();
 
         //check password
-        //get stored password
         String storedPass = userNode.getProperty(PASSWORD_PROPERTY);
 
         if (!checkPasswordHash(storedPass, password)) {
-            throw new PMAccessDeniedException("Username and password does not match.");
+            throw new PmException(ApiResponseCodes.ERR_INVALID_CREDENTIALS, "Username and password does not match.");
         }
 
         //create session id

@@ -12,11 +12,11 @@ import java.util.*;
 
 public class TestService extends Service {
 
-    public Map<String, Object> getTestGraph(String session, long process) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidAssignmentException, NoSubjectParameterException, NoSuchAlgorithmException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, MissingPermissionException, UnexpectedNumberOfNodesException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, InvalidAssociationException, InvalidKeySpecException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, AssociationExistsException {
+    public Map<String, Object> getTestGraph(String session, long process) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidAssignmentException, NoSubjectParameterException, NoSuchAlgorithmException, ConfigurationException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, MissingPermissionException, UnexpectedNumberOfNodesException, NullNameException, NullTypeException, NodeNameExistsException, NodeIDExistsException, PropertyNotFoundException, InvalidAssociationException, InvalidKeySpecException, SessionUserNotFoundException, NodeNotFoundException, AssignmentExistsException, AssociationExistsException, NodeNameExistsInNamespaceException, PolicyClassNameExistsException {
         //create nodes
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         Map<String, String> properties = new HashMap<>();
-        properties.put("uuid", uuid);
+        properties.put("namespace", uuid);
 
         NodeService nodeService = new NodeService();
         Node pc1 = nodeService.createPolicy("pc1", properties, session, process);
@@ -38,7 +38,7 @@ public class TestService extends Service {
 
     public void deleteTestGraph(String uuid) throws SQLException, IOException, ClassNotFoundException, InvalidPropertyException, DatabaseException, InvalidNodeTypeException, NodeNotFoundException {
         Map<String, String> properties = new HashMap<>();
-        properties.put("uuid", uuid);
+        properties.put("namespace", uuid);
 
         NodeService nodeService = new NodeService();
         Set<Node> nodes = nodeService.getNodes(null, null, properties);

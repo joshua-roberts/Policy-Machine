@@ -5,7 +5,6 @@ import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pdp.analytics.PmAnalyticsEntry;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.epp.obligations.EvrService;
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.InvalidEvrException;
 
@@ -35,7 +34,7 @@ public class NodeService extends Service{
                 }
                 return false;
             }
-            catch (MissingPermissionException | NoSubjectParameterException | InvalidProhibitionSubjectTypeException | NodeNotFoundException | ClassNotFoundException | ConfigurationException | DatabaseException | SQLException | InvalidPropertyException | IOException e) {
+            catch (Exception e) {
                 return true;
             }
         });
@@ -69,7 +68,7 @@ public class NodeService extends Service{
                     for (String key : properties.keySet()) {
                         String value = properties.get(key);
                         String checkValue = node.getProperties().get(key);
-                        if (!value.equals(checkValue)) {
+                        if (!(checkValue != null && checkValue.equals(value))) {
                             add = false;
                             break;
                         }
@@ -96,7 +95,7 @@ public class NodeService extends Service{
         return nodes.iterator().next();
     }
 
-    public Node createNodeIn(long baseID, String name, String type, Map<String, String> properties, String session, long process) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, NullNameException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, NodeIDExistsException, NodeNameExistsException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException, InvalidAssociationException {
+    public Node createNodeIn(long baseID, String name, String type, Map<String, String> properties, String session, long process) throws DatabaseException, NodeNotFoundException, IOException, SQLException, InvalidPropertyException, ClassNotFoundException, NullNameException, NullTypeException, InvalidNodeTypeException, InvalidAssignmentException, NodeIDExistsException, NodeNameExistsException, ConfigurationException, SessionDoesNotExistException, SessionUserNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, MissingPermissionException, InvalidAssociationException, NodeNameExistsInNamespaceException {
         Node user = getSessionUser(session);
 
         //check parent node exists
@@ -122,9 +121,9 @@ public class NodeService extends Service{
 
         //create assignment
         try {
-            assignmentService.createAssignment(node.getID(), parentNode.getID());
+            assignmentService.createAssignment(node, parentNode);
         }
-        catch (AssignmentExistsException | UnexpectedNumberOfNodesException | AssociationExistsException | InvalidAssociationException e) {
+        catch (AssociationExistsException | InvalidAssociationException e) {
             deleteNode(node.getID());
             throw e;
         }
@@ -132,25 +131,38 @@ public class NodeService extends Service{
         return node;
     }
 
-    public Node createPolicy(String name, Map<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    /**
+     * This method creates a new Policy Class in the NGAC graph.  Unlike other nodes, Policy Class nodes must have unique names.
+     * @param name The name of the Policy Class
+     * @param properties Any additional properties to add to the Policy Class
+     * @param session The session ID of the user creating the Policy Class
+     * @param process The ID of the process attempting to create a Policy Class
+     * @return A Node object representing the Policy Class that was added to the graph
+     */
+    public Node createPolicy(String name, Map<String, String> properties, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NullNameException, NodeIDExistsException, ConfigurationException, NodeNotFoundException, AssignmentExistsException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, NodeNameExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, NullTypeException, InvalidAssociationException, InvalidKeySpecException, NoSuchAlgorithmException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, NodeNameExistsInNamespaceException, PolicyClassNameExistsException {
         Node user = getSessionUser(session);
 
         if (properties == null) {
             properties = new HashMap<>();
         }
 
+        //check that the PC name does not exist
+        Set<Node> nodes = getNodes(name, NodeType.PC.toString(), null);
+        if (!nodes.isEmpty()) {
+            throw new PolicyClassNameExistsException(name);
+        }
+
         //create the pc node
         Node node = createNode(NEW_NODE_ID, name, NodeType.PC.toString(), properties);
 
         //create OA
-        properties.put(NAMESPACE_PROPERTY, node.getName());
         Node oaNode = createNodeIn(node.getID(), node.getName(), NodeType.OA.toString(), properties, session, process);
 
         //create UA
         Node uaNode = createNodeIn(node.getID(), node.getName() + " admin", NodeType.UA.toString(), properties, session, process);
 
         //assign U to UA
-        new AssignmentService().createAssignment(user.getID(), uaNode.getID());
+        new AssignmentService().createAssignment(user, uaNode);
 
         //create association
         new AssociationsService().createAssociation(uaNode.getID(), oaNode.getID(), new HashSet<>(Collections.singleton(ALL_OPERATIONS)));
@@ -158,7 +170,20 @@ public class NodeService extends Service{
         return node;
     }
 
-    protected Node createNode(long id, String name, String type, Map<String, String> properties) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, InvalidKeySpecException, NoSuchAlgorithmException {
+    protected Node createNode(long id, String name, String type, Map<String, String> properties) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, InvalidNodeTypeException, InvalidKeySpecException, NoSuchAlgorithmException, NodeNameExistsInNamespaceException {
+        if (properties == null) {
+            properties = new HashMap<>();
+        }
+
+        // first check if this name and type already exists in the namespace
+        HashMap<String, String> nsProp = new HashMap<>();
+        nsProp.put(NAMESPACE_PROPERTY, properties.get(NAMESPACE_PROPERTY));
+
+        Set<Node> nodes = getNodes(name, type, nsProp);
+        if (!nodes.isEmpty()) {
+            throw new NodeNameExistsInNamespaceException(nsProp.get(NAMESPACE_PROPERTY), name);
+        }
+
         //create node in database
         NodeType nt = NodeType.toNodeType(type);
 

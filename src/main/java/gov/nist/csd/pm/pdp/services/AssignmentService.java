@@ -46,14 +46,6 @@ public class AssignmentService extends Service{
             throw new NodeNotFoundException(parentID);
         }
 
-        //check assigning correct types
-        Assignment.checkAssignment(child.getType(), parent.getType());
-
-        //check if the nodes are already assigned
-        if (isAssigned(childID, parentID) ) {
-            throw new AssignmentExistsException("Assignment exists between node " + childID + " and " + parentID);
-        }
-
         //check the user can assign the child
         canAssign(child, user, process);
 
@@ -61,7 +53,7 @@ public class AssignmentService extends Service{
         canAssignTo(child, parent, user, process);
 
         //create the assignment
-        createAssignment(child.getID(), parent.getID());
+        createAssignment(child, parent);
     }
 
     private void canAssign(Node child, Node user, long process) throws IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
@@ -94,10 +86,14 @@ public class AssignmentService extends Service{
             throw new AssignmentExistsException("Assignment exists between node " + childID + " and " + parentID);
         }
 
+        Assignment.checkAssignment(child.getType(), parent.getType());
+
         createAssignment(child, parent);
     }
 
-    protected void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, InvalidAssociationException {
+    protected void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, InvalidAssociationException, InvalidAssignmentException {
+        Assignment.checkAssignment(child.getType(), parent.getType());
+
         //create assignment in database
         getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
 

@@ -58,7 +58,7 @@ public class EmailResource {
     @POST
     public Response sendEmail(EmailRequest request,
                               @QueryParam("session") String session,
-                              @QueryParam("process") long process) throws NullNameException, NodeIDExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+                              @QueryParam("process") long process) throws NullNameException, NodeIDExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, NodeNameExistsInNamespaceException {
     /*
         Steps
         1. Create OA Node and get the node_id back with email_node_id

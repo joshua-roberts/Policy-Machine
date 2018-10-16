@@ -22,11 +22,9 @@ public class SessionResource {
 
     @POST
     public Response createSession(CreateSessionRequest request)
-            throws NullNameException, NodeNameExistsInNamespaceException, NodeNameExistsException,
-            NodeNotFoundException, DatabaseException, InvalidNodeTypeException,
-            InvalidPropertyException, ConfigurationException, NullTypeException, NodeIDExistsException,
-            AssignmentExistsException, InvalidKeySpecException, NoSuchAlgorithmException,
-            PMAccessDeniedException, PropertyNotFoundException, InvalidAssignmentException, IOException, ClassNotFoundException, SQLException {
+            throws PmException,
+            InvalidKeySpecException, NoSuchAlgorithmException,
+            IOException, ClassNotFoundException, SQLException {
         String username = request.getUsername();
         String password = request.getPassword();
 

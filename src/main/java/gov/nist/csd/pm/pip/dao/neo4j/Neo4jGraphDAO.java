@@ -66,7 +66,7 @@ public class Neo4jGraphDAO implements GraphDAO {
         System.out.print("Getting associations...");
         List<Association> associations = getAssociations();
         for(Association assoc : associations){
-            graph.createAssociation(assoc.getChild(), assoc.getParent(), assoc.getOps());
+            graph.createAssociation(graph.getNode(assoc.getChild().getID()), graph.getNode(assoc.getParent().getID()), assoc.getOps());
         }
         System.out.println("DONE");
 

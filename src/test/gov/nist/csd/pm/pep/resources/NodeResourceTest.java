@@ -2,14 +2,9 @@ package gov.nist.csd.pm.pep.resources;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
 import gov.nist.csd.pm.model.exceptions.NodeNotFoundException;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pep.response.ApiResponseCodes;
-import gov.nist.csd.pm.pip.dao.DAOManager;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
@@ -17,11 +12,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.csd.pm.model.Constants.NEW_NODE_ID;
 import static io.restassured.RestAssured.delete;
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
@@ -29,26 +21,44 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NodeResourceTest extends PMTest {
 
-    private static final String URI = BASE_URI + "/nodes";
-    private static final String TEST_URI = BASE_URI + "/tests/graph";
-    private LinkedTreeMap testGraphIDs;
+    private static final String NODES_URI = BASE_URI + "/nodes";
+    private static final String TEST_URI  = BASE_URI + "/tests/graph";
+
+    private String sessionID;
+    private String uuid;
 
     @BeforeEach
-    void buildTestGraph() {
-        String sessionID = getSessionID();
-
-        Response response = given().queryParam("session", sessionID).get(TEST_URI);
-        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
-
-        testGraphIDs = (LinkedTreeMap) res.getEntity();
+    void init() {
+        sessionID = getSessionID();
+        uuid = UUID.randomUUID().toString().replaceAll("-", "");
     }
 
     @AfterEach
     void tearDown() {
-        Response response = given().delete(TEST_URI + "/" + testGraphIDs.get("uuid"));
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+        Response response = given().delete(TEST_URI + "/" + uuid);
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        deleteSession(sessionID);
     }
+
+    private LinkedTreeMap buildTestGraph() {
+        Response response = given().queryParam("session", sessionID).get(TEST_URI);
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        LinkedTreeMap testGraph = (LinkedTreeMap) res.getEntity();
+        uuid = (String) testGraph.get("uuid");
+
+        return testGraph;
+    }
+
+    private long idToLong(Object id) {
+        return (long)((double)id);
+    }
+
 
     /**
      * Check that the given ID is in the provided list.
@@ -70,21 +80,22 @@ class NodeResourceTest extends PMTest {
 
     @Test
     void getNodes() {
-        String sessionID = getSessionID();
+        LinkedTreeMap testGraph = buildTestGraph();
 
         // get all nodes
-        Response response = given().queryParam("session", sessionID).get(URI);
+        Response response = given().queryParam("session", sessionID).get(NODES_URI);
         ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
 
         // check all the test nodes are there
         List list = (List) res.getEntity();
         try {
-            checkForNode(list, (long)((double)testGraphIDs.get("uID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("uaID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("oID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("oaID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("pcID")));
+            checkForNode(list, idToLong(testGraph.get("uID")));
+            checkForNode(list, idToLong(testGraph.get("uaID")));
+            checkForNode(list, idToLong(testGraph.get("oID")));
+            checkForNode(list, idToLong(testGraph.get("oaID")));
+            checkForNode(list, idToLong(testGraph.get("pcID")));
         }
         catch (NodeNotFoundException e) {
             e.printStackTrace();
@@ -93,33 +104,35 @@ class NodeResourceTest extends PMTest {
 
 
         // get all oas
-        response = given().queryParam("type", "OA").queryParam("session", sessionID).get(URI);
+        response = given().queryParam("type", "OA").queryParam("session", sessionID).get(NODES_URI);
         res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
 
         // check the test oa is there
         list = (List) res.getEntity();
         try {
-            checkForNode(list, (long)((double)testGraphIDs.get("oaID")));
+            checkForNode(list, idToLong(testGraph.get("oaID")));
         }
         catch (NodeNotFoundException e) {
             e.printStackTrace();
             fail(e.getMessage());
         }
 
-        // get all nodes with the uuid as a property
-        response = given().queryParam("uuid", testGraphIDs.get("uuid")).queryParam("session", sessionID).get(URI);
+        // get all nodes with the namespace as a property
+        response = given().queryParam("namespace", testGraph.get("uuid")).queryParam("session", sessionID).get(NODES_URI);
         res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
 
         // check all test nodes are there
         list = (List) res.getEntity();
         try {
-            checkForNode(list, (long)((double)testGraphIDs.get("uID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("oID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("uaID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("oaID")));
-            checkForNode(list, (long)((double)testGraphIDs.get("pcID")));
+            checkForNode(list, idToLong(testGraph.get("uID")));
+            checkForNode(list, idToLong(testGraph.get("oID")));
+            checkForNode(list, idToLong(testGraph.get("uaID")));
+            checkForNode(list, idToLong(testGraph.get("oaID")));
+            checkForNode(list, idToLong(testGraph.get("pcID")));
         }
         catch (NodeNotFoundException e) {
             e.printStackTrace();
@@ -129,54 +142,102 @@ class NodeResourceTest extends PMTest {
 
     @Test
     void createPolicy() {
-        String sessionID = getSessionID();
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        
         //create policy class
-        Response response = given().
-                contentType(ContentType.JSON)
+        Response response = given()
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\"}}")
+                .body("{\"name\": \"test_pc\",\"type\": \"PC\",\"properties\":{\"namespace\":\"" + uuid + "\"}}")
                 .when()
-                .post(URI + "/policies" + "?session=" + sessionID);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+                .post(NODES_URI + "/policies" + "?session=" + sessionID);
         ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
         LinkedTreeMap m = (LinkedTreeMap) res.getEntity();
-        assertEquals(m.get("name"), "pc1");
+        assertEquals(m.get("name"), "test_pc");
 
         //create policy class with same name different namespace property
-        response = given().
-                contentType(ContentType.JSON)
+        response = given()
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace\":\"pc1\"}}")
+                .body("{\"name\": \"test_pc\",\"type\": \"PC\",\"properties\":{\"namespace\":\"" + uuid + "\",\"namespace\":\"test_pc\"}}")
                 .when()
-                .post(URI + "/policies" + "?session=" + sessionID);
-        response.then().body("code", Matchers.is(ApiResponseCodes.SUCCESS));
+                .post(NODES_URI + "/policies" + "?session=" + sessionID);
         res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        m = (LinkedTreeMap) res.getEntity();
-        assertEquals(m.get("name"), "pc1");
-        
-        //create already existing policy class name same property, this should return an error
-        response = given().
-                contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("{\"name\": \"pc1\",\"type\": \"PC\",\"properties\":{\"uuid\":\"" + uuid + "\",\"namespace\":\"pc1\"}}")
-                .when()
-                .post(URI + "/policies" + "?session=" + sessionID);
-        System.out.println(response.asString());
-        response.then().body("code", Matchers.is(ApiResponseCodes.ERR_NODE_NAME_EXISTS_IN_NAMESPACE));
+        assertEquals(ApiResponseCodes.ERR_POLICY_NAME_EXISTS, res.getCode());
     }
 
     @Test
     void getNode() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //test for existing node
+        Response response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}", idToLong(testGraph.get("oaID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+        LinkedTreeMap m = (LinkedTreeMap) res.getEntity();
+        assertEquals(m.get("name"), "oa1");
+
+        //test for non existing node
+        response = given().queryParam("session", sessionID).get(NODES_URI + "/{nodeID}", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
     }
 
     @Test
     void deleteNode() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //test deleting object
+        Response response = given().queryParam("session", sessionID).delete(NODES_URI + "/{nodeID}", idToLong(testGraph.get("oaID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+        //test deleting non existent object
+        response = given().queryParam("session", sessionID).delete(NODES_URI + "/{nodeID}", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
     }
 
     @Test
     void createNodeIn() {
+        LinkedTreeMap testGraph = buildTestGraph();
+
+        //create o in oa
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body("{\"name\": \"test_o\",\"type\": \"O\",\"properties\":{\"namespace\":\"" + uuid + "\"}}")
+                .queryParam("session", sessionID)
+                .when()
+                .post(NODES_URI + "/{nodeID}/children", idToLong(testGraph.get("oaID")));
+        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+                String.format("expected a success response code (9000) but received %s", res.getCode()));
+
+
+        //create o in non existing oa
+        response = given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body("{\"name\": \"test_o1\",\"type\": \"O\",\"properties\":{\"namespace\":\"" + uuid + "\"}}")
+                .queryParam("session", sessionID)
+                .when()
+                .post(NODES_URI + "/{nodeID}/children", -1);
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_NODE_NOT_FOUND, res.getCode());
+        
+        //create invalid assignment
+        response = given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body("{\"name\": \"test_o1\",\"type\": \"O\",\"properties\":{\"namespace\":\"" + uuid + "\"}}")
+                .queryParam("session", sessionID)
+                .when()
+                .post(NODES_URI + "/{nodeID}/children", idToLong(testGraph.get("uaID")));
+        res = new Gson().fromJson(response.asString(), ApiResponse.class);
+        assertEquals(ApiResponseCodes.ERR_INVALID_ASSIGNMENT, res.getCode());
     }
 
     @Test
