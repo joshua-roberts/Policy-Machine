@@ -501,8 +501,11 @@ public class ConfigurationService extends Service{
         for(Node node : nodes) {
             Map<String, String> properties = node.getProperties();
 
-            //if a password is present encrypt it
-            if (properties != null && properties.get(PASSWORD_PROPERTY) != null) {
+            //if a password is present encrypt it.
+            // A password dis considered not encrypted if the length is less than 163 (HASH_LENGTH)
+            if (properties != null &&
+                    properties.get(PASSWORD_PROPERTY) != null &&
+                    properties.get(PASSWORD_PROPERTY).length() < HASH_LENGTH) {
                 properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
             }
 
