@@ -19,14 +19,6 @@ public class AssignmentResource {
 
     private AssignmentService assignmentService = new AssignmentService();
 
-    @GET
-    public Response isAssigned(@QueryParam("childID") long childID,
-                               @QueryParam("parentID") long parentID,
-                               @QueryParam("session") String session,
-                               @QueryParam("process") long process) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new ApiResponse(assignmentService.isAssigned(childID, parentID)).toResponse();
-    }
-
     @POST
     public Response createAssignment(AssignmentRequest request,
                                      @QueryParam("session") String session,

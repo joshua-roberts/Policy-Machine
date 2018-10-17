@@ -22,42 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class NodeResourceTest extends PMTest {
 
     private static final String NODES_URI = BASE_URI + "/nodes";
-    private static final String TEST_URI  = BASE_URI + "/tests/graph";
-
-    private String sessionID;
-    private String uuid;
-
-    @BeforeEach
-    void init() {
-        sessionID = getSessionID();
-        uuid = UUID.randomUUID().toString().replaceAll("-", "");
-    }
-
-    @AfterEach
-    void tearDown() {
-        Response response = given().delete(TEST_URI + "/" + uuid);
-        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
-                String.format("expected a success response code (9000) but received %s", res.getCode()));
-
-        deleteSession(sessionID);
-    }
-
-    private LinkedTreeMap buildTestGraph() {
-        Response response = given().queryParam("session", sessionID).get(TEST_URI);
-        ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
-                String.format("expected a success response code (9000) but received %s", res.getCode()));
-
-        LinkedTreeMap testGraph = (LinkedTreeMap) res.getEntity();
-        uuid = (String) testGraph.get("uuid");
-
-        return testGraph;
-    }
-
-    private long idToLong(Object id) {
-        return (long)((double)id);
-    }
 
 
     /**
