@@ -25,8 +25,8 @@ public class Neo4jLoader implements Loader {
 
     /**
      * Create a new Loader from Neo4j, using the provided database connection parameters.
-     * @param ctx
-     * @throws DatabaseException
+     * @param ctx The parameters to connect to the database
+     * @throws DatabaseException If a connection cannot be made to the database
      */
     public Neo4jLoader(DatabaseContext ctx) throws DatabaseException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());

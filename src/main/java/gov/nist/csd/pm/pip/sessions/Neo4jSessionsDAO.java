@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pip.sessions;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.SessionDoesNotExistException;
 import gov.nist.csd.pm.pip.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 
@@ -9,12 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 
 import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
 
-public class Neo4jSessionsDAO implements SessionsDAO {
-    private HashMap<String, Long> sessions = new HashMap<>();
+public class Neo4jSessionsDAO extends SessionsDAO {
     private Neo4jConnection       neo4j;
 
     public Neo4jSessionsDAO(DatabaseContext ctx) throws DatabaseException {
@@ -22,6 +19,7 @@ public class Neo4jSessionsDAO implements SessionsDAO {
         loadSessions();
     }
 
+    @Override
     public void loadSessions() throws DatabaseException {
         sessions.clear();
 
@@ -73,15 +71,5 @@ public class Neo4jSessionsDAO implements SessionsDAO {
         }
 
         sessions.remove(sessionId);
-    }
-
-    @Override
-    public long getSessionUserID(String sessionID) throws SessionDoesNotExistException {
-        Long nodeId = sessions.get(sessionID);
-        if(nodeId == null) {
-            throw new SessionDoesNotExistException(sessionID);
-        }
-
-        return nodeId;
     }
 }

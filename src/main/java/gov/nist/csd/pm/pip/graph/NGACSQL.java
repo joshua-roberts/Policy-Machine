@@ -147,7 +147,7 @@ public class NGACSQL implements NGAC {
         }
     }
 
-    private Node getNode(long id) throws SQLException, InvalidNodeTypeException, DatabaseException {
+    private Node getNode(long id) throws InvalidNodeTypeException, DatabaseException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
@@ -158,6 +158,9 @@ public class NGACSQL implements NGAC {
             HashMap<String, String> properties = getNodeProps(id);
 
             return new Node(id, name, type, properties);
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_DB, e.getMessage());
         }
     }
 
