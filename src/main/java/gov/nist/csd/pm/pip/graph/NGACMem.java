@@ -75,14 +75,12 @@ public class NGACMem implements NGAC {
      * @throws PMException When the node context is null, the ID is zero, or the type is null.
      */
     @Override
-    public Node createNode(Node ctx) throws NoIDException, NullTypeException, NullNodeCtxException {
+    public Node createNode(Node ctx) throws NoIDException, NullNodeCtxException {
         //check for null values
         if(ctx == null) {
             throw new NullNodeCtxException();
         } else if(ctx.getID() == 0) {
             throw new NoIDException();
-        } else if (ctx.getType() == null) {
-            throw new NullTypeException();
         }
 
         //if the node being created is a PC, add it to the graph and list of policies

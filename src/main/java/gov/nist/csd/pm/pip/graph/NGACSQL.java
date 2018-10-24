@@ -27,6 +27,7 @@ public class NGACSQL implements NGAC {
             throw new NullNodeCtxException();
         }
 
+        //get the ID of the node context, can be 0
         long id = ctx.getID();
 
         try(

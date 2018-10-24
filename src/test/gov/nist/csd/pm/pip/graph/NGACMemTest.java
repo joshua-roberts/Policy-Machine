@@ -7,9 +7,7 @@ import gov.nist.csd.pm.model.graph.nodes.Node;
 import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pip.loader.DummyLoader;
 import gov.nist.csd.pm.pip.loader.LoaderException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,71 +39,40 @@ class NGACMemTest {
             //create associations
             mem.associate(ua1.getID(), oa1.getID(), new HashSet<>(Arrays.asList("read", "write")));
         }
-        catch (LoaderException | NoIDException | NullTypeException | NullNodeCtxException e) {
+        catch (LoaderException | NoIDException | NullNodeCtxException e) {
             fail(e.getMessage());
         }
     }
 
-    @Test
-    void createNode() {
-        try {
-            Node testOA = mem.createNode(new Node(2, "testOA", NodeType.OA, null));
+    @Nested
+    @DisplayName("tests for createNode")
+    class CreateNode {
+        @Test
+        @DisplayName("test create node")
+        void test1() {
+            try {
+                Node test_oa = mem.createNode(new Node(6, "test_oa", NodeType.OA, null));
+                assertTrue(mem.exists(test_oa.getID()));
+            }
+            catch (NoIDException | NullNodeCtxException e) {
+                fail(e.getMessage());
+            }
         }
-        catch (NoIDException | NullTypeException | NullNodeCtxException e) {
-            e.printStackTrace();
+
+        @Test
+        @DisplayName("test create node NoIDException")
+        void test2() {
+            Assertions.assertThrows(NoIDException.class, () -> {
+                mem.createNode(new Node("test_oa", NodeType.OA, null));
+            });
         }
 
-    }
-
-    @Test
-    void updateNode() {
-    }
-
-    @Test
-    void deleteNode() {
-    }
-
-    @Test
-    void exists() {
-    }
-
-    @Test
-    void getNodes() {
-    }
-
-    @Test
-    void getPolicies() {
-    }
-
-    @Test
-    void getChildren() {
-    }
-
-    @Test
-    void getParents() {
-    }
-
-    @Test
-    void assign() {
-    }
-
-    @Test
-    void deassign() {
-    }
-
-    @Test
-    void associate() {
-    }
-
-    @Test
-    void dissociate() {
-    }
-
-    @Test
-    void getSourceAssociations() {
-    }
-
-    @Test
-    void getTargetAssociations() {
+        @Test
+        @DisplayName("test create node NullNodeCtxException")
+        void test3() {
+            Assertions.assertThrows(NullNodeCtxException.class, () -> {
+                mem.createNode(null);
+            });
+        }
     }
 }
