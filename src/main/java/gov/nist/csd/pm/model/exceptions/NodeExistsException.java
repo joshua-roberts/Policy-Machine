@@ -1,12 +1,12 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.pep.response.ApiResponseCodes;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.exceptions.ErrorCodes;
 
-public class NodeExistsException extends PmException{
+public class NodeExistsException extends PMException {
 
-    public NodeExistsException(Node node) {
-        super(ApiResponseCodes.ERR_NODE_EXISTS, String.format("a node with the name %s with the type %s and properties %s already exists",
+    public NodeExistsException(OldNode node) {
+        super(ErrorCodes.ERR_NODE_EXISTS, String.format("a node with the name %s with the type %s and properties %s already exists",
                 node.getName(), node.getType(), node.getProperties()));
     }
 }

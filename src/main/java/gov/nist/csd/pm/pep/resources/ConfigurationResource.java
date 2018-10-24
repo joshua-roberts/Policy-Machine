@@ -72,7 +72,7 @@ public class ConfigurationResource {
     @POST
     public Response getData(DataRequest request,
                             @QueryParam("session") String session,
-                            @QueryParam("process") long process) throws PmException, IOException {
+                            @QueryParam("process") long process) throws PMException, IOException {
         String host = request.getHost();
         int port = request.getPort();
         String username = request.getUsername();

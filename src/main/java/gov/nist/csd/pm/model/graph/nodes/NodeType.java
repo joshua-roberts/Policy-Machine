@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.model.graph;
+package gov.nist.csd.pm.model.graph.nodes;
 
 import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
 

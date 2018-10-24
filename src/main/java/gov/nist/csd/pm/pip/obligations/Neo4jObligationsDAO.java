@@ -1,8 +1,9 @@
+/*
 package gov.nist.csd.pm.pip.dao.neo4j;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.obligations.*;
-import gov.nist.csd.pm.pip.dao.ObligationsDAO;
+import gov.nist.csd.pm.pip.obligations.ObligationsDAO;
 import gov.nist.csd.pm.epp.obligations.EvrManager;
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.obligations.script.EvrScript;
@@ -288,7 +289,7 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
 
             EvrTimeElement evrTimeElement;
             if(values != null) {
-                evrTimeElement = new EvrTimeElement(neo4j.toIntList(values));
+                evrTimeElement = new EvrTimeElement(Neo4jHelper.toIntList(values));
             } else {
                 evrTimeElement = new EvrTimeElement(Integer.valueOf(start), Integer.valueOf(end));
             }
@@ -878,3 +879,4 @@ public class Neo4jObligationsDAO implements ObligationsDAO {
         neo4j.execute(cypher);
     }
 }
+*/

@@ -2,8 +2,8 @@ package gov.nist.csd.pm.epp.obligations;
 
 import gov.nist.csd.pm.model.Constants;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.model.obligations.*;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
@@ -140,7 +140,7 @@ public class EvrService extends Service {
         getEvrManager().deleteScripts();
     }
 
-    public void processFileRead(Node node, Node user, long process) throws InvalidPropertyException, ProhibitionResourceExistsException, IOException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, InvalidEntityException, DatabaseException, ConfigurationException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, NullNameException, SQLException, InvalidEvrException, InvalidProhibitionSubjectTypeException {
+    public void processFileRead(OldNode node, OldNode user, long process) throws InvalidPropertyException, ProhibitionResourceExistsException, IOException, InvalidNodeTypeException, NodeNotFoundException, ClassNotFoundException, InvalidEntityException, DatabaseException, ConfigurationException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, NullNameException, SQLException, InvalidEvrException, InvalidProhibitionSubjectTypeException {
         //if user is null, its a process
         EvrSubject evrSubject = new EvrSubject();
         if(process != 0) {
@@ -152,7 +152,7 @@ public class EvrService extends Service {
         processEvent(evrSubject, new EvrPolicies(), Constants.FILE_READ, node);
     }
 
-    public void processEvent(EvrSubject procSubject, EvrPolicies procPc, String procEvent, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
+    public void processEvent(EvrSubject procSubject, EvrPolicies procPc, String procEvent, OldNode procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, ConfigurationException, ProhibitionResourceExistsException, ProhibitionNameExistsException, ProhibitionDoesNotExistException, InvalidProhibitionSubjectTypeException, NullNameException, IOException, ClassNotFoundException {
         //get all rules with the same event
         List<EvrRule> rules = getRules(procEvent);
         for(EvrRule rule : rules) {
@@ -189,7 +189,7 @@ public class EvrService extends Service {
 
         //if its a node and exists than return true
         if(entity.isNode()) {
-            HashSet<Node> nodes = getNodes(entity.getName(), entity.getType(), entity.getProperties());
+            HashSet<OldNode> nodes = getNodes(entity.getName(), entity.getType(), entity.getProperties());
             return !nodes.isEmpty();
         }
 
@@ -201,12 +201,12 @@ public class EvrService extends Service {
         return false;
     }
 
-    private HashSet<Node> getNodes(String name, String type, Map<String, String> properties) throws InvalidPropertyException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
+    private HashSet<OldNode> getNodes(String name, String type, Map<String, String> properties) throws InvalidPropertyException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException {
         //get target node
         //get properties
         NodeType nodeType = (type != null) ? NodeType.toNodeType(type) : null;
 
-        HashSet<Node> nodes = getGraph().getNodes();
+        HashSet<OldNode> nodes = getGraph().getNodes();
         String namespace = "";
         if(properties != null) {
             for (String key : properties.keySet()) {
@@ -254,7 +254,7 @@ public class EvrService extends Service {
         return nodes;
     }
 
-    private boolean eventMatches(EvrEvent evrEvent, EvrSubject procSubject, EvrPolicies procPc, Node procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, IOException, ClassNotFoundException, NoProcessFoundException {
+    private boolean eventMatches(EvrEvent evrEvent, EvrSubject procSubject, EvrPolicies procPc, OldNode procTarget) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, InvalidPropertyException, InvalidEvrException, SQLException, DatabaseException, IOException, ClassNotFoundException, NoProcessFoundException {
         //check subject
         EvrSubject evrSubject = evrEvent.getSubject();
         EvrPolicies evrPc = evrEvent.getPolicies();
@@ -333,15 +333,15 @@ public class EvrService extends Service {
         return true;
     }
 
-    private boolean targetMatches(Node procTarget, EvrTarget evrTarget) throws InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    private boolean targetMatches(OldNode procTarget, EvrTarget evrTarget) throws InvalidNodeTypeException, InvalidEvrException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         EvrEntity evrTargetEntity = evrTarget.getEntity();
         List<EvrEntity> evrTargetContainers = evrTarget.getContainers();
 
-        Node evrTargetNode = null;
+        OldNode evrTargetNode = null;
 
         if(!evrTargetEntity.isAny()) {
             // check that the nodes match
-            HashSet<Node> nodes = getNodes(evrTargetEntity.getName(), evrTargetEntity.getType(), evrTargetEntity.getProperties());
+            HashSet<OldNode> nodes = getNodes(evrTargetEntity.getName(), evrTargetEntity.getType(), evrTargetEntity.getProperties());
             if(nodes.size() != 1) {
                 throw new InvalidEvrException("Target entity (" + evrTargetEntity.getName() + ") can only be one node");
             }
@@ -355,17 +355,17 @@ public class EvrService extends Service {
         if(!evrTarget.isAnyContainer()) {
             //make sure the entity is in at least one container
             for(EvrEntity evrEntity : evrTargetContainers) {
-                HashSet<Node> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
-                for(Node node : nodes) {
+                HashSet<OldNode> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
+                for(OldNode node : nodes) {
                     if(evrTargetNode != null) {
-                        HashSet<Node> ascendants = assignmentService.getAscendants(evrTargetNode.getID());
+                        HashSet<OldNode> ascendants = assignmentService.getAscendants(evrTargetNode.getID());
                         ascendants.add(evrTargetNode);
                         if(ascendants.contains(node)) {
                             return true;
                         }
                     } else {
                         //any object, check the processed target is in the container
-                        HashSet<Node> ascendants = assignmentService.getAscendants(node.getID());
+                        HashSet<OldNode> ascendants = assignmentService.getAscendants(node.getID());
                         ascendants.add(node);
                         if(ascendants.contains(procTarget)) {
                             return true;
@@ -477,10 +477,10 @@ public class EvrService extends Service {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(propName.getName(), propValue.getName());
-        HashSet<Node> nodes = getNodes(null, null, properties);
+        HashSet<OldNode> nodes = getNodes(null, null, properties);
 
         List<EvrEntity> evrEntities = new ArrayList<>();
-        for(Node node : nodes) {
+        for(OldNode node : nodes) {
             evrEntities.add(new EvrEntity(node));
         }
 
@@ -514,12 +514,12 @@ public class EvrService extends Service {
      * @return
      */
     private boolean checkNode(EvrEntity procEntity, EvrEntity evrEntity) throws InvalidNodeTypeException, InvalidEntityException, NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        HashSet<Node> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
+        HashSet<OldNode> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
         if(nodes.size() != 1) {
             throw new InvalidEntityException("The node (" + evrEntity.getName() + ", " + evrEntity.getType() + ") specified in the EVR script does not exist.");
         }
 
-        Node checkNode = nodes.iterator().next();
+        OldNode checkNode = nodes.iterator().next();
 
         //check that the nodes are equal
         if(procEntity.getNode().equals(checkNode)) {
@@ -662,11 +662,11 @@ public class EvrService extends Service {
                 evrEntity = evalFunction(evrEntity.getFunction());
             }
 
-            HashSet<Node> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
+            HashSet<OldNode> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
             if(nodes.size() != 1) {
                 throw new NodeNotFoundException("Error finding container node when creating a prohibition");
             }
-            Node node = nodes.iterator().next();
+            OldNode node = nodes.iterator().next();
             resources[i] = new ProhibitionResource(node.getID(), evrEntity.isCompliment());
         }
 
@@ -680,11 +680,11 @@ public class EvrService extends Service {
             //get node if node
             ProhibitionSubject proSubject = null;
             if(evrEntity.isNode()) {
-                HashSet<Node> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
+                HashSet<OldNode> nodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
                 if (nodes.size() != 1) {
                     throw new NodeNotFoundException("Error finding subject node when creating a prohibition");
                 }
-                Node node = nodes.iterator().next();
+                OldNode node = nodes.iterator().next();
                 proSubject = new ProhibitionSubject(node.getID(), ProhibitionSubjectType.toProhibitionSubjectType(node.getType().toString()));
             } else {
                 //its a process
@@ -714,31 +714,31 @@ public class EvrService extends Service {
             parent = evalFunction(parent.getFunction());
         }
 
-        HashSet<Node> childNodes = getNodes(child);
-        HashSet<Node> parentnodes = getNodes(parent);
+        HashSet<OldNode> childNodes = getNodes(child);
+        HashSet<OldNode> parentnodes = getNodes(parent);
 
-        for(Node childNode : childNodes) {
-            for(Node parentNode : parentnodes) {
+        for(OldNode childNode : childNodes) {
+            for(OldNode parentNode : parentnodes) {
                 System.out.println("Assigning " + childNode.getName() + " to " + parentNode.getName());
                 //assignmentService.createAssignment(childNode.getID(), parentNode.getID());
             }
         }
     }
 
-    private HashSet<Node> getNodes(EvrEntity evrEntity) throws InvalidEntityException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        HashSet<Node> nodes = new HashSet<>();
+    private HashSet<OldNode> getNodes(EvrEntity evrEntity) throws InvalidEntityException, InvalidNodeTypeException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        HashSet<OldNode> nodes = new HashSet<>();
         if(evrEntity.isList()) {
             List<EvrEntity> entityList = evrEntity.getEntityList();
             for(EvrEntity entity : entityList) {
                 if(entity.isNode()) {
                     nodes.add(entity.getNode());
                 } else if(entity.isEvrNode()) {
-                    HashSet<Node> entityNodes = getNodes(entity.getName(), entity.getType(), entity.getProperties());
+                    HashSet<OldNode> entityNodes = getNodes(entity.getName(), entity.getType(), entity.getProperties());
                     nodes.addAll(entityNodes);
                 }
             }
         } else if(evrEntity.isEvrNode()) {
-            HashSet<Node> entityNodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
+            HashSet<OldNode> entityNodes = getNodes(evrEntity.getName(), evrEntity.getType(), evrEntity.getProperties());
             nodes.addAll(entityNodes);
         } else if(evrEntity.isNode()) {
             nodes.add(evrEntity.getNode());
@@ -767,10 +767,10 @@ public class EvrService extends Service {
                 subjectEntity = evalFunction(subjectEntity.getFunction());
             }
 
-            HashSet<Node> subjectNodes = getNodes(subjectEntity);
+            HashSet<OldNode> subjectNodes = getNodes(subjectEntity);
 
             //loop through the nodes that are included in the subject entity
-            for(Node subjectNode : subjectNodes) {
+            for(OldNode subjectNode : subjectNodes) {
                 if(!subjectNode.getType().equals(NodeType.UA)) {//can only grant analytics for ua
                     continue;
                 }
@@ -780,9 +780,9 @@ public class EvrService extends Service {
                         targetContainer = evalFunction(targetContainer.getFunction());
                     }
 
-                    HashSet<Node> targetNodes = getNodes(targetContainer);
+                    HashSet<OldNode> targetNodes = getNodes(targetContainer);
 
-                    for(Node targetNode : targetNodes) {
+                    for(OldNode targetNode : targetNodes) {
                         System.out.println("Granting " + subjectNode.getName() + " " + ops + " on " + targetNode.getName());
                         //analyticsService.grantAccess(subjectNode.getID(), targetNode.getID(), new HashSet<>(ops), true);
                     }

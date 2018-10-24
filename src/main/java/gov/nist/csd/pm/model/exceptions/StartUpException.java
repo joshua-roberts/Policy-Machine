@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.model.exceptions;
 
-public class StartUpException extends PmException {
+public class StartUpException extends PMException {
 
     private static final long serialVersionUID = 1L;
     private static final String STARTUP_ERRMSG = "The server encountered an error on startup";

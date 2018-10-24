@@ -1,11 +1,13 @@
 package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.Node;
+import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.pdp.PDP;
 import gov.nist.csd.pm.pep.requests.AssociationRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pdp.services.AnalyticsService;
-import gov.nist.csd.pm.pdp.services.AssociationsService;
+import gov.nist.csd.pm.pip.loader.LoaderException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -13,48 +15,62 @@ import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.Constants.*;
+import static gov.nist.csd.pm.model.constants.Operations.UPDATE_ASSOCIATION;
 
 @Path("/associations")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class AssociationsResource {
 
-    private AssociationsService associationsService = new AssociationsService();
-    private AnalyticsService    permissionsService  = new AnalyticsService();
-
     @POST
     public Response createAssociation(AssociationRequest request,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process)
-            throws NodeNotFoundException, AssociationExistsException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException, InvalidAssociationException {
-        //PERMISSION CHECK
-        //get user from username
-        Node user = permissionsService.getSessionUser(session);
+                                      @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, NullOperationsException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidAssociationException {
+        PDP pdp = new PDP(session, process);
 
-        //check user can create an association for the target and the subject
-        //1. can create association for the target
-        permissionsService.checkPermissions(user, process, request.getTargetID(), CREATE_ASSOCIATION);
+        //check parameters
+        long sourceID = request.getSourceID();
+        if(pdp.exists(sourceID)) {
+            throw new NodeNotFoundException(sourceID);
+        }
+        long targetID = request.getTargetID();
+        if(pdp.exists(targetID)) {
+            throw new NodeNotFoundException(targetID);
+        }
+        HashSet<String> operations = request.getOperations();
+        if(operations == null) {
+            throw new NullOperationsException();
+        }
 
-        //TODO associations on UAs not yet implemented
-        //2. can create an association for the subject
-        //permissionsService.checkPermissions(user, process, request.getUaId(), ASSIGN);
+        Node sourceNode = pdp.getNode(sourceID);
+        Node targetNode = pdp.getNode(targetID);
 
-        associationsService.createAssociation(request.getUaID(), request.getTargetID(), request.getOps());
+        NGACAssociation.checkAssociation(sourceNode.getType(), targetNode.getType());
 
-        return new ApiResponse(ApiResponse.CREATE_ASSOCIATION_SUCCESS).toResponse();
+        pdp.associate(sourceID, targetID, operations);
+
+        return ApiResponse.Builder
+                .success()
+                .message(ApiResponse.CREATE_ASSOCIATION_SUCCESS)
+                .build();
     }
 
     @GET
     public Response getAssociations(@QueryParam("targetId") long targetId,
                                     @QueryParam("session") String session,
-                                    @QueryParam("process") long process) throws NodeNotFoundException, InvalidPropertyException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException {
-        if(targetId != 0) {
-            return new ApiResponse(associationsService.getTargetAssociations(targetId)).toResponse();
-        } else {
-            return new ApiResponse(associationsService.getAssociations()).toResponse();
+                                    @QueryParam("process") long process) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NoIDException {
+        PDP pdp = new PDP(session, process);
+
+        if(targetId == 0) {
+            throw new NoIDException();
         }
+
+        return ApiResponse.Builder
+                .success()
+                .entity(pdp.getTargetAssociations(targetId))
+                .build();
     }
 
     @Path("/{targetId}")
@@ -66,7 +82,7 @@ public class AssociationsResource {
             throws NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
-        Node user = permissionsService.getSessionUser(session);
+        OldNode user = permissionsService.getSessionUserID(session);
 
         //check user can create an association for the target and the subject
         //1. can update association for the target
@@ -76,7 +92,7 @@ public class AssociationsResource {
         //2. can update an association for the subject
         //permissionsService.checkPermissions(user, process, request.getUaId(), UPDATE_ASSOCIATION);
 
-        associationsService.updateAssociation(targetId, request.getUaID(), request.getOps());
+        associationsService.updateAssociation(targetId, request.getSourceID(), request.getOperations());
         return new ApiResponse(ApiResponse.UPDATE_ASSOCIATION_SUCCESS).toResponse();
     }
 
@@ -88,7 +104,7 @@ public class AssociationsResource {
                                       @QueryParam("process") long process) throws NodeNotFoundException, NoUserParameterException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, SessionDoesNotExistException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
-        Node user = permissionsService.getSessionUser(session);
+        OldNode user = permissionsService.getSessionUserID(session);
 
         //check user can create an association for the target and the subject
         //1. can delete association for the target
@@ -111,7 +127,7 @@ public class AssociationsResource {
             throws NodeNotFoundException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, ConfigurationException, SessionDoesNotExistException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //PERMISSION CHECK
         //get user from username
-        Node user = permissionsService.getSessionUser(session);
+        OldNode user = permissionsService.getSessionUserID(session);
 
         //check user can get associations that the subject is in
         permissionsService.checkPermissions(user, process, subjectId, GET_ASSOCIATIONS);

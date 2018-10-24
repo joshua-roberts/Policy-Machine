@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pep.servlets;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.pdp.services.ConfigurationService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

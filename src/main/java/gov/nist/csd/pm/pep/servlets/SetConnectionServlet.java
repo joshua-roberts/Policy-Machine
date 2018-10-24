@@ -1,8 +1,9 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.pip.dao.DAOManager;
+import gov.nist.csd.pm.pip.PIP;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
+import gov.nist.csd.pm.pip.loader.LoaderException;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -32,11 +33,11 @@ public class SetConnectionServlet extends HttpServlet {
         props.put("schema", schema == null ? "" : schema);
 
         try {
-            DAOManager.init(props);
+            PIP.init(props);
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
-        catch (DatabaseException | ClassNotFoundException | SQLException | InvalidPropertyException e) {
+        catch (DatabaseException | LoaderException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

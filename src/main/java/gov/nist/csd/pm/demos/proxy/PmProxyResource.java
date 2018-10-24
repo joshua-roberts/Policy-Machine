@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.demos.proxy;
 
 import com.google.gson.Gson;
-import gov.nist.csd.pm.model.exceptions.PmException;
+import gov.nist.csd.pm.model.exceptions.PMException;
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pep.response.TranslateResponse;
@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
+import static gov.nist.csd.pm.pip.PIP.getPIP;
 
 @Path("/proxy")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -37,7 +37,7 @@ public class PmProxyResource {
     }
 
     @POST
-    public Response query(PmProxyRequest request) throws InvalidEntityException, PolicyMachineException, IOException, SQLException, PmException, JSQLParserException, ClassNotFoundException {
+    public Response query(PmProxyRequest request) throws InvalidEntityException, PolicyMachineException, IOException, SQLException, PMException, JSQLParserException, ClassNotFoundException {
         String host = request.getHost();
         int port = request.getPort();
         String database = request.getDatabase();
@@ -106,7 +106,7 @@ public class PmProxyResource {
             }
             String json = gson.toJson(results);
 
-            getDaoManager().getObligationsDAO().getEvrManager().removeActiveSql(sqlId);
+            getPIP().getObligationsDAO().getEvrManager().removeActiveSql(sqlId);
 
             return new ApiResponse(json).toResponse();
         } else {

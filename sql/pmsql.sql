@@ -227,7 +227,7 @@ DECLARE new_assignment_id int;
              SELECT 'Error in creating assignment' INTO error_msg;
           END IF;
         ELSE  
-          SELECT 'Node can not be an operation set' INTO error_msg;
+          SELECT 'OldNode can not be an operation set' INTO error_msg;
         END IF;
       ELSE
         SELECT 'Start node is the same as the end node' INTO error_msg;
@@ -347,7 +347,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `create_node_fun`(node_id_in int, nod
 BEGIN
 DECLARE node_type_id_in int;
 DECLARE inserted_node_id int;
-  -- Insert in Node table
+  -- Insert in OldNode table
   SELECT NODE_TYPE_ID INTO node_type_id_in FROM NODE_TYPE WHERE UPPER(NAME) = UPPER(node_type_name);
   IF node_type_id_in IS NULL THEN 
      RETURN 0;
@@ -472,7 +472,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `create_operand`(operand_type varchar
 BEGIN
 DECLARE node_type_id_in int;
 DECLARE inserted_operand_id int;
--- Insert in Node table
+-- Insert in OldNode table
     insert into ob_operand (operand_type,operand_num,is_function,is_subgraph,is_compliment,
                                 expression,expression_id,action_id,parent_function)
                 values (get_operand_type_id(operand_type),op_num,is_function,is_subgraph,is_compliment,
@@ -615,7 +615,7 @@ DECLARE opset_id_in int;
         DELETE FROM ASSIGNMENT where start_node_id = oa_node and end_node_id = opset_id_in;
         DELETE FROM ASSIGNMENT where start_node_id = opset_id_in and end_node_id = ua_node;
       ELSE
-        SELECT 'Null Node' INTO error_msg;
+        SELECT 'Null OldNode' INTO error_msg;
       END IF;
     END;
     DELETE FROM NODE WHERE NODE_ID = opset_id_in;

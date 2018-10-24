@@ -1,7 +1,7 @@
-package gov.nist.csd.pm.pip.dao.sql;
+package gov.nist.csd.pm.pip.obligations;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.pip.dao.ObligationsDAO;
+import gov.nist.csd.pm.pip.db.sql.SQLConnection;
 import gov.nist.csd.pm.epp.obligations.EvrManager;
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.obligations.EvrArg;

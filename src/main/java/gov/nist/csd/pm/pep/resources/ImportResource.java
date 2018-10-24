@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.exceptions.PmException.SUCCESS;
+import static gov.nist.csd.pm.model.exceptions.PMException.SUCCESS;
 
 @Path("/import")
 @Consumes(MediaType.APPLICATION_JSON)

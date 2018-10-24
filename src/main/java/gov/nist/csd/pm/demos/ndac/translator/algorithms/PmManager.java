@@ -2,9 +2,9 @@ package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.epp.obligations.EvrManager;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pdp.analytics.PmAnalyticsEntry;
-import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pdp.services.AnalyticsService;
 import gov.nist.csd.pm.pdp.services.NodeService;
 
@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static gov.nist.csd.pm.model.Constants.NAMESPACE_PROPERTY;
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
+import static gov.nist.csd.pm.pip.PIP.getPIP;
 
 public class PmManager {
     public static final String GET_ENTITY_ID = "getEntityId";
@@ -30,17 +30,17 @@ public class PmManager {
     private BufferedReader in;
     private PrintWriter out;
 
-    private Node             pmUser;
+    private OldNode          pmUser;
     private NodeService      nodeService;
     private AnalyticsService analyticsService;
     private EvrManager       evrManager;
-    private long           process;
+    private long             process;
 
     public PmManager(String username, long process) throws NodeNotFoundException, ConfigurationException, DatabaseException, IOException, ClassNotFoundException, SQLException, InvalidPropertyException {
         this.nodeService = new NodeService();
         this.analyticsService = new AnalyticsService();
         this.pmUser = getPmUser(username);
-        this.evrManager = getDaoManager().getObligationsDAO().getEvrManager();
+        this.evrManager = getPIP().getObligationsDAO().getEvrManager();
         this.process = process;
     }
 
@@ -52,9 +52,9 @@ public class PmManager {
         this.process = process;
     }
 
-    private Node getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
+    private OldNode getPmUser(String username) throws NodeNotFoundException, ClassNotFoundException, SQLException, IOException, DatabaseException {
         try {
-            Set<Node> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
+            Set<OldNode> nodes = nodeService.getNodes(username, NodeType.U.toString(), null);
             if(!nodes.isEmpty()) {
                 return nodes.iterator().next();
             }else {
@@ -67,7 +67,7 @@ public class PmManager {
         return null;
     }
 
-    public Node getPmUser() {
+    public OldNode getPmUser() {
         return pmUser;
     }
 
@@ -78,11 +78,11 @@ public class PmManager {
         return nodeService.getNode(name, type.toString(), properties).getID();
     }
 
-    public List<Node> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    public List<OldNode> getAccessibleChildren(long id, String perm) throws NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         List<PmAnalyticsEntry> accessibleChildren = analyticsService.getAccessibleChildren(id, pmUser.getID());
-        List<Node> nodes = new ArrayList<>();
+        List<OldNode> nodes = new ArrayList<>();
         for(PmAnalyticsEntry entry : accessibleChildren) {
-            Node target = entry.getTarget();
+            OldNode target = entry.getTarget();
             HashSet<String> prohibitedOps = getProhibitedOps(target.getID());
             if(entry.hasOp(perm) && !prohibitedOps.contains(perm)) {
                 nodes.add(entry.getTarget());
@@ -112,9 +112,9 @@ public class PmManager {
         return prohibitedOps;
     }
 
-    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        HashSet<Node> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.O.toString());
-        HashSet<Node> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.O.toString());
+    public OldNode getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, InvalidNodeTypeException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        HashSet<OldNode> columnChildren = nodeService.getChildrenOfType(columnPmId, NodeType.O.toString());
+        HashSet<OldNode> rowChildren = nodeService.getChildrenOfType(rowPmId, NodeType.O.toString());
         columnChildren.retainAll(rowChildren);
         if(!columnChildren.isEmpty()) {
             return columnChildren.iterator().next();
@@ -123,10 +123,10 @@ public class PmManager {
         }
     }
 
-    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
+    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PMException, SQLException, IOException, ClassNotFoundException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
-        Node node = nodeService.getNode(columnName, NodeType.OA.toString(), properties);
+        OldNode node = nodeService.getNode(columnName, NodeType.OA.toString(), properties);
         if(node == null) {
             throw new NodeNotFoundException("Could not find column object attribute for " + tableName);
         }
@@ -143,17 +143,17 @@ public class PmManager {
         return operations.containsAll(permList) || operations.contains("*");
     }
 
-    public boolean checkRowAccess(String tableName, String ... perms) throws PmException, SQLException, IOException, ClassNotFoundException {
+    public boolean checkRowAccess(String tableName, String ... perms) throws PMException, SQLException, IOException, ClassNotFoundException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
-        Set<Node> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
+        Set<OldNode> nodes = nodeService.getNodes("Rows", NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
             throw new NodeNotFoundException("Could not find row object attribute for table " + tableName);
         }
 
         List<String> permList = Arrays.asList(perms);
 
-        Node node = nodes.iterator().next();
+        OldNode node = nodes.iterator().next();
         PmAnalyticsEntry access = analyticsService.getUserPermissionsOn(node.getID(), pmUser.getID());
         HashSet<String> operations = access.getOperations();
 

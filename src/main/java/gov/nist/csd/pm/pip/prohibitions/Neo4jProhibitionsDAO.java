@@ -1,13 +1,19 @@
-package gov.nist.csd.pm.pip.dao.neo4j;
+package gov.nist.csd.pm.pip.prohibitions;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.pip.dao.ProhibitionsDAO;
+import gov.nist.csd.pm.pip.db.neo4j.Neo4jConnection;
+import gov.nist.csd.pm.pip.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashSet;
+
+import static gov.nist.csd.pm.pep.response.ErrorCodes.ERR_NEO;
 
 public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
@@ -23,10 +29,18 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
     public void createProhibition(String prohibitionName, HashSet<String> operations, boolean intersection, ProhibitionResource[] resources, ProhibitionSubject subject) throws DatabaseException, DatabaseException {
         String cypher = "create (:" + PROHIBITION_LABEL + "{" +
                 "name: '" + prohibitionName + "', " +
-                "operations: " + neo4j.setToCypherArray(operations) +
+                "operations: " + Neo4jHelper.setToCypherArray(operations) +
                 ", intersection: " + intersection +
                 "})";
-        neo4j.execute(cypher);
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }
 
         for(ProhibitionResource pr : resources){
             addResourceToProhibition(prohibitionName, pr.getResourceID(), pr.isComplement());
@@ -38,26 +52,55 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
     @Override
     public void deleteProhibition(String prohibitionName) throws DatabaseException {
         String cypher = "match(p:" + PROHIBITION_LABEL +") detach delete p";
-        neo4j.execute(cypher);
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }
     }
 
     @Override
     public void addResourceToProhibition(String prohibitionName, long resourceID, boolean complement) throws DatabaseException {
         String cypher = "match(p:" + PROHIBITION_LABEL + "{name:'" + prohibitionName + "'}), (n{id:" + resourceID +"}) create (p)-[:" + PROHIBITION_LABEL +"{complement: " + complement + "}]->(n)";
-        neo4j.execute(cypher);
-    }
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }    }
 
     @Override
     public void deleteProhibitionResource(String prohibitionName, long resourceID) throws DatabaseException {
         String cypher = "match(n{id:" + resourceID + "})<-[r:" + PROHIBITION_LABEL +"]-(p:" + PROHIBITION_LABEL +"{name:'" + prohibitionName + "'}) delete r";
-        neo4j.execute(cypher);
-    }
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }    }
 
     @Override
     public void setProhibitionIntersection(String prohibitionName, boolean intersection) throws DatabaseException {
         String cypher = "match(d:" + PROHIBITION_LABEL +"{name:'" + prohibitionName + "'}) set d.intersection = " + intersection;
-        neo4j.execute(cypher);
-    }
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }    }
 
     @Override
     public void setProhibitionSubject(String prohibitionName, long subjectID, ProhibitionSubjectType subjectType) throws DatabaseException {
@@ -67,13 +110,27 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
         } else {
             cypher = "match(p:" + PROHIBITION_LABEL + "{name:'" + prohibitionName + "'}), (n{id:" + subjectID + ", type:'" + subjectType + "'}) create (p)<-[:" + PROHIBITION_LABEL + "]-(n)";
         }
-        neo4j.execute(cypher);
-    }
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }    }
 
     @Override
     public void setProhibitionOperations(String prohibitionName, HashSet<String> operations) throws DatabaseException {
-        String opStr = neo4j.setToCypherArray(operations);
+        String opStr = Neo4jHelper.setToCypherArray(operations);
         String cypher = "match(p:" + PROHIBITION_LABEL +"{name:'" + prohibitionName + "'}) set p.operations = " + opStr;
-        neo4j.execute(cypher);
-    }
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+        ) {
+            stmt.executeQuery();
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_NEO, e.getMessage());
+        }    }
 }

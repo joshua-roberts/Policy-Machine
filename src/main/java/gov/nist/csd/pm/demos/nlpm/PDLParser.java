@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.demos.nlpm;
 
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class PDLParser {
         String policy = pieces[6];
     }
 
-    private List<Node> parseSubjetFunc(String subjectFunc) throws MalformedPDLException {
+    private List<OldNode> parseSubjetFunc(String subjectFunc) throws MalformedPDLException {
         System.out.println(subjectFunc);
         String[] pieces = subjectFunc.split("\\(|\\)");
         if(pieces.length != SUBJECT_LENGTH) {

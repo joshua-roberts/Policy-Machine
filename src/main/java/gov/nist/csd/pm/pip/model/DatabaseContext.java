@@ -1,5 +1,8 @@
 package gov.nist.csd.pm.pip.model;
 
+/**
+ * Class to hold information about a database connection
+ */
 public class DatabaseContext {
     private String host;
     private int port;

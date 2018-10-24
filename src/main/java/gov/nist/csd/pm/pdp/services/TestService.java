@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -19,11 +19,11 @@ public class TestService extends Service {
         properties.put("namespace", uuid);
 
         NodeService nodeService = new NodeService();
-        Node pc1 = nodeService.createPolicy("pc1", properties, session, process);
-        Node oa1 = nodeService.createNodeIn(pc1.getID(), "oa1", NodeType.OA.toString(), properties, session, process);
-        Node ua1 = nodeService.createNodeIn(pc1.getID(), "ua1", NodeType.UA.toString(), properties, session, process);
-        Node u1 = nodeService.createNodeIn(ua1.getID(), "u1", NodeType.U.toString(), properties, session, process);
-        Node o1 = nodeService.createNodeIn(oa1.getID(), "o1", NodeType.O.toString(), properties, session, process);
+        OldNode pc1 = nodeService.createPolicy("pc1", properties, session, process);
+        OldNode oa1 = nodeService.createNodeIn(pc1.getID(), "oa1", NodeType.OA.toString(), properties, session, process);
+        OldNode ua1 = nodeService.createNodeIn(pc1.getID(), "ua1", NodeType.UA.toString(), properties, session, process);
+        OldNode u1 = nodeService.createNodeIn(ua1.getID(), "u1", NodeType.U.toString(), properties, session, process);
+        OldNode o1 = nodeService.createNodeIn(oa1.getID(), "o1", NodeType.O.toString(), properties, session, process);
 
         Map<String, Object> map = new HashMap<>();
         map.put("uuid", uuid);
@@ -41,19 +41,19 @@ public class TestService extends Service {
         properties.put("namespace", uuid);
 
         NodeService nodeService = new NodeService();
-        Set<Node> nodes = nodeService.getNodes(null, null, properties);
-        for (Node node : nodes) {
+        Set<OldNode> nodes = nodeService.getNodes(null, null, properties);
+        for (OldNode node : nodes) {
             getDaoManager().getNodesDAO().deleteNode(node.getID());
-            getGraph().deleteNode(node.getID());
+            getGraph().deleteNode(node);
 
             if(node.getType().equals(NodeType.PC)) {
                 // delete pc admin and pc oa
-                Set<Node> subNodes = nodeService.getNodes(node.getName(), NodeType.OA.toString(), properties);
-                for(Node pcOA : subNodes) {
+                Set<OldNode> subNodes = nodeService.getNodes(node.getName(), NodeType.OA.toString(), properties);
+                for(OldNode pcOA : subNodes) {
                     nodeService.deleteNode(pcOA.getID());
                 }
                 subNodes = nodeService.getNodes(node.getName() + " admin", NodeType.OA.toString(), properties);
-                for(Node pcOA : subNodes) {
+                for(OldNode pcOA : subNodes) {
                     nodeService.deleteNode(pcOA.getID());
                 }
 

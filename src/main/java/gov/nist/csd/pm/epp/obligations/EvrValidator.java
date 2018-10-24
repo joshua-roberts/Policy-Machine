@@ -2,7 +2,7 @@
 package gov.nist.csd.pm.epp.obligations;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEvrException;
-import org.w3c.dom.Node;
+import org.w3c.dom.OldNode;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
@@ -76,7 +76,7 @@ public class EvrValidator {
         allowedTags.put("delete", Arrays.asList("assign", "deny", "rule"));
     }
 
-    public static void validate(Node node) throws InvalidEvrException {
+    public static void validate(OldNode node) throws InvalidEvrException {
         switch (node.getNodeName()) {
             case "script":
                 validateScript(node);
@@ -148,13 +148,13 @@ public class EvrValidator {
         }
     }
 
-    private static void validateEntity(Node node) {
+    private static void validateEntity(OldNode node) {
     }
 
-    private static void validateSubject(Node node) {
+    private static void validateSubject(OldNode node) {
     }
 
-    private static void validateEvent(Node node) throws InvalidEvrException {
+    private static void validateEvent(OldNode node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
         checkInvalidElements(node.getNodeName(), childNodes);
     }
@@ -167,7 +167,7 @@ public class EvrValidator {
      * @throws InvalidEvrException
      *//*
 
-    private static void validateScript(Node node) throws InvalidEvrException {
+    private static void validateScript(OldNode node) throws InvalidEvrException {
         if(!node.getNodeName().equals(SCRIPT_TAG)) {
             throw new InvalidEvrException("script must be the root tag");
         }
@@ -184,7 +184,7 @@ public class EvrValidator {
      * @throws InvalidEvrException
      *//*
 
-    private static void validateLabel(Node node) throws InvalidEvrException {
+    private static void validateLabel(OldNode node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
         checkInvalidElements(node.getNodeName(), childNodes);
     }
@@ -197,7 +197,7 @@ public class EvrValidator {
      * @throws InvalidEvrException
      *//*
 
-    private static void validateRules(Node node) throws InvalidEvrException {
+    private static void validateRules(OldNode node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
         checkInvalidElements(node.getNodeName(), childNodes);
     }
@@ -210,7 +210,7 @@ public class EvrValidator {
      * @throws InvalidEvrException
      *//*
 
-    private static void validateRule(Node node) throws InvalidEvrException {
+    private static void validateRule(OldNode node) throws InvalidEvrException {
         List<String> childNodes = getChildNodes(node);
 
         //check there are two elements
@@ -238,70 +238,70 @@ public class EvrValidator {
     }
 
     */
-/*private void validateSubject(Node node) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(node);
-        for(Node child : childNodes) {
+/*private void validateSubject(OldNode node) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(node);
+        for(OldNode child : childNodes) {
             if(!subject.contains(child.getNodeName())) {
                 throw new InvalidEvrException(child.getNodeName() + " is not valid in subject");
             }
         }
     }
 
-    private void validateEntity(Node entityNode) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(entityNode);
+    private void validateEntity(OldNode entityNode) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(entityNode);
         if(childNodes.size() > NUM_ENTITY_OPERANDS) {
             throw new InvalidEvrException("Invalid number of child tags for entity");
         }
 
-        for(Node node : childNodes) {
+        for(OldNode node : childNodes) {
             if(!entity.contains(node.getNodeName())) {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in entity");
             }
         }
     }
 
-    private void validateFunction(Node functionNode) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(functionNode);
-        for(Node node : childNodes) {
+    private void validateFunction(OldNode functionNode) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(functionNode);
+        for(OldNode node : childNodes) {
             if(!function.contains(node.getNodeName())) {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in function");
             }
         }
     }
 
-    private void validateArg(Node argNode) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(argNode);
+    private void validateArg(OldNode argNode) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(argNode);
         if(childNodes.size() > NUM_ARG_OPERANDS) {
             throw new InvalidEvrException("Invalid number of child tags for arg");
         }
 
-        for(Node node : childNodes) {
+        for(OldNode node : childNodes) {
             if(!arg.contains(node.getNodeName())) {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in arg");
             }
         }
     }
 
-    private void validateProcess(Node entityNode) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(entityNode);
+    private void validateProcess(OldNode entityNode) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(entityNode);
         if(childNodes.size() > NUM_PROCESS_OPERANDS) {
             throw new InvalidEvrException("Invalid number of child tags for process");
         }
 
-        for(Node node : childNodes) {
+        for(OldNode node : childNodes) {
             if(!process.contains(node.getNodeName())) {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in process");
             }
         }
     }
 
-    private void validatePcSpec(Node entityNode) throws InvalidEvrException {
-        List<Node> childNodes = getChildNodes(entityNode);
+    private void validatePcSpec(OldNode entityNode) throws InvalidEvrException {
+        List<OldNode> childNodes = getChildNodes(entityNode);
         if(childNodes.size() > NUM_PROCESS_OPERANDS) {
             throw new InvalidEvrException("Invalid number of child tags for process");
         }
 
-        for(Node node : childNodes) {
+        for(OldNode node : childNodes) {
             if(!process.contains(node.getNodeName())) {
                 throw new InvalidEvrException(node.getNodeName() + " is not valid in process");
             }
@@ -311,7 +311,7 @@ public class EvrValidator {
 
 
 
-    private static List<String> getChildNodes(Node node) {
+    private static List<String> getChildNodes(OldNode node) {
         List<String> nodes = new ArrayList<>();
         NodeList childNodes = node.getChildNodes();
         for(int i = 0; i < childNodes.getLength(); i++) {

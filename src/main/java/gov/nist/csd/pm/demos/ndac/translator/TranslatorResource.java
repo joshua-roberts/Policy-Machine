@@ -26,7 +26,7 @@ public class TranslatorResource {
     }
 
     @POST
-    public Response translate(TranslateRequest request) throws ClassNotFoundException, SQLException, JSQLParserException, IOException, PmException, PolicyMachineException, InvalidEntityException {
+    public Response translate(TranslateRequest request) throws ClassNotFoundException, SQLException, JSQLParserException, IOException, PMException, PolicyMachineException, InvalidEntityException {
         return new ApiResponse(translatorService.translate(request.getSql(), request.getUsername(), request.getProcess(),
                 request.getHost(), request.getPort(), request.getDbUsername(),
                 request.getDbPassword(), request.getDatabase())).toResponse();

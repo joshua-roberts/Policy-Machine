@@ -1,16 +1,12 @@
 package gov.nist.csd.pm.pep.resources;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.internal.LinkedTreeMap;
-import gov.nist.csd.pm.model.graph.Node;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-
-import java.util.TreeMap;
 
 import static io.restassured.RestAssured.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;

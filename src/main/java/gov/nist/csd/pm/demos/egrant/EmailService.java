@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.demos.egrant;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 import gov.nist.csd.pm.pdp.services.AssignmentService;
 import gov.nist.csd.pm.pdp.services.NodeService;
 
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
+import static gov.nist.csd.pm.pip.PIP.getPIP;
 
 public class EmailService {
 
@@ -21,19 +21,19 @@ public class EmailService {
     private AssignmentService assignmentService = new AssignmentService();
 
     public List<Email> getEmails(List<Long> emailIDs) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException {
-        return getDaoManager().getApplicationDAO().getEmails(emailIDs);
+        return getPIP().getApplicationDAO().getEmails(emailIDs);
     }
 
-    public void sendEmail(Email email, Node user, String session , long process) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNameException, NodeNameExistsException, NodeIDExistsException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException, NodeNameExistsInNamespaceException {
+    public void sendEmail(Email email, OldNode user, String session , long process) throws DatabaseException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNameException, NodeNameExistsException, NodeIDExistsException, ConfigurationException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NoSubjectParameterException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, SessionUserNotFoundException, MissingPermissionException, NodeNameExistsInNamespaceException {
         Map<String, String> properties = new HashMap<>();
         properties.put("inbox", email.getRecipient());
-        Node recipientInbox = nodeService.getNode(null, null, properties);
+        OldNode recipientInbox = nodeService.getNode(null, null, properties);
         
         properties.clear();
         properties.put("outbox",user.getName());
-        Node senderOutbox = nodeService.getNode(null, null, properties);
+        OldNode senderOutbox = nodeService.getNode(null, null, properties);
 
-        Node emailNodeID = nodeService.createNodeIn(email.getEmailNodeID(),email.getSender() + " to " + email.getRecipient() + email.getTimestamp(),"OA",null, session , process);
+        OldNode emailNodeID = nodeService.createNodeIn(email.getEmailNodeID(),email.getSender() + " to " + email.getRecipient() + email.getTimestamp(),"OA",null, session , process);
 
         System.out.println(emailNodeID.getID());
 
@@ -46,6 +46,6 @@ public class EmailService {
                 assignmentService.createAssignment(attachmentID, emailNodeID.getID());
             }
         }
-        getDaoManager().getApplicationDAO().saveEmail(email);
+        getPIP().getApplicationDAO().saveEmail(email);
     }
 }

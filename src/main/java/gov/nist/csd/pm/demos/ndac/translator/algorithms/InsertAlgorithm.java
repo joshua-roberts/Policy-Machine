@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -13,8 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nist.csd.pm.model.Constants.*;
-
 public class InsertAlgorithm extends Algorithm{
     private Insert insert;
 
@@ -24,15 +22,15 @@ public class InsertAlgorithm extends Algorithm{
     }
 
     @Override
-    public String run() throws PmException, SQLException, IOException, ClassNotFoundException {
+    public String run() throws PMException, SQLException, IOException, ClassNotFoundException {
         //Check user can create an object attribute in the table oa
         Table table = insert.getTable();
 
         //get the columns the user has analytics to
         long columnsContId = pmManager.getEntityId(table.getName(), "Columns", NodeType.OA);
-        List<Node> accColumns = pmManager.getAccessibleChildren(columnsContId, table.getName());
+        List<OldNode> accColumns = pmManager.getAccessibleChildren(columnsContId, table.getName());
         List<String> accColumnNames = new ArrayList<>();
-        for(Node node : accColumns) {
+        for(OldNode node : accColumns) {
             accColumnNames.add(node.getName());
         }
 
@@ -43,7 +41,7 @@ public class InsertAlgorithm extends Algorithm{
         try {
             access = pmManager.checkRowAccess(table.getName(), CREATE_OBJECT_ATTRIBUTE, ASSIGN_OBJECT_ATTRIBUTE);
         }
-        catch (PmException | SQLException | ClassNotFoundException | IOException e) {
+        catch (PMException | SQLException | ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
         if(!access) {

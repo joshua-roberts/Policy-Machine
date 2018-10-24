@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 import gov.nist.csd.pm.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
@@ -69,7 +69,7 @@ public class ProhibitionsService extends Service{
         Prohibition prohibition = getProhibition(prohibitionName);
 
         //check if the resource exists
-        Node node = getGraph().getNode(resourceID);
+        OldNode node = getGraph().getNode(resourceID);
         if(node == null){
             throw new NodeNotFoundException(resourceID);
         }

@@ -1,15 +1,14 @@
 package gov.nist.csd.pm.model.obligations;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class EvrEntity {
-    private Node                node;
+    private OldNode             node;
     private String              name;
     private String              type;
     private Map<String, String> properties;
@@ -31,13 +30,13 @@ public class EvrEntity {
     }
 
     //node
-    public EvrEntity(Node node) {
+    public EvrEntity(OldNode node) {
         this.node = node;
     }
 
-    public Node getNode() throws InvalidEntityException {
+    public OldNode getNode() throws InvalidEntityException {
         if(node == null) {
-            throw new InvalidEntityException("This entity is not a Node");
+            throw new InvalidEntityException("This entity is not a OldNode");
         }
         return node;
     }

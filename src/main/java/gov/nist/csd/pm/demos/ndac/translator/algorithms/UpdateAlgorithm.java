@@ -2,7 +2,7 @@ package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 import gov.nist.csd.pm.demos.ndac.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;

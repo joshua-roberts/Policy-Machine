@@ -2,7 +2,7 @@ package gov.nist.csd.pm.demos.ndac.translator.algorithms;
 
 import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 import gov.nist.csd.pm.demos.ndac.translator.exceptions.PolicyMachineException;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -33,7 +33,7 @@ public abstract class Algorithm {
         return this.id;
     }
 
-    public abstract String run() throws SQLException, IOException, PolicyMachineException, PmException, JSQLParserException, InvalidEntityException, ClassNotFoundException;
+    public abstract String run() throws SQLException, IOException, PolicyMachineException, PMException, JSQLParserException, InvalidEntityException, ClassNotFoundException;
 
     protected List<String> getKeys(String tableName) throws SQLException {
         PreparedStatement ps2 = dbManager.getConnection().prepareStatement("SELECT k.COLUMN_NAME\n" +
@@ -108,9 +108,9 @@ public abstract class Algorithm {
     }
 
     public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws IOException, NodeNotFoundException, NoUserParameterException, InvalidNodeTypeException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, SQLException, ClassNotFoundException, InvalidPropertyException {
-        List<Node> accChildren = pmManager.getAccessibleChildren(rowPmId, perm);
+        List<OldNode> accChildren = pmManager.getAccessibleChildren(rowPmId, perm);
 
-        Node intersection = pmManager.getIntersection(columnPmId, rowPmId);
+        OldNode intersection = pmManager.getIntersection(columnPmId, rowPmId);
 
         return accChildren.contains(intersection);
     }

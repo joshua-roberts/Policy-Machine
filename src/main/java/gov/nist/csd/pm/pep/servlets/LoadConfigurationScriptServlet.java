@@ -19,7 +19,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
+import static gov.nist.csd.pm.pip.PIP.getPIP;
 
 public class LoadConfigurationScriptServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
@@ -46,16 +46,9 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
 
                     ConfigurationService service = new ConfigurationService();
                     service.load(config);
-
-                    //build the graph in memory
-                    getDaoManager().getGraphDAO().buildGraph();
                 }
             }
-
-            getDaoManager().getGraphDAO().buildGraph();
-
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
-
         }
         catch ( FileUploadException | InvalidPropertyException | DatabaseException | SQLException | ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);

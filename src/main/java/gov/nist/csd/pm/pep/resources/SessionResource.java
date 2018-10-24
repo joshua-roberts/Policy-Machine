@@ -4,7 +4,6 @@ import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.pep.requests.CreateSessionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pdp.services.SessionService;
-import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -22,7 +21,7 @@ public class SessionResource {
 
     @POST
     public Response createSession(CreateSessionRequest request)
-            throws PmException,
+            throws PMException,
             InvalidKeySpecException, NoSuchAlgorithmException,
             IOException, ClassNotFoundException, SQLException {
         String username = request.getUsername();
@@ -41,6 +40,6 @@ public class SessionResource {
     @Path("/{sessionId}")
     @GET
     public Response getSessionUser(@PathParam("sessionId") String sessionId) throws SessionDoesNotExistException, IOException, SQLException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, InvalidPropertyException {
-        return new ApiResponse(sessionService.getSessionUser(sessionId)).toResponse();
+        return new ApiResponse(sessionService.getSessionUserID(sessionId)).toResponse();
     }
 }

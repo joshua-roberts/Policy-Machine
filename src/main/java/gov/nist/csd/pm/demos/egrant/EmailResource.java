@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.demos.egrant;
 
 import gov.nist.csd.pm.model.exceptions.*;
+import gov.nist.csd.pm.model.graph.OldNode;
 import gov.nist.csd.pm.pdp.analytics.PmAnalyticsEntry;
-import gov.nist.csd.pm.model.graph.Node;
 
 import gov.nist.csd.pm.pep.requests.EmailRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
@@ -38,12 +38,12 @@ public class EmailResource {
         {
 
             List<Long> emailIDs = new ArrayList<>();
-            Node user = analyticsService.getSessionUser(session);
+            OldNode user = analyticsService.getSessionUserID(session);
             System.out.println(" user is " + user.getName());
 
             Map<String, String> properties = new HashMap<>();
             properties.put("inbox",user.getName());
-            Node inbox = nodeService.getNode(null, null, properties);
+            OldNode inbox = nodeService.getNode(null, null, properties);
 
             System.out.println(" name of the inbox " + inbox.getName() + " consists of ");
             List<PmAnalyticsEntry> emails = analyticsService.getAccessibleChildren(inbox.getID(),user.getID());
@@ -61,14 +61,14 @@ public class EmailResource {
                               @QueryParam("process") long process) throws NullNameException, NodeIDExistsException, NodeNotFoundException, NodeNameExistsException, SQLException, DatabaseException, InvalidNodeTypeException, IOException, InvalidPropertyException, ClassNotFoundException, ConfigurationException, NullTypeException, SessionDoesNotExistException, SessionUserNotFoundException, UnexpectedNumberOfNodesException, InvalidAssignmentException, AssociationExistsException, AssignmentExistsException, PropertyNotFoundException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidAssociationException, NoSubjectParameterException, MissingPermissionException, InvalidProhibitionSubjectTypeException, NodeNameExistsInNamespaceException {
     /*
         Steps
-        1. Create OA Node and get the node_id back with email_node_id
+        1. Create OA OldNode and get the node_id back with email_node_id
         2. insert into email and attachment tables
         3. assign the email_node_id to outbox of the user
         4. assign attachment to email_node_id oa
         5. assign email_node_id to inbox of recepient
     */
 
-        Node user = analyticsService.getSessionUser(session);
+        OldNode user = analyticsService.getSessionUserID(session);
 
         Email email = new Email();
         email.setEmailNodeID(request.getEmailNodeID());

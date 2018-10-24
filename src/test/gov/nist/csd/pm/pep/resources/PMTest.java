@@ -3,7 +3,7 @@ package gov.nist.csd.pm.pep.resources;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import gov.nist.csd.pm.pep.response.ApiResponse;
-import gov.nist.csd.pm.pep.response.ApiResponseCodes;
+import gov.nist.csd.pm.model.exceptions.ErrorCodes;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
@@ -52,7 +52,7 @@ class PMTest {
     void tearDown() {
         Response response = given().delete(TEST_URI + "/" + uuid);
         ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+        assertEquals(ErrorCodes.SUCCESS, res.getCode(),
                 String.format("expected a success response code (9000) but received %s", res.getCode()));
 
         deleteSession(sessionID);
@@ -61,7 +61,7 @@ class PMTest {
     LinkedTreeMap buildTestGraph() {
         Response response = given().queryParam("session", sessionID).get(TEST_URI);
         ApiResponse res = new Gson().fromJson(response.asString(), ApiResponse.class);
-        assertEquals(ApiResponseCodes.SUCCESS, res.getCode(),
+        assertEquals(ErrorCodes.SUCCESS, res.getCode(),
                 String.format("expected a success response code (9000) but received %s", res.getCode()));
 
         LinkedTreeMap testGraph = (LinkedTreeMap) res.getEntity();

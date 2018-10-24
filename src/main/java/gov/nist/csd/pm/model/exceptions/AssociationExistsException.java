@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.pep.response.ApiResponseCodes;
+import gov.nist.csd.pm.model.exceptions.ErrorCodes;
 
-public class AssociationExistsException extends PmException {
+public class AssociationExistsException extends PMException {
     public AssociationExistsException(long uaId, long targetId) {
-        super(ApiResponseCodes.ERR_ASSOCIATION_EXISTS, String.format("An association between %d and %d already exists.", uaId, targetId));
+        super(ErrorCodes.ERR_ASSOCIATION_EXISTS, String.format("An association between %d and %d already exists.", uaId, targetId));
     }
 }

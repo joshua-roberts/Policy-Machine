@@ -2,7 +2,7 @@ package gov.nist.csd.pm.demos.cloud;
 
 import com.google.gson.Gson;
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 import gov.nist.csd.pm.pep.requests.UpdateContentRequest;
 import gov.nist.csd.pm.pdp.services.AnalyticsService;
 
@@ -14,7 +14,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.Constants.*;
 import static gov.nist.csd.pm.model.Constants.PATH_PROPERTY;
 
 public class ContentHelper {
@@ -65,7 +64,7 @@ public class ContentHelper {
 
     private static AnalyticsService analyticsService = new AnalyticsService();
 
-    public static String getNodeContents(Node user, long process, long id, Node node) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
+    public static String getNodeContents(OldNode user, long process, long id, OldNode node) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
         analyticsService.checkPermissions(user, process, id, FILE_READ);
 
         String content = null;
@@ -95,11 +94,11 @@ public class ContentHelper {
         return content;
     }
 
-    private static String getLocalContents(Node node) {
+    private static String getLocalContents(OldNode node) {
         return null;
     }
 
-    private static String getAWSContent(Node node) throws PropertyNotFoundException {
+    private static String getAWSContent(OldNode node) throws PropertyNotFoundException {
         String awsURI = "http://localhost:8082/aws/buckets/objects";
         Client client = ClientBuilder.newClient();
         return client
@@ -109,7 +108,7 @@ public class ContentHelper {
                 .get(String.class);
     }
 
-    private static String getGCSContents(Node node) throws PropertyNotFoundException {
+    private static String getGCSContents(OldNode node) throws PropertyNotFoundException {
         String gcsURI = "http://localhost:8084/gcs/buckets/objects";
         Client client = ClientBuilder.newClient();
         return client
@@ -119,7 +118,7 @@ public class ContentHelper {
                 .get(String.class);
     }
 
-    public static ImportFile updateNodeContents(Node user, long process, Node node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
+    public static ImportFile updateNodeContents(OldNode user, long process, OldNode node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
         analyticsService.checkPermissions(user, process, node.getID(), FILE_WRITE);
 
         //get contents
@@ -218,7 +217,7 @@ public class ContentHelper {
         json = response.toString();
         return new Gson().fromJson(json, ImportFile.class);
     }
-    public static ImportFile createNodeContents(Node user, long process, Node node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
+    public static ImportFile createNodeContents(OldNode user, long process, OldNode node, String content) throws PropertyNotFoundException, IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
         analyticsService.checkPermissions(user, process, node.getID(), FILE_WRITE);
 
         //get contents

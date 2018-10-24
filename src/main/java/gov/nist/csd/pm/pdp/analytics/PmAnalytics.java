@@ -6,9 +6,8 @@ import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
 import gov.nist.csd.pm.model.graph.Assignment;
 import gov.nist.csd.pm.model.graph.Association;
 import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
-import gov.nist.csd.pm.pip.dao.DAOManager;
-import gov.nist.csd.pm.pip.graph.PmGraph;
+import gov.nist.csd.pm.pip.PIP;
+import gov.nist.csd.pm.pip.graph.MemGraph;
 import gov.nist.csd.pm.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
@@ -27,8 +26,8 @@ public class PmAnalytics implements Serializable{
         prohibitions = new ArrayList<>();
     }
 
-    private PmGraph getGraph() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        return DAOManager.getDaoManager().getGraphDAO().getGraph();
+    private MemGraph getGraph() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        return PIP.getPIP().getGraphDAO().getGraph();
     }
 
     /**
@@ -37,15 +36,15 @@ public class PmAnalytics implements Serializable{
      * @param target The node to get the access1 rights for
      * @return a HashSet of operations
      */
-    public PmAnalyticsEntry getUserAccessOn(Node user, Node target) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+    public PmAnalyticsEntry getUserAccessOn(Node user, Node target) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         PmAnalyticsEntry entry = new PmAnalyticsEntry(target);
         HashSet<String> ops = new HashSet<>();
 
         //get policy classes
-        HashSet<Node> pcs = getPolicyClasses();
+        HashSet<Long> pcs = getGraph().getPolicies();
 
         //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
-        HashMap<Node, HashSet<String>> dc = getBorderOas(user);
+        HashMap<Long, HashSet<String>> dc = getBorderOas(user);
         if(dc.isEmpty()){
             return entry;
         }
@@ -53,8 +52,8 @@ public class PmAnalytics implements Serializable{
         HashMap<Node, HashMap<Node, HashSet<String>>> D = new HashMap<>();
 
         //add PC to the map to signify end of dfs
-        for(Node pc : pcs){
-            HashMap<Node, HashSet<String>> pcMap = new HashMap<>();
+        for(long pc : pcs){
+            HashMap<Long, HashSet<String>> pcMap = new HashMap<>();
             pcMap.put(pc, new HashSet<>());
             D.put(pc, pcMap);
         }
@@ -116,108 +115,6 @@ public class PmAnalytics implements Serializable{
         entry = new PmAnalyticsEntry(user, ops);
 
         return entry;
-    }
-
-    /**
-     * Get all of the objects a user has access1 to, as well as the access1 rights for each object
-     * @param user The user
-     * @return A Map with Nodes as the keys and a HashSets of access1 rights as the values
-     */
-    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        //Node->{ops}
-        List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
-
-        //get policy classes
-        HashSet<Node> pcs = getPolicyClasses();
-
-        //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
-        HashMap<Node, HashSet<String>> dc = getBorderOas(user);
-        if(dc.isEmpty()){
-            return accessibleObjects;
-        }
-
-        Node vNode = createVNode(dc);
-
-        HashMap<Node, HashMap<Node, HashSet<String>>> D = new HashMap<>();
-
-        for(Node pc : pcs){
-            HashMap<Node, HashSet<String>> pcMap = new HashMap<>();
-            pcMap.put(pc, new HashSet<>());
-            D.put(pc, pcMap);
-        }
-
-        Set<Node> objects = getGraph().getAscesndants(vNode);
-
-        for(Node v : objects){
-            dfs(v, D, dc);
-
-            //for every pc the object reaches check to see if they have a common access1 right.
-            HashSet<String> finalOps = new HashSet<>();
-            HashMap<Node, HashSet<String>> pcMap = D.get(v);
-            boolean addOps = true;
-            for(Node pc : pcMap.keySet()){
-                if(addOps){
-                    finalOps.addAll(pcMap.get(pc));
-                    addOps = false;
-                }else{
-                    finalOps.retainAll(pcMap.get(pc));
-                }
-            }
-            if(!finalOps.isEmpty()) {
-                accessibleObjects.add(new PmAnalyticsEntry(v, finalOps));
-            }
-        }
-
-        getGraph().deleteNode(vNode);
-
-        return accessibleObjects;
-    }
-
-    public synchronized List<PmAnalyticsEntry> getAccessibleNodes(Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        //Node->{ops}
-        List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
-
-        //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
-        HashMap<Node, HashSet<String>> dc = getBorderOas(user);
-        if(dc.isEmpty()){
-            return accessibleObjects;
-        }
-
-        Node vNode = createVNode(dc);
-
-        HashMap<Node, HashMap<Node, HashSet<String>>> D = new HashMap<>();
-
-        for(Node pc : pcs){
-            HashMap<Node, HashSet<String>> pcMap = new HashMap<>();
-            pcMap.put(pc, new HashSet<>());
-            D.put(pc, pcMap);
-        }
-
-        Set<Node> objects = getGraph().getAscesndants(vNode);
-
-        for(Node v : objects){
-            dfs(v, D, dc);
-
-            //for every pc the object reaches check to see if they have a common access1 right.
-            HashSet<String> finalOps = new HashSet<>();
-            HashMap<Node, HashSet<String>> pcMap = D.get(v);
-            boolean addOps = true;
-            for(Node pc : pcMap.keySet()){
-                if(addOps){
-                    finalOps.addAll(pcMap.get(pc));
-                    addOps = false;
-                }else{
-                    finalOps.retainAll(pcMap.get(pc));
-                }
-            }
-            if(!finalOps.isEmpty()) {
-                accessibleObjects.add(new PmAnalyticsEntry(v, finalOps));
-            }
-        }
-
-        getGraph().deleteNode(vNode);
-
-        return accessibleObjects;
     }
 
     /**
@@ -345,8 +242,8 @@ public class PmAnalytics implements Serializable{
             D.put(pc, pcMap);
         }
 
-        Set<Node> objects = getGraph().getChildren(target);
-        for(Node v : objects){
+        HashSet<Long> objects = getGraph().getChildren(target.getID());
+        for(long v : objects){
             dfs(v, D, dc);
 
             //for every pc the object reaches check to see if they have a common access1 right.
@@ -371,33 +268,33 @@ public class PmAnalytics implements Serializable{
         return accessibleObjects;
     }
 
-    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(Node target, Node user, HashSet<Node> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    public synchronized List<PmAnalyticsEntry> getAccessibleChildrenOf(long target, long user, HashSet<Long> pcs) throws ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //Node->{ops}
         List<PmAnalyticsEntry> accessibleObjects = new ArrayList<>();
 
         //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
-        HashMap<Node, HashSet<String>> dc = getBorderOas(user);
+        HashMap<Long, HashSet<String>> dc = getBorderOas(user);
         if(dc.isEmpty()){
             return accessibleObjects;
         }
 
-        Node vNode = createVNode(dc);
+        long vNode = createVNode(dc);
 
-        HashMap<Node, HashMap<Node, HashSet<String>>> D = new HashMap<>();
+        HashMap<Long, HashMap<Long, HashSet<String>>> D = new HashMap<>();
 
-        for(Node pc : pcs){
-            HashMap<Node, HashSet<String>> pcMap = new HashMap<>();
+        for(Long pc : pcs){
+            HashMap<Long, HashSet<String>> pcMap = new HashMap<>();
             pcMap.put(pc, new HashSet<>());
             D.put(pc, pcMap);
         }
 
-        Set<Node> objects = getGraph().getChildren(target);
-        for(Node v : objects){
+        Set<Long> objects = getGraph().getChildren(target);
+        for(Long v : objects){
             dfs(v, D, dc);
 
             //for every pc the object reaches check to see if they have a common access1 right.
             HashSet<String> finalOps = new HashSet<>();
-            HashMap<Node, HashSet<String>> pcMap = D.get(v);
+            HashMap<Long, HashSet<String>> pcMap = D.get(v);
             boolean addOps = true;
             for(Node pc : pcMap.keySet()){
                 if(addOps){
@@ -418,7 +315,7 @@ public class PmAnalytics implements Serializable{
     }
 
     //Utility Methods
-    private synchronized HashMap<Node, HashSet<String>> getBorderOas(Node user) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    private synchronized HashMap<Long, HashSet<String>> getBorderOas(Node user) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         HashMap<Node, HashSet<String>> d = new HashMap<>();
         Set<Assignment> edges = getGraph().outgoingEdgesOf(user);
         HashSet<Assignment> uaEdges = new HashSet<>(edges);
@@ -449,28 +346,23 @@ public class PmAnalytics implements Serializable{
         return d;
     }
 
-    private synchronized void dfs(Node w, HashMap<Node, HashMap<Node, HashSet<String>>> D, HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+    private synchronized void dfs(long w, HashMap<Long, HashMap<Long, HashSet<String>>> D, HashMap<Long, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         D.put(w, new HashMap<>());
         //for loop through nodes
         //if node is not in D, recursive call to dfs
 
-        Set<Assignment> assignments = getGraph().outgoingEdgesOf(w);
+        HashSet<Long> parents = getGraph().getParents(w);
 
         //loop through the parents of node w
-        for(Assignment edge : assignments){
-            if(edge instanceof Association){
-                continue;
-            }
-
+        for(long parent : parents){
             //if the parent is not in the map yet, run dfs on it
-            Node node = edge.getParent();
-            if(!D.containsKey(node)){
-                dfs(node, D, dc);
+            if(!D.containsKey(parent)){
+                dfs(parent, D, dc);
             }
 
             //the first time we get here will be for a PC
-            HashMap<Node, HashSet<String>> pcSet = D.get(node);
-            for(Node pc : pcSet.keySet()){
+            HashMap<Long, HashSet<String>> pcSet = D.get(parent);
+            for(Long pc : pcSet.keySet()){
                 HashSet<String> ops = pcSet.get(pc);
                 HashSet<String> exOps = D.get(w).computeIfAbsent(pc, k -> new HashSet<>());
                 exOps.addAll(ops);
@@ -478,30 +370,22 @@ public class PmAnalytics implements Serializable{
         }
 
         if(dc.containsKey(w)){
-            HashMap<Node, HashSet<String>> pcSet = D.get(w);
+            HashMap<Long, HashSet<String>> pcSet = D.get(w);
             HashSet<String> ops = dc.get(w);
-            for(Node pcId : pcSet.keySet()){
+            for(Long pcId : pcSet.keySet()){
                 D.get(w).get(pcId).addAll(ops);
             }
         }
 
     }
 
-    private synchronized Node createVNode(HashMap<Node, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        Node vNode = new Node("VNODE", NodeType.OA);
-        getGraph().addNode(vNode);
-        for(Node node : dc.keySet()){
-            getGraph().addEdge(node, vNode, new Assignment<>(node, vNode));
+    private synchronized long createVNode(HashMap<Long, HashSet<String>> dc) throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
+        long vID = new Random().nextLong();
+        getGraph().addNode(vID);
+        for(long node : dc.keySet()){
+            getGraph().assign(node, vID);
         }
-        return vNode;
-    }
-
-    private synchronized HashSet<Node> getPolicyClasses() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.PC));
-    }
-
-    private synchronized HashSet<Node> getUsers() throws ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
-        return new HashSet<>(getGraph().getNodesOfType(NodeType.U));
+        return vID;
     }
 
     /**
@@ -559,7 +443,7 @@ public class PmAnalytics implements Serializable{
                 subjectInDeny = prohibition.getSubject().getSubjectID()==subjectId;
             } else {
                 subjectInDeny = (prohibition.getSubject().getSubjectID()==subjectId) ||
-                        getGraph().getAscesndants(prohibition.getSubject().getSubjectID()).contains(getGraph().getNode(subjectId));
+                        getGraph().getAscendants(prohibition.getSubject().getSubjectID()).contains(getGraph().getNode(subjectId));
             }
 
             if(subjectInDeny){
@@ -569,7 +453,7 @@ public class PmAnalytics implements Serializable{
                 HashMap<ProhibitionResource, HashSet<Node>> drAscendants = new HashMap<>();
                 HashSet<Node> nodes = new HashSet<>();
                 for (ProhibitionResource dr : resources) {
-                    HashSet<Node> ascendants = getGraph().getAscesndants(dr.getResourceID());
+                    HashSet<Node> ascendants = getGraph().getAscendants(dr.getResourceID());
                     drAscendants.put(dr, ascendants);
                     nodes.addAll(ascendants);
                 }

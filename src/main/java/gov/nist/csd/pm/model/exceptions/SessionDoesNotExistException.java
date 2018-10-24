@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.pep.response.ApiResponseCodes;
+import gov.nist.csd.pm.model.exceptions.ErrorCodes;
 
-public class SessionDoesNotExistException extends PmException {
+public class SessionDoesNotExistException extends PMException {
     public SessionDoesNotExistException(String sessionId){
-        super(ApiResponseCodes.ERR_SESSION_DOES_NOT_EXIST, String.format("Session with id %s does not exist", sessionId));
+        super(ErrorCodes.ERR_SESSION_DOES_NOT_EXIST, String.format("Session with id %s does not exist", sessionId));
     }
 }

@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Association;
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -13,11 +13,11 @@ public class AssociationsService extends Service{
 
     public void createAssociation(long uaID, long targetID, HashSet<String> ops) throws NodeNotFoundException, DatabaseException, AssociationExistsException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException, InvalidAssociationException {
         //check that the target and user attribute nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
-        Node ua = getGraph().getNode(uaID);
+        OldNode ua = getGraph().getNode(uaID);
         if(ua == null){
             throw new NodeNotFoundException(uaID);
         }
@@ -38,11 +38,11 @@ public class AssociationsService extends Service{
 
     public void updateAssociation(long targetID, long uaID, HashSet<String> ops) throws NodeNotFoundException, AssociationDoesNotExistException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check that the target and user attribute nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
-        Node ua = getGraph().getNode(uaID);
+        OldNode ua = getGraph().getNode(uaID);
         if(ua == null){
             throw new NodeNotFoundException(uaID);
         }
@@ -71,11 +71,11 @@ public class AssociationsService extends Service{
 
     public void deleteAssociation(long targetID, long uaID) throws NoUserParameterException, NodeNotFoundException, AssociationDoesNotExistException, ConfigurationException, DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //check that the nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
-        Node ua = getGraph().getNode(uaID);
+        OldNode ua = getGraph().getNode(uaID);
         if(ua == null){
             throw new NodeNotFoundException(uaID);
         }
@@ -92,12 +92,12 @@ public class AssociationsService extends Service{
         getGraph().deleteAssociation(uaID, targetID);
     }
 
-    private boolean isAssociated(Node ua, Node target) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+    private boolean isAssociated(OldNode ua, OldNode target) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         return getGraph().isAssociated(ua, target);
     }
 
     public List<Association> getTargetAssociations(long targetID) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
@@ -105,7 +105,7 @@ public class AssociationsService extends Service{
     }
 
     public List<Association> getSubjectAssociations(long subjectID) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        Node target = getGraph().getNode(subjectID);
+        OldNode target = getGraph().getNode(subjectID);
         if(target == null){
             throw new NodeNotFoundException(subjectID);
         }

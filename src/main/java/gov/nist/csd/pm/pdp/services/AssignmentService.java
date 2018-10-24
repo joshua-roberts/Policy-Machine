@@ -1,108 +1,83 @@
 package gov.nist.csd.pm.pdp.services;
 
+import gov.nist.csd.pm.demos.ndac.translator.exceptions.PMAccessDeniedException;
 import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.Assignment;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.Node;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.model.graph.Search;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.Constants.*;
-import static gov.nist.csd.pm.model.graph.NodeType.OA;
-import static gov.nist.csd.pm.model.graph.NodeType.PC;
+import static gov.nist.csd.pm.model.constants.Operations.*;
+import static gov.nist.csd.pm.model.constants.Properties.ALL_OPS;
+import static gov.nist.csd.pm.model.graph.nodes.NodeType.OA;
+import static gov.nist.csd.pm.model.graph.nodes.NodeType.PC;
 
 
 public class AssignmentService extends Service{
 
-    private AssociationsService associationsService = new AssociationsService();
-    private AnalyticsService  analyticsService  = new AnalyticsService();
+    /**
+     * Create a new AssignmentService with the given sessionID and processID.
+     */
+    public AssignmentService(String sessionID, long processID) {
+        super(sessionID, processID);
+    }
 
-    public boolean isAssigned(long childID, long parentID) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        //check if the nodes exist
-        Node child = getGraph().getNode(childID);
-        if(child == null){
+    /**
+     * Assign the node with childID
+     * @param childID
+     * @param parentID
+     * @throws PMException
+     * @throws IOException
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public void createAssignment(long childID, long parentID) throws PMException, IOException, SQLException, ClassNotFoundException {
+        boolean exists = getMem().exists(childID);
+        if(!exists){
             throw new NodeNotFoundException(childID);
         }
-        Node parent = getGraph().getNode(parentID);
-        if(parent == null){
-            throw new NodeNotFoundException(parentID);
-        }
-
-        return getGraph().isAssigned(child, parent);
-    }
-
-    public void createAssignment(long childID, long parentID, String session, long process) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException, AssignmentExistsException, InvalidAssignmentException, UnexpectedNumberOfNodesException, AssociationExistsException, InvalidNodeTypeException, PropertyNotFoundException, InvalidAssociationException {
-        Node user = getSessionUser(session);
-
-        Node child = getGraph().getNode(childID);
-        if(child == null){
-            throw new NodeNotFoundException(childID);
-        }
-        Node parent = getGraph().getNode(parentID);
-        if(parent == null){
-            throw new NodeNotFoundException(parentID);
-        }
-
-        //check the user can assign the child
-        canAssign(child, user, process);
-
-        //check the user can assign to the parent
-        canAssignTo(child, parent, user, process);
-
-        //create the assignment
-        createAssignment(child, parent);
-    }
-
-    private void canAssign(Node child, Node user, long process) throws IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        if(child.getType().equals(OA)) {
-            analyticsService.checkPermissions(user, process, child.getID(), ASSIGN_OBJECT_ATTRIBUTE);
-        } else if(child.getType().equals(NodeType.O)) {
-            analyticsService.checkPermissions(user, process, child.getID(), ASSIGN_OBJECT);
-        }
-    }
-
-    private void canAssignTo(Node child, Node parent, Node user, long process) throws IOException, NodeNotFoundException, SQLException, InvalidProhibitionSubjectTypeException, DatabaseException, InvalidPropertyException, NoSubjectParameterException, ClassNotFoundException, ConfigurationException, MissingPermissionException {
-        if(child.getType().equals(OA)) {
-            analyticsService.checkPermissions(user, process, parent.getID(), ASSIGN_OBJECT_ATTRIBUTE_TO);
-        } else if(child.getType().equals(NodeType.O)) {
-            analyticsService.checkPermissions(user, process, parent.getID(), ASSIGN_OBJECT_TO);
-        }
-    }
-
-    public void createAssignment(long childID, long parentID) throws NodeNotFoundException, AssignmentExistsException, DatabaseException, InvalidAssignmentException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, AssociationExistsException, PropertyNotFoundException, InvalidAssociationException {
-        //check if the nodes exist
-        Node child = getGraph().getNode(childID);
-        if(child == null){
-            throw new NodeNotFoundException(childID);
-        }
-        Node parent = getGraph().getNode(parentID);
-        if(parent == null){
+        exists = getMem().exists(parentID);
+        if(!exists){
             throw new NodeNotFoundException(parentID);
         }
         if (isAssigned(childID, parentID) ) {
             throw new AssignmentExistsException("Assignment exists between node " + childID + " and " + parentID);
         }
 
-        Assignment.checkAssignment(child.getType(), parent.getType());
+        PolicyDecider decider = getPolicyDecider();
+        if (!decider.canAssign(childID, parentID)) {
+           throw new PMAccessDeniedException();
+        }
 
-        createAssignment(child, parent);
+        //get the nodes in order to check the assignment is allowed under NGAC
+        Search search = getSearch();
+        Node childNode = search.getNode(childID);
+        Node parentNode = search.getNode(parentID);
+
+        Assignment.checkAssignment(childNode.getType(), parentNode.getType());
+
+        //create the assignment
+        createAssignment(childNode, parentNode);
     }
 
-    protected void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException, NodeNotFoundException, InvalidNodeTypeException, PropertyNotFoundException, AssociationExistsException, InvalidAssociationException, InvalidAssignmentException {
-        Assignment.checkAssignment(child.getType(), parent.getType());
-
+    protected void createAssignment(Node child, Node parent) throws ClassNotFoundException, SQLException, PMException, IOException {
         //create assignment in database
-        getDaoManager().getAssignmentsDAO().createAssignment(child, parent);
+        getDB().assign(child.getID(), parent.getID());
 
         //create assignment in nodes
-        getGraph().createAssignment(child, parent);
+        getMem().assign(child.getID(), parent.getID());
 
         //if the parent is a PC and the child is an OA, create a Association for the super user on the child
         if (parent.getType().equals(PC) && child.getType().equals(OA)) {
-            Node superUA = getSuperUA();
+            Search search = getSearch();
+            Node superUA = search.getNode(getSuperUAID());
 
             //assign UA to PC
             if(!isAssigned(superUA.getID(), parent.getID())) {
@@ -110,32 +85,20 @@ public class AssignmentService extends Service{
             }
 
             //create Association
+            AssociationsService associationsService = new AssociationsService();
             associationsService.createAssociation(superUA.getID(), child.getID(),
                     new HashSet<>(Collections.singleton(ALL_OPS)));
         }
     }
 
-    private Node getSuperUA() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException, InvalidNodeTypeException, PropertyNotFoundException, NodeNotFoundException {
-        HashSet<Node> nodesOfType = getGraph().getNodesOfType(NodeType.UA);
-        for(Node node : nodesOfType) {
-            if(node.getName().equals(SUPER_KEYWORD)) {
-                if(node.hasPropertyKey(NAMESPACE_PROPERTY) && node.getProperty(NAMESPACE_PROPERTY).equals(SUPER_KEYWORD)) {
-                    return node;
-                }
-            }
-        }
-
-        throw new NodeNotFoundException(SUPER_KEYWORD);
-    }
-
     public void deleteAssignment(String session, long process, long childID, long parentID) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException, NoSubjectParameterException, ConfigurationException, InvalidProhibitionSubjectTypeException, NodeNotFoundException, MissingPermissionException, AssignmentDoesNotExistException {
-        Node user = getSessionUser(session);
+        OldNode user = getSessionUserID(session);
 
-        Node child = getGraph().getNode(childID);
+        OldNode child = getGraph().getNode(childID);
         if(child == null){
             throw new NodeNotFoundException(childID);
         }
-        Node parent = getGraph().getNode(parentID);
+        OldNode parent = getGraph().getNode(parentID);
         if(parent == null){
             throw new NodeNotFoundException(childID);
         }
@@ -158,7 +121,12 @@ public class AssignmentService extends Service{
         deleteAssignment(child, parent);
     }
 
-    private void deleteAssignment(Node child, Node parent) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
+    private boolean isAssigned(long childID, long parentID) throws PMException {
+        // check that the childID is in the parent's children.
+        return getMem().getChildren(parentID).contains(new Node().id(childID));
+    }
+
+    private void deleteAssignment(OldNode child, OldNode parent) throws DatabaseException, SQLException, IOException, ClassNotFoundException, InvalidPropertyException {
         //delete assignment in database
         getDaoManager().getAssignmentsDAO().deleteAssignment(child.getID(), parent.getID());
 
@@ -166,12 +134,12 @@ public class AssignmentService extends Service{
         getGraph().deleteAssignment(child, parent);
     }
 
-    public HashSet<Node> getAscendants(long nodeID) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        Node node = getGraph().getNode(nodeID);
+    public HashSet<OldNode> getAscendants(long nodeID) throws NodeNotFoundException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        OldNode node = getGraph().getNode(nodeID);
         if(node == null) {
             throw new NodeNotFoundException(nodeID);
         }
 
-        return getGraph().getAscesndants(nodeID);
+        return getGraph().getAscendants(nodeID);
     }
 }

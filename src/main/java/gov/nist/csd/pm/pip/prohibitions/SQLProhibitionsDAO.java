@@ -1,7 +1,7 @@
-package gov.nist.csd.pm.pip.dao.sql;
+package gov.nist.csd.pm.pip.prohibitions;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.pip.dao.ProhibitionsDAO;
+import gov.nist.csd.pm.pip.db.sql.SQLConnection;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
@@ -10,8 +10,8 @@ import gov.nist.csd.pm.pip.model.DatabaseContext;
 import java.sql.*;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.pip.dao.sql.SQLConnection.arrayToString;
-import static gov.nist.csd.pm.pip.dao.sql.SQLConnection.setToString;
+import static gov.nist.csd.pm.pip.db.sql.SQLHelper.arrayToString;
+import static gov.nist.csd.pm.pip.db.sql.SQLHelper.setToString;
 
 public class SQLProhibitionsDAO implements ProhibitionsDAO {
     private SQLConnection mysql;

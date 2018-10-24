@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.model.graph.Association;
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.model.graph.NodeType;
+import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
 import gov.nist.csd.pm.pdp.analytics.PmAnalyticsEntry;
 import gov.nist.csd.pm.model.exceptions.*;
@@ -19,7 +19,7 @@ public class AnalyticsService extends Service{
     public List<PmAnalyticsEntry> getUsersPermissionsOn(long targetID)
             throws NodeNotFoundException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //check that the target node exists
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
@@ -30,11 +30,11 @@ public class AnalyticsService extends Service{
     public PmAnalyticsEntry getUserPermissionsOn(long targetID, long userID)
             throws NodeNotFoundException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, IOException, DatabaseException, InvalidPropertyException {
         //check that the target and user nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
-        Node user = getGraph().getNode(userID);
+        OldNode user = getGraph().getNode(userID);
         if(user == null){
             throw new NodeNotFoundException(userID);
         }
@@ -58,11 +58,11 @@ public class AnalyticsService extends Service{
         }
 
         //check that the user and target nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
-        Node user = getGraph().getNode(userID);
+        OldNode user = getGraph().getNode(userID);
         if(user == null){
             throw new NodeNotFoundException(userID);
         }
@@ -77,7 +77,7 @@ public class AnalyticsService extends Service{
         }
 
         //check that the user exists
-        Node user = getGraph().getNode(userID);
+        OldNode user = getGraph().getNode(userID);
         if(user == null){
             throw new NodeNotFoundException(userID);
         }
@@ -87,7 +87,7 @@ public class AnalyticsService extends Service{
         return getAnalytics().getAccessibleNodes(user);
     }
 
-    public List<PmAnalyticsEntry> getAccessibleNodes(Node user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+    public List<PmAnalyticsEntry> getAccessibleNodes(OldNode user) throws ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         //get the accessible nodes and add it to the cache
 
         return getAnalytics().getAccessibleNodes(user);
@@ -102,12 +102,12 @@ public class AnalyticsService extends Service{
         ProhibitionSubjectType type = ProhibitionSubjectType.toProhibitionSubjectType(subjectType);
 
         //check that the user and target nodes exist
-        Node target = getGraph().getNode(targetID);
+        OldNode target = getGraph().getNode(targetID);
         if(target == null){
             throw new NodeNotFoundException(targetID);
         }
         if(type.equals(ProhibitionSubjectType.U)) {
-            Node user = getGraph().getNode(subjectID);
+            OldNode user = getGraph().getNode(subjectID);
             if (user == null) {
                 throw new NodeNotFoundException(subjectID);
             }
@@ -116,8 +116,8 @@ public class AnalyticsService extends Service{
         return getAnalytics().getProhibitedOps(targetID, subjectID);
     }
 
-    public void checkPermissions(Node user, long process, long targetID, String reqPerm) throws MissingPermissionException, NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        Node node = getGraph().getNode(targetID);
+    public void checkPermissions(OldNode user, long process, long targetID, String reqPerm) throws MissingPermissionException, NoSubjectParameterException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, ConfigurationException, ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        OldNode node = getGraph().getNode(targetID);
         if(node == null) {
             throw new NodeNotFoundException(targetID);
         }
@@ -148,15 +148,15 @@ public class AnalyticsService extends Service{
         }
     }
 
-    public HashSet<Node> inMemFindPcSet(Node node, NodeType type) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        HashSet<Node> reachable = new HashSet<>();
+    public HashSet<OldNode> inMemFindPcSet(OldNode node, NodeType type) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+        HashSet<OldNode> reachable = new HashSet<>();
 
         // Init the queue, visited
-        ArrayList<Node> queue = new ArrayList<>();
-        HashSet<Node> visited = new HashSet<>();
+        ArrayList<OldNode> queue = new ArrayList<>();
+        HashSet<OldNode> visited = new HashSet<>();
 
         // The current element
-        Node crtNode = null;
+        OldNode crtNode = null;
 
         // Insert the start node into the queue
         queue.add(node);
@@ -172,10 +172,10 @@ public class AnalyticsService extends Service{
                 // Extract its direct descendants. If a descendant is an attribute,
                 // insert it into the queue. If it is a pc, add it to reachable,
                 // if not already there
-                HashSet<Node> hsContainers = getGraph().getParents(crtNode);
-                Iterator<Node> hsiter = hsContainers.iterator();
+                HashSet<OldNode> hsContainers = getGraph().getParents(crtNode);
+                Iterator<OldNode> hsiter = hsContainers.iterator();
                 while (hsiter.hasNext()) {
-                    Node n = hsiter.next();
+                    OldNode n = hsiter.next();
                     if (n.getType().equals(type)) {
                         queue.add(n);
                     } else if (n.getType().equals(NodeType.PC)) {
@@ -187,7 +187,7 @@ public class AnalyticsService extends Service{
         return reachable;
     }
 
-    public boolean inMemUattrHasOpsets(Node uaNode) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
+    public boolean inMemUattrHasOpsets(OldNode uaNode) throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
         return !getGraph().getUattrAssociations(uaNode.getID()).isEmpty();
     }
 
@@ -202,7 +202,7 @@ public class AnalyticsService extends Service{
         // For each returned oa (key in htOa)
         for (Enumeration oas = htOa.keys(); oas.hasMoreElements(); ) {
             long oaID = (long)oas.nextElement();
-            Node node = getGraph().getNode(oaID);
+            OldNode node = getGraph().getNode(oaID);
 
             // Compute oa's required PCs by calling find_pc_set(sOaID).
             HashSet hsReqPcs = inMemFindPcSet(node, NodeType.OA);
@@ -227,7 +227,7 @@ public class AnalyticsService extends Service{
     }
 
     public Hashtable findBorderOaPrivRestrictedInternal(String session) throws SessionDoesNotExistException, IOException, SQLException, InvalidPropertyException, SessionUserNotFoundException, DatabaseException, ClassNotFoundException {
-        Node sessionUser = getSessionUser(session);
+        OldNode sessionUser = getSessionUserID(session);
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
         // An oa is a key in this hashtable. The value is another hashtable that
         // represents a label of the oa. A label is a set of pairs {(op -> pcset)}, with
@@ -236,12 +236,12 @@ public class AnalyticsService extends Service{
         Hashtable htReachableOas = new Hashtable();
 
         // BFS from u (the base node). Prepare a queue.
-        ArrayList<Node> queue = new ArrayList<>();
-        HashSet<Node> visited = new HashSet<>();
-        Node crtNode;
+        ArrayList<OldNode> queue = new ArrayList<>();
+        HashSet<OldNode> visited = new HashSet<>();
+        OldNode crtNode;
 
         // Get u's directly assigned attributes and put them into the queue.
-        HashSet<Node> hsAttrs = getGraph().getParents(sessionUser);
+        HashSet<OldNode> hsAttrs = getGraph().getParents(sessionUser);
         queue.addAll(hsAttrs);
 
         // While the queue has elements, extract an element from the queue
@@ -253,7 +253,7 @@ public class AnalyticsService extends Service{
                 // If the ua has ua -> oa edges
                 if (inMemUattrHasOpsets(crtNode)) {
                     // Find the set of PCs reachable from ua.
-                    HashSet<Node> hsUaPcs = inMemFindPcSet(crtNode, NodeType.UA);
+                    HashSet<OldNode> hsUaPcs = inMemFindPcSet(crtNode, NodeType.UA);
 
                     // From each discovered ua traverse the edges ua -> oa.
 
@@ -268,7 +268,7 @@ public class AnalyticsService extends Service{
                         Association assoc = opsetsIter.next();
                         // If this is an opset
                         // Find the object attributes of this opset.
-                        Node oattr = assoc.getParent();
+                        OldNode oattr = assoc.getParent();
                         // If oa is in htReachableOas
                         if (htReachableOas.containsKey(oattr.getID())) {
                             // Then oa has a label op1 -> hsPcs1, op2 -> hsPcs2,...
@@ -320,7 +320,7 @@ public class AnalyticsService extends Service{
                 HashSet hsDescs = getGraph().getParents(crtNode);
                 Iterator descsIter = hsDescs.iterator();
                 while (descsIter.hasNext()) {
-                    Node d = (Node) descsIter.next();
+                    OldNode d = (OldNode) descsIter.next();
                     if (d.getType().equals(NodeType.UA)) {
                         queue.add(d);
                     }

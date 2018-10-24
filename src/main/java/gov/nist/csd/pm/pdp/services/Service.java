@@ -1,45 +1,124 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.model.graph.Node;
-import gov.nist.csd.pm.pdp.analytics.PmAnalytics;
-import gov.nist.csd.pm.pip.dao.DAOManager;
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.pip.graph.PmGraph;
-import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
+import gov.nist.csd.pm.model.constants.MetaDataNodes;
+import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.model.exceptions.LoadConfigException;
+import gov.nist.csd.pm.model.exceptions.PMException;
+import gov.nist.csd.pm.model.exceptions.SessionDoesNotExistException;
+import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
+import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.model.graph.NGAC;
+import gov.nist.csd.pm.pip.loader.LoaderException;
+import gov.nist.csd.pm.model.graph.Search;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.sql.SQLException;
 
+import static gov.nist.csd.pm.pip.PIP.getPIP;
+
+/**
+ * Parent service class that contains common methods between services.
+ */
 public class Service {
-    public PmGraph getGraph() throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
-        return getDaoManager().getGraphDAO().getGraph();
-    }
 
-    public PmAnalytics getAnalytics() throws ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
-        return getDaoManager().getGraphDAO().getAnalytics();
-    }
+    /**
+     * The ID of the session currently using the service.
+     */
+    private String sessionID;
 
-    public DAOManager getDaoManager() throws ClassNotFoundException, SQLException, DatabaseException, IOException, InvalidPropertyException {
-        return DAOManager.getDaoManager();
-    }
+    /**
+     * THE ID of the process currently using the service.
+     */
+    private long processID;
 
-    public Node getSessionUser(String session) throws SessionUserNotFoundException, SessionDoesNotExistException, ClassNotFoundException, SQLException, InvalidPropertyException, IOException, DatabaseException {
-        long sessionUserID = getDaoManager().getSessionsDAO().getSessionUserID(session);
-        Node node = getGraph().getNode(sessionUserID);
-        if(node == null) {
-            throw new SessionUserNotFoundException(session);
+    /**
+     * Create a new service with a sessionID and processID
+     * @param sessionID the ID of the current session.  This cannot be null.
+     * @param processID the ID of the current process.  This can be 0
+     */
+    public Service(String sessionID, long processID) {
+        if(this.sessionID == null || this.sessionID.isEmpty()) {
+            throw new IllegalArgumentException("The session ID cannot be null or empty");
         }
 
-        return node;
+        this.sessionID = sessionID;
+        this.processID = processID;
     }
 
-    public static String generatePasswordHash(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    /**
+     * Get the ID of the current session.
+     * @return The current session's ID.
+     */
+    protected String getSessionID() {
+        return sessionID;
+    }
+
+    /**
+     * Get the ID of the current process.  The current process can be 0, in which case a process
+     * is not currently being used.
+     * @return the ID of the current process.
+     */
+    long getProcessID() {
+        return processID;
+    }
+
+    /**
+     * Get a new instance of a PolicyDecider.  This is meant be called each time a decision is needed.
+     * @return An instance of a PolicyDecider.
+     */
+    public PolicyDecider getPolicyDecider() throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException {
+        return new MemPolicyDecider(getPIP().getNGACBackend().getNGACMem(), getSessionUserID(), getProcessID());
+    }
+
+    /**
+     * Get the Search instance from the PIP.
+     * @return The implementation of the Search interface from the PIP
+     */
+    public Search getSearch() throws LoaderException, DatabaseException, LoadConfigException {
+        return getPIP().getNGACBackend().getSearch();
+    }
+
+    /**
+     * Get the NGAC database instance from the PIP.
+     * @return The database implementation of the NGAC interface from the PIP
+     */
+    public NGAC getDB() throws LoaderException, DatabaseException, LoadConfigException {
+        return getPIP().getNGACBackend().getDB();
+    }
+
+    /**
+     * Get the NGAC in memory instance from the PIP.
+     * @return The in memory implementation of the NGAC interface from the PIP
+     */
+    public NGAC getMem() throws LoaderException, DatabaseException, LoadConfigException {
+        return getPIP().getNGACBackend().getDB();
+    }
+
+    /**
+     * Get the ID of the User that is associated with the current session ID.
+     * @return The ID of the user node.
+     */
+    public long getSessionUserID() throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException {
+        return getPIP().getSessionsDAO().getSessionUserID(sessionID);
+    }
+
+    /**
+     * Get the ID for the Super User Attribute.
+     */
+    long getSuperUAID() throws PMException {
+        return MetaDataNodes.SUPER_UA_ID;
+    }
+
+    /**
+     * Utility method to hash a password.
+     * @param password The plaintext password to hash.
+     * @return The hash of the password;
+     */
+    static String generatePasswordHash(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
         int iterations = 100;
         char[] chars = password.toCharArray();
         SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
@@ -52,19 +131,13 @@ public class Service {
         return iterations + toHex(salt) + toHex(hash);
     }
 
-    public static void main(String[] args) {
-        try {
-            System.out.println(checkPasswordHash("1000a7a9f891957ded72e7cf7c30f8f1bdc24f29e0319c45ab9169b8183609035f86388287c4171050200db2efbf4a75a1214d6ff612c548be16ba5c20bf88fd8095220db621ea43e0c41d01d6657b33e6d", "super"));
-        }
-        catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static boolean checkPasswordHash(String stored, String toCheck) throws NoSuchAlgorithmException, InvalidKeySpecException{
+    /**
+     * Utility method to check that a plain text password matches a hashed password.
+     * @param stored The hash of the password.
+     * @param toCheck The plaintext password to check against the hashed.
+     * @return True if the passwords match, false otherwise.
+     */
+    static boolean checkPasswordHash(String stored, String toCheck) throws NoSuchAlgorithmException, InvalidKeySpecException{
         String part0 = stored.substring(0, 3);
         String part1 = stored.substring(3, 35);
         String part2 = stored.substring(35);

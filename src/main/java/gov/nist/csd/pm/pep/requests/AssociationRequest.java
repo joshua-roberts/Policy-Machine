@@ -3,16 +3,16 @@ package gov.nist.csd.pm.pep.requests;
 import java.util.HashSet;
 
 public class AssociationRequest {
-    long            uaID;
+    long            sourceID;
     long            targetID;
-    HashSet<String> ops;
+    HashSet<String> operations;
 
-    public long getUaID() {
-        return uaID;
+    public long getSourceID() {
+        return sourceID;
     }
 
-    public void setUaID(long uaID) {
-        this.uaID = uaID;
+    public void setSourceID(long sourceID) {
+        this.sourceID = sourceID;
     }
 
     public long getTargetID() {
@@ -23,11 +23,11 @@ public class AssociationRequest {
         this.targetID = targetID;
     }
 
-    public HashSet<String> getOps() {
-        return ops;
+    public HashSet<String> getOperations() {
+        return operations;
     }
 
-    public void setOps(HashSet<String> ops) {
-        this.ops = ops;
+    public void setOperations(HashSet<String> operations) {
+        this.operations = operations;
     }
 }

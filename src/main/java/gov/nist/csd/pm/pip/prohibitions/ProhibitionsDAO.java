@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.pip.dao;
+package gov.nist.csd.pm.pip.prohibitions;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
 import gov.nist.csd.pm.model.prohibitions.ProhibitionResource;

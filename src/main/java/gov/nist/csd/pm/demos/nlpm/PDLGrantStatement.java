@@ -1,23 +1,23 @@
 package gov.nist.csd.pm.demos.nlpm;
 
-import gov.nist.csd.pm.model.graph.Node;
+import gov.nist.csd.pm.model.graph.OldNode;
 
 import java.util.List;
 
 public class PDLGrantStatement {
-    List<Node> subjects;
-    List<String> operations;
-    List<Node> targets;
-    Node pcNode;
+    List<OldNode> subjects;
+    List<String>  operations;
+    List<OldNode> targets;
+    OldNode       pcNode;
 
-    public PDLGrantStatement(List<Node> subjects, List<String> operations, List<Node> targets, Node pcNode) {
+    public PDLGrantStatement(List<OldNode> subjects, List<String> operations, List<OldNode> targets, OldNode pcNode) {
         this.subjects = subjects;
         this.operations = operations;
         this.targets = targets;
         this.pcNode = pcNode;
     }
 
-    public List<Node> getSubjects() {
+    public List<OldNode> getSubjects() {
         return subjects;
     }
 
@@ -25,11 +25,11 @@ public class PDLGrantStatement {
         return operations;
     }
 
-    public List<Node> getTargets() {
+    public List<OldNode> getTargets() {
         return targets;
     }
 
-    public Node getPcNode() {
+    public OldNode getPcNode() {
         return pcNode;
     }
 }

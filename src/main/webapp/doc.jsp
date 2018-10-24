@@ -463,7 +463,7 @@
                             <h5>Example Response</h5>
                             <pre id="/nodes/{nodeID}-DELETE-response" style="background-color: lightgrey; height: 200px"></pre>
                             <script>
-                                var json = {"code":9000,"message":"Success","entity":"Node successfully deleted"};
+                                var json = {"code":9000,"message":"Success","entity":"OldNode successfully deleted"};
                                 document.getElementBId('/nodes/{nodeID}-DELETE-response').innerHTML = JSON.stringify(json, undefined, 2);
                             </script>
                         </div>

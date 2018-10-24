@@ -26,7 +26,7 @@ public class TranslatorService {
     public TranslateResponse translate(String sql, String username, long process, String host, int port,
                                        String dbUsername, String dbPassword, String database)
             throws SQLException, IOException, ClassNotFoundException,
-            JSQLParserException, PolicyMachineException, PmException, InvalidEntityException {
+            JSQLParserException, PolicyMachineException, PMException, InvalidEntityException {
         Algorithm algorithm = null;
         pmManager = new PmManager(username, process);
 
@@ -52,7 +52,7 @@ public class TranslatorService {
         if(algorithm != null) {
             return new TranslateResponse(id, algorithm.run());
         } else {
-            throw new PmException(6000, "Algorithm returned null");
+            throw new PMException(6000, "Algorithm returned null");
         }
     }
 }
