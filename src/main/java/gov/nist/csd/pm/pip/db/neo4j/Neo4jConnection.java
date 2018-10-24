@@ -1,14 +1,13 @@
 package gov.nist.csd.pm.pip.db.neo4j;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.pip.model.DatabaseContext;
 
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_NEO;
+import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * Object that sotres a connectino to a neo4j database.
@@ -31,7 +30,7 @@ public class Neo4jConnection {
             DriverManager.registerDriver(driver);
             connection = DriverManager.getConnection("jdbc:neo4j:http://" + host + ":" + port + "", username, password);
         } catch (SQLException e) {
-            throw new DatabaseException(ERR_NEO, e.getMessage());
+            throw new DatabaseException(ERR_DB, e.getMessage());
         }
     }
 

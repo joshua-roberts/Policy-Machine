@@ -1,3 +1,4 @@
+/*
 package gov.nist.csd.pm.pep.resources;
 
 import com.google.gson.Gson;
@@ -65,4 +66,4 @@ class SessionResourceTest extends PMTest {
         LinkedTreeMap m = (LinkedTreeMap) res.getEntity();
         assertEquals(3, (double)m.get("id"));
     }
-}
+}*/

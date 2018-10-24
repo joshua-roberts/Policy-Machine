@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_SQL;
+import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
 
 public class SQLConnection {
 
@@ -18,7 +18,7 @@ public class SQLConnection {
             Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + db, username, password);
         } catch (SQLException | ClassNotFoundException e) {
-            throw new DatabaseException(ERR_SQL, e.getMessage());
+            throw new DatabaseException(ERR_DB, e.getMessage());
         }
     }
 
