@@ -12,7 +12,7 @@ public interface NGAC {
     /**
      * Create a new node with the given name, type and properties and add it to the graph.
      * @param ctx The context of the node to create.  This includes the id, name, type, and properties.
-     * @return A OldNode object with it's ID.
+     * @return A Node object with it's ID.
      */
     Node createNode(Node ctx) throws NoIDException, NullTypeException, NullNameException, NullNodeCtxException, DatabaseException, LoadConfigException, LoaderException;
 
@@ -56,14 +56,14 @@ public interface NGAC {
      * @param nodeID The ID of the node to get the children of.
      * @return The Set of NGACNodes that are assigned to the node with the given ID.
      */
-    HashSet<Node> getChildren(long nodeID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException;
+    HashSet<Node> getChildren(long nodeID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException;
 
     /**
      * Get the set of nodes that the node with the given ID is assigned to.
      * @param nodeID The ID of the node to get the parents of.
      * @return The Set of NGACNodes that are assigned to the node with the given ID.
      */
-    HashSet<Node> getParents(long nodeID) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException;
+    HashSet<Node> getParents(long nodeID) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException, MissingPermissionException;
 
     /**
      * Assign the child node to the parent node.
@@ -86,7 +86,7 @@ public interface NGAC {
      * @param targetID The ID of the target node.
      * @param operations A Set of operations to add to the Association.
      */
-    void associate(long uaID, long targetID, Collection<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException;
+    void associate(long uaID, long targetID, HashSet<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException;
 
     /**
      * Delete the Association between the User Attribute and Target node.
@@ -102,7 +102,7 @@ public interface NGAC {
      * @param sourceID The ID of the source node.
      * @return A Map of the target node IDs and the operations for each association.
      */
-    HashMap<Long, Collection<String>> getSourceAssociations(long sourceID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException;
+    HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException;
 
     /**
      * Retrieve the associations the given node is the target of.  The target node can be an Object Attribute or a User
@@ -111,5 +111,5 @@ public interface NGAC {
      * @param targetID the ID of the target node.
      * @return A Map of the source Ids and the operations for each association.
      */
-    HashMap<Long, Collection<String>> getTargetAssociations(long targetID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException;
+    HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException;
 }

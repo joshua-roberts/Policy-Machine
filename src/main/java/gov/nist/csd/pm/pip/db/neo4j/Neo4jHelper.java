@@ -24,7 +24,7 @@ import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
 public class Neo4jHelper {
 
     /**
-     * Given a ResultSet, extract a list of nodes. Each element in the ResultSet is a json representation of a OldNode
+     * Given a ResultSet, extract a list of nodes. Each element in the ResultSet is a json representation of a Node
      */
     public static HashSet<Node> getNodesFromResultSet(ResultSet rs) throws DatabaseException {
         try {
@@ -41,7 +41,7 @@ public class Neo4jHelper {
     }
 
     /**
-     * Given a json representation of an OldNode, return an OldNode object.
+     * Given a json representation of an Node, return an Node object.
      */
     public static Node getNodeFromJson(String json) throws InvalidNodeTypeException {
         // first, convert the json to a map
@@ -64,10 +64,10 @@ public class Neo4jHelper {
     /**
      * Convert a Colection of Strings to a cypher array string.
      * (i.e. ["read", "write"] to "['read', 'write']"
-     * @param c The Collection to convert to a string
-     * @return A string representation of the given Collection
+     * @param c The HashSet to convert to a string
+     * @return A string representation of the given HashSet
      */
-    public static String setToCypherArray(Collection<String> c) {
+    public static String setToCypherArray(HashSet<String> c) {
         String str = "[";
         for (String op : c) {
             op = "'" + op + "'";

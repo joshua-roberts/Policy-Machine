@@ -1,12 +1,12 @@
 package gov.nist.csd.pm.model.exceptions;
 
-import gov.nist.csd.pm.model.graph.OldNode;
+import gov.nist.csd.pm.model.graph.nodes.Node;
 import gov.nist.csd.pm.model.graph.nodes.NodeType;
 
 import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_INVALID_ASSOCIATION;
 
 public class InvalidAssociationException extends PMException {
-    public InvalidAssociationException(OldNode ua, OldNode target){
+    public InvalidAssociationException(Node ua, Node target){
         super(ERR_INVALID_ASSOCIATION, "Cannot associate a node of type " + ua.getType() + " to a node with type " + target.getType());
     }
 

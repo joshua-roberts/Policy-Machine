@@ -1,15 +1,11 @@
 package gov.nist.csd.pm.model.graph.relationships;
 
-import org.jgrapht.graph.DefaultEdge;
-
-import java.io.Serializable;
-
 /**
  * This class will serve as a parent class for Assignments and Associations
  */
-public class NGACRelationship<V> extends DefaultEdge implements Serializable {
-    private long sourceID;
-    private long targetID;
+public class NGACRelationship {
+    long sourceID;
+    long targetID;
 
     public NGACRelationship() {
 

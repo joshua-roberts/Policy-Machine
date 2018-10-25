@@ -224,7 +224,7 @@ public class NGACNeo4j implements NGAC {
                 "CREATE (a)-[:assigned_to]->(b)", childCtx.getType(), childCtx.getID(), parentCtx.getType(), parentCtx.getID());
         try(
                 Connection conn = neo4j.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(cypher);
+                PreparedStatement stmt = conn.prepareStatement(cypher)
         ){
             stmt.executeQuery();
         }
@@ -243,7 +243,7 @@ public class NGACNeo4j implements NGAC {
         String cypher = String.format("match (a:%s{id: %d})-[r:assigned_to]->(b:%s{id: %d}) delete r", childCtx.getType(), childCtx.getID(), parentCtx.getType(), parentCtx.getID());
         try(
                 Connection conn = neo4j.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(cypher);
+                PreparedStatement stmt = conn.prepareStatement(cypher)
         ){
             stmt.executeQuery();
         }
@@ -253,13 +253,13 @@ public class NGACNeo4j implements NGAC {
     }
 
     @Override
-    public void associate(long uaID, long targetID, Collection<String> operations) throws DatabaseException {
+    public void associate(long uaID, long targetID, HashSet<String> operations) throws DatabaseException {
         String operationsStr = Neo4jHelper.setToCypherArray(operations);
         String cypher = String.format("MATCH (ua:UA{id: %d}), (target{id: %d}) " +
                 "merge (ua)-[a:associated_with]->(target) set a.operations = %s", uaID, targetID, operationsStr);
         try(
                 Connection conn = neo4j.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(cypher);
+                PreparedStatement stmt = conn.prepareStatement(cypher)
         ) {
             stmt.executeQuery();
         }
@@ -283,14 +283,14 @@ public class NGACNeo4j implements NGAC {
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getSourceAssociations(long sourceID) throws DatabaseException {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws DatabaseException {
         String cypher = String.format("match(source:UA{id:%d})-[a:associated_with]->(target) return target.id, a.operations", sourceID);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            HashMap<Long, Collection<String>> associations = new HashMap<>();
+            HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long targetID = rs.getLong(1);
                 //get operations as json
@@ -309,14 +309,14 @@ public class NGACNeo4j implements NGAC {
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getTargetAssociations(long targetID) throws DatabaseException {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws DatabaseException {
         String cypher = String.format("match(source)<-[a:associated_with]-(target{id:%d}) return target.id, a.operations", targetID);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            HashMap<Long, Collection<String>> associations = new HashMap<>();
+            HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
                 //get operations as json
                 String opsStr = rs.getString(2);

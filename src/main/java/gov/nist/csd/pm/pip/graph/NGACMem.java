@@ -46,7 +46,8 @@ public class NGACMem implements NGAC {
             graph.addEdge(association.getSourceID(), association.getTargetID());
         }
 
-        pcs = new HashSet<>();
+        //load the policies
+        pcs = loader.getPolicies();
     }
 
     /**
@@ -71,7 +72,7 @@ public class NGACMem implements NGAC {
      * the ID of the context needs to be set to a non zero value.  An exception will be thrown if the ID is zero.
      * @param ctx The context of the node to create.  This includes the id, name, type, and properties.
      *            The name and properties will be ignored in this implementation.
-     * @return An empty OldNode since only IDs are stored in this implementation.
+     * @return An empty Node since only IDs are stored in this implementation.
      * @throws PMException When the node context is null, the ID is zero, or the type is null.
      */
     @Override
@@ -90,12 +91,8 @@ public class NGACMem implements NGAC {
             addNode(ctx.getID());
         }
 
-        //return the OldNode with the given info about the node
-        return new Node()
-                .id(ctx.getID())
-                .name(ctx.getName())
-                .type(ctx.getType())
-                .properties(ctx.getProperties());
+        //return the Node with the given info about the node
+        return new Node(ctx.getID(), ctx.getType());
     }
 
     /**
@@ -123,7 +120,7 @@ public class NGACMem implements NGAC {
     }
 
     /**
-     * Retrieve the set of all nodes in the graph. Each element in the set will be an OldNode but will only contain the
+     * Retrieve the set of all nodes in the graph. Each element in the set will be an Node but will only contain the
      * ID of the node, no further information is stored in this implementation.
      * @return The set of all node IDs in the graph.
      */
@@ -189,7 +186,7 @@ public class NGACMem implements NGAC {
             throw new NullNodeCtxException();
         }
 
-        graph.addEdge(childCtx.getID(), parentCtx.getID());
+        graph.addEdge(childCtx.getID(), parentCtx.getID(), new NGACAssignment(childCtx.getID(), parentCtx.getID()));
     }
 
     @Override
@@ -203,7 +200,7 @@ public class NGACMem implements NGAC {
     }
 
     @Override
-    public void associate(long uaID, long targetID, Collection<String> operations) {
+    public void associate(long uaID, long targetID, HashSet<String> operations) {
         if(graph.containsEdge(uaID, targetID)) {
             // if the association exists update the operations
             NGACAssociation assoc = (NGACAssociation) graph.getEdge(uaID, targetID);
@@ -219,8 +216,8 @@ public class NGACMem implements NGAC {
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getSourceAssociations(long sourceID) {
-        HashMap<Long, Collection<String>> assocs = new HashMap<>();
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) {
+        HashMap<Long, HashSet<String>> assocs = new HashMap<>();
         Set<NGACRelationship> rels = graph.outgoingEdgesOf(sourceID);
         for(NGACRelationship rel : rels){
             if(rel instanceof NGACAssociation){
@@ -232,8 +229,8 @@ public class NGACMem implements NGAC {
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getTargetAssociations(long targetID) {
-        HashMap<Long, Collection<String>> assocs = new HashMap<>();
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) {
+        HashMap<Long, HashSet<String>> assocs = new HashMap<>();
         Set<NGACRelationship> rels = graph.incomingEdgesOf(targetID);
         for(NGACRelationship rel : rels){
             if(rel instanceof NGACAssociation){

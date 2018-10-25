@@ -20,7 +20,7 @@ import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
-class OldNodeResourceTest extends PMTest {
+class NodeResourceTest extends PMTest {
 
     private static final String NODES_URI = BASE_URI + "/nodes";
 

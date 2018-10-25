@@ -7,6 +7,7 @@ import gov.nist.csd.pm.model.graph.nodes.NodeType;
  * This object represents an Assignment in a NGAC graph
  */
 public class NGACAssignment extends NGACRelationship {
+
     public NGACAssignment(long childID, long parentID) {
         super(childID, parentID);
     }

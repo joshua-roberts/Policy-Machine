@@ -8,10 +8,12 @@ import gov.nist.csd.pm.pip.graph.NGACNeo4j;
 import gov.nist.csd.pm.pip.graph.NGACSQL;
 import gov.nist.csd.pm.pip.loader.LoaderException;
 import gov.nist.csd.pm.pip.loader.Neo4jLoader;
+import gov.nist.csd.pm.pip.loader.SQLLoader;
 import gov.nist.csd.pm.pip.model.DatabaseContext;
 import gov.nist.csd.pm.pip.model.NGACBackend;
 import gov.nist.csd.pm.model.graph.Search;
 import gov.nist.csd.pm.pip.search.Neo4jSearch;
+import gov.nist.csd.pm.pip.search.SQLSearch;
 import gov.nist.csd.pm.pip.sessions.Neo4jSessionsDAO;
 import gov.nist.csd.pm.pip.sessions.SQLSessionsDAO;
 import gov.nist.csd.pm.pip.sessions.SessionsDAO;
@@ -86,22 +88,22 @@ public class PIP {
     private void setupBackend() throws DatabaseException, LoaderException {
         DatabaseContext ctx = new DatabaseContext(host, port, username, password, schema);
 
-        NGAC ngac;
+        NGAC db;
+        NGAC mem;
+        Search search;
         if(database.equalsIgnoreCase("neo4j")) {
-            ngac = new NGACNeo4j(ctx);
+            db = new NGACNeo4j(ctx);
+            search = new Neo4jSearch(ctx);
+            mem = new NGACMem(new Neo4jLoader(ctx));
             sessionsDAO = new Neo4jSessionsDAO(ctx);
         } else {
-            ngac = new NGACSQL(ctx);
+            db = new NGACSQL(ctx);
+            search = new SQLSearch(ctx);
+            mem = new NGACMem(new SQLLoader(ctx));
             sessionsDAO = new SQLSessionsDAO(ctx);
         }
 
-        // instantiate the in memory graph
-        NGACMem memGraph = new NGACMem(new Neo4jLoader(ctx));
-
-        // instantiate the search
-        Search search = new Neo4jSearch(ctx);
-
-        this.backend = new NGACBackend(ngac, memGraph, search);
+        this.backend = new NGACBackend(db, mem, search);
     }
 
     public NGACBackend getNGACBackend() {

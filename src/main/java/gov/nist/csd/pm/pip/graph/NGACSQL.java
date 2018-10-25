@@ -279,7 +279,7 @@ public class NGACSQL implements NGAC {
     }
 
     @Override
-    public void associate(long uaID, long targetID, Collection<String> operations) throws DatabaseException {
+    public void associate(long uaID, long targetID, HashSet<String> operations) throws DatabaseException {
         String ops = "";
         for (String op : operations) {
             ops += op + ",";
@@ -351,12 +351,12 @@ public class NGACSQL implements NGAC {
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getSourceAssociations(long sourceID)  {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID)  {
         return null;
     }
 
     @Override
-    public HashMap<Long, Collection<String>> getTargetAssociations(long targetID)  {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID)  {
         return null;
     }
 }

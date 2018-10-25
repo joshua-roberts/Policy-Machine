@@ -22,12 +22,12 @@ public interface Search {
      * @param properties The properties of the nodes to search for.
      * @return A set of nodes that match the given search criteria.
      */
-    HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException;
+    HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException, MissingPermissionException;
 
     /**
      * Retrieve the node with the given ID.
      * @param id the ID of the node to get.
-     * @return The OldNode with the given ID.
+     * @return The Node with the given ID.
      */
     Node getNode(long id) throws NodeNotFoundException, DatabaseException, InvalidNodeTypeException, SessionDoesNotExistException, LoadConfigException, LoaderException, MissingPermissionException;
 }

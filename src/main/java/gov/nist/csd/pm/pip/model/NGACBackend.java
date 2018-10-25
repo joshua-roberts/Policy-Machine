@@ -9,7 +9,7 @@ public class NGACBackend {
     private NGAC    ngacMem;
     private Search  search;
 
-    public NGACBackend(NGAC ngacDB, NGACMem ngacMem, Search search) {
+    public NGACBackend(NGAC ngacDB, NGAC ngacMem, Search search) {
         this.ngacDB = ngacDB;
         this.ngacMem = ngacMem;
         this.search = search;

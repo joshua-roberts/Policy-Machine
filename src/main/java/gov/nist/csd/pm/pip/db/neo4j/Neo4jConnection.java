@@ -14,7 +14,10 @@ import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
  */
 public class Neo4jConnection {
 
-    private Connection connection;
+    private String host;
+    private int port;
+    private String username;
+    private String password;
 
     /**
      * Establishes a new connection to a Neo4j database.
@@ -25,10 +28,14 @@ public class Neo4jConnection {
      * @throws DatabaseException When there's ann error connecting to the Neo4j instance.
      */
     public Neo4jConnection(String host, int port, String username, String password) throws DatabaseException {
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+
         try {
             Driver driver = new org.neo4j.jdbc.Driver();
             DriverManager.registerDriver(driver);
-            connection = DriverManager.getConnection("jdbc:neo4j:http://" + host + ":" + port + "", username, password);
         } catch (SQLException e) {
             throw new DatabaseException(ERR_DB, e.getMessage());
         }
@@ -37,7 +44,12 @@ public class Neo4jConnection {
     /**
      * @return The connection to the Neo4j instance.
      */
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws DatabaseException {
+        try {
+            return DriverManager.getConnection("jdbc:neo4j:http://" + host + ":" + port + "", username, password);
+        }
+        catch (SQLException e) {
+            throw new DatabaseException(ERR_DB, e.getMessage());
+        }
     }
 }

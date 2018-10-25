@@ -4,23 +4,24 @@ import gov.nist.csd.pm.model.exceptions.InvalidAssociationException;
 import gov.nist.csd.pm.model.graph.nodes.NodeType;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * This object represents an Association in a NGAC graph
  */
 public class NGACAssociation extends NGACRelationship {
-    private Collection<String> operations;
+    private HashSet<String> operations;
 
-    public NGACAssociation(long uaID, long targetID, Collection<String> operations) {
+    public NGACAssociation(long uaID, long targetID, HashSet<String> operations) {
         super(uaID, targetID);
         this.operations = operations;
     }
 
-    public Collection<String> getOperations() {
+    public HashSet<String> getOperations() {
         return operations;
     }
 
-    public void setOperations(Collection<String> operations) {
+    public void setOperations(HashSet<String> operations) {
         this.operations = operations;
     }
 

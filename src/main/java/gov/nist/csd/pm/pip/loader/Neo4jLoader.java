@@ -61,7 +61,7 @@ public class Neo4jLoader implements Loader {
                 nodeIDs.add(rs.getLong(1));
             }
             return nodeIDs;
-        } catch (SQLException e) {
+        } catch (SQLException | DatabaseException e) {
             throw new LoaderException(e.getMessage());
         }
     }
@@ -79,7 +79,7 @@ public class Neo4jLoader implements Loader {
                 assignments.add(new NGACAssignment(rs.getLong(1), rs.getLong(2)));
             }
             return assignments;
-        } catch (SQLException e) {
+        } catch (SQLException | DatabaseException e) {
             throw new LoaderException(e.getMessage());
         }
     }
@@ -98,7 +98,7 @@ public class Neo4jLoader implements Loader {
                 associations.add(new NGACAssociation(rs.getLong(1), rs.getLong(2), ops));
             }
             return associations;
-        } catch (SQLException e) {
+        }  catch (SQLException | DatabaseException e) {
             throw new LoaderException(e.getMessage());
         }
     }

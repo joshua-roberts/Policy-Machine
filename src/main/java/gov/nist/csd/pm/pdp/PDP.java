@@ -106,11 +106,11 @@ public class PDP implements NGAC, Search {
      * where we check the user has the correct permissions.
      *
      * @param ctx The context of the node to create.  This includes the id, name, type, and properties.
-     * @return The OldNode representing the node that was just created.
+     * @return The Node representing the node that was just created.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
-     * @throws NullNodeCtxException If the provided OldNode context is null.
+     * @throws NullNodeCtxException If the provided Node context is null.
      * @throws NoIDException If the given node context does not already have the ID.
      * @throws NullTypeException If the given node context does not have a type.
      * @throws NullNameException If the given node context does not have a name.
@@ -158,7 +158,7 @@ public class PDP implements NGAC, Search {
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
-     * @throws NullNodeCtxException If the provided OldNode context is null.
+     * @throws NullNodeCtxException If the provided Node context is null.
      * @throws NoIDException If the node context does not have an ID when creating a node in the in-memory graph
      * @throws NullTypeException If the given node context does not have a type.
      * @throws NullNameException If the given node context does not have a name.
@@ -211,11 +211,11 @@ public class PDP implements NGAC, Search {
     /**
      * Update the node in the database and in the in-memory graph
      * @param ctx The context of the node to update. This includes the id, name, type, and properties.
-     * @throws NullNodeCtxException If either of the provided OldNode contexts are null.
+     * @throws NullNodeCtxException If either of the provided Node contexts are null.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
-     * @throws NullNodeCtxException If the provided OldNode context is null.
+     * @throws NullNodeCtxException If the provided Node context is null.
      */
     @Override
     public void updateNode(Node ctx) throws LoadConfigException, DatabaseException, LoaderException, NullNodeCtxException, NoIDException {
@@ -308,7 +308,7 @@ public class PDP implements NGAC, Search {
      * Get the children of the node from the graph.  Get the children from the database to ensure all node information
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID The ID of the node to get the children of.
-     * @return The children of the given OldNode that the user has any permissions on.
+     * @return The children of the given Node that the user has any permissions on.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
@@ -316,7 +316,7 @@ public class PDP implements NGAC, Search {
 
      */
     @Override
-    public HashSet<Node> getChildren(long nodeID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException {
+    public HashSet<Node> getChildren(long nodeID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
         //get the children from the db
         HashSet<Node> children = getDB().getChildren(nodeID);
         //filter any nodes that the user doesn't have any permissions on
@@ -327,14 +327,14 @@ public class PDP implements NGAC, Search {
      * Get the parents of the node from the graph.  Get the parents from the database to ensure all node information
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID The ID of the node to get the parents of.
-     * @return The parents of the given OldNode that the user has any permissions on.
+     * @return The parents of the given Node that the user has any permissions on.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      */
     @Override
-    public HashSet<Node> getParents(long nodeID) throws LoadConfigException, DatabaseException, LoaderException, SessionDoesNotExistException {
+    public HashSet<Node> getParents(long nodeID) throws LoadConfigException, DatabaseException, LoaderException, SessionDoesNotExistException, MissingPermissionException {
         //get the children from the db
         HashSet<Node> children = getDB().getParents(nodeID);
         //filter any nodes that the user doesn't have any permissions on
@@ -346,7 +346,7 @@ public class PDP implements NGAC, Search {
      * and allowed to assign something to the parent.
      * @param childCtx The child ID and type.
      * @param parentCtx The parent ID and type.
-     * @throws NullNodeCtxException If either of the provided OldNode contexts are null.
+     * @throws NullNodeCtxException If either of the provided Node contexts are null.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
@@ -390,7 +390,7 @@ public class PDP implements NGAC, Search {
      * and allowed to assign something to the parent.
      * @param childCtx The ID and type of the child node.
      * @param parentCtx The ID and type of the parent node.
-     * @throws NullNodeCtxException If either of the provided OldNode contexts are null.
+     * @throws NullNodeCtxException If either of the provided Node contexts are null.
      * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
@@ -439,7 +439,7 @@ public class PDP implements NGAC, Search {
      * @throws MissingPermissionException If the current user does not the correct permissions.
      */
     @Override
-    public void associate(long uaID, long targetID, Collection<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException {
+    public void associate(long uaID, long targetID, HashSet<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException {
         //check the user can associate the source and target nodes
         PolicyDecider decider = getPolicyDecider();
         if(!decider.hasPermissions(uaID, ASSOCIATE)) {
@@ -453,7 +453,7 @@ public class PDP implements NGAC, Search {
         associateInBackend(uaID, targetID, operations);
     }
 
-    private void associateInBackend(long uaID, long targetID, Collection<String> operations) throws LoadConfigException, DatabaseException, LoaderException, SessionDoesNotExistException, MissingPermissionException {
+    private void associateInBackend(long uaID, long targetID, HashSet<String> operations) throws LoadConfigException, DatabaseException, LoaderException, SessionDoesNotExistException, MissingPermissionException {
         //create association in db
         getDB().associate(uaID, targetID, operations);
         //create association in-memory
@@ -495,7 +495,7 @@ public class PDP implements NGAC, Search {
      * @return A map of the target ID and operations for each association the given node is the source of.
      */
     @Override
-    public HashMap<Long, Collection<String>> getSourceAssociations(long sourceID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
         //check the user can get the associations of the source node
         PolicyDecider decider = getPolicyDecider();
         if(!decider.hasPermissions(sourceID, GET_ASSOCIATIONS)){
@@ -512,7 +512,7 @@ public class PDP implements NGAC, Search {
      * @return A map of the source ID and operations for each association the given node is the target of.
      */
     @Override
-    public HashMap<Long, Collection<String>> getTargetAssociations(long targetID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
         //check the user can get the associations of the source node
         PolicyDecider decider = getPolicyDecider();
         if(!decider.hasPermissions(targetID, GET_ASSOCIATIONS)){
@@ -531,7 +531,7 @@ public class PDP implements NGAC, Search {
      * @return The set of nodes that match the provided search criteria.
      */
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException {
+    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException, MissingPermissionException {
         // user the PIP searcher to search for the intended nodes
         HashSet<Node> nodes = getSearch().search(name, type, properties);
         //filter out any nodes the user doesn't have any permissions on
