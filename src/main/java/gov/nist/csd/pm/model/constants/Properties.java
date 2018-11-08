@@ -1,5 +1,8 @@
 package gov.nist.csd.pm.model.constants;
 
+/**
+ * Common properties used in the Policy Machine
+ */
 public class Properties {
     public static final int HASH_LENGTH = 163;
     public static final String SUPER_KEYWORD      = "super";

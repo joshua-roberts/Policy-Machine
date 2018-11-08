@@ -4,25 +4,31 @@ import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
 
 import java.io.Serializable;
 
+/**
+ * Allowed types of nodes in an NGAC Graph
+ *
+ * OA = Object Attribute
+ * UA = User Attribute
+ * U = User
+ * O = Object
+ * PC = Policy Class
+ * OS = Operation Set
+ */
 public enum NodeType implements Serializable {
-    C("C"),
     OA("OA"),
     UA("UA"),
     U("U"),
     O("O"),
     PC("PC"),
-    P("P"),
     OS("OS");
 
-    //Node_Type ids
-    public static final int C_ID  = 1;
+    //NodeType ids
     public static final int PC_ID = 2;
     public static final int UA_ID = 3;
     public static final int U_ID  = 4;
     public static final int OA_ID = 5;
     public static final int O_ID  = 6;
     public static final int OS_ID = 7;
-    public static final int S_ID  = 8;
 
     private String label;
     NodeType(String label){
@@ -32,13 +38,18 @@ public enum NodeType implements Serializable {
         return label;
     }
 
+    /**
+     * Given a string, return the matching NodeType. If the type is null or not one of the types listed above,
+     * an InvalidNodeTypeExceptino will be thrown.
+     * @param type The String type to convert to a NodeType.
+     * @return The equivalent NodeType of the given String.
+     * @throws InvalidNodeTypeException When an invalid or null type is provided.
+     */
     public static NodeType toNodeType(String type) throws InvalidNodeTypeException {
         if(type == null){
-            throw new InvalidNodeTypeException(type);
+            throw new InvalidNodeTypeException(null);
         }
         switch (type.toUpperCase()){
-            case "C":
-                return NodeType.C;
             case "OA":
                 return NodeType.OA;
             case "UA":
@@ -49,8 +60,6 @@ public enum NodeType implements Serializable {
                 return NodeType.O;
             case "PC":
                 return NodeType.PC;
-            case "D":
-                return NodeType.P;
             case "OS":
                 return NodeType.OS;
             default:
@@ -64,8 +73,6 @@ public enum NodeType implements Serializable {
         }
 
         switch(typeID){
-            case 1:
-                return NodeType.C;
             case 2:
                 return NodeType.PC;
             case 3:
@@ -89,8 +96,6 @@ public enum NodeType implements Serializable {
         }
 
         switch (type.toUpperCase()){
-            case "C":
-                return NodeType.C_ID;
             case "OA":
                 return NodeType.OA_ID;
             case "UA":
@@ -103,8 +108,6 @@ public enum NodeType implements Serializable {
                 return NodeType.PC_ID;
             case "OS":
                 return NodeType.OS_ID;
-            case "S":
-                return NodeType.S_ID;
             default:
                 throw new InvalidNodeTypeException(type);
         }

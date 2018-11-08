@@ -5,6 +5,13 @@ import gov.nist.csd.pm.model.exceptions.InvalidProhibitionSubjectTypeException;
 
 import java.io.Serializable;
 
+/**
+ * The allowed types of subjects for a prohibition.
+ *
+ * UA = User Attribute
+ * U = User
+ * P = Process
+ */
 public enum ProhibitionSubjectType  implements Serializable {
     UA("UA"),
     U("U"),
@@ -18,9 +25,15 @@ public enum ProhibitionSubjectType  implements Serializable {
         return value;
     }
 
-    public static ProhibitionSubjectType toProhibitionSubjectType(String subjectType) throws InvalidProhibitionSubjectTypeException {
+    /**
+     * Convert a string to a ProhibitionSubjectType.
+     * @param subjectType The string to convert.
+     * @return The ProhibitionSubjectType that is equivalent to the provided String.
+     * @throws InvalidProhibitionSubjectTypeException When the provided String is not a valid type ir is null.
+     */
+    public static ProhibitionSubjectType toType(String subjectType) throws InvalidProhibitionSubjectTypeException {
         if(subjectType == null){
-            throw new InvalidProhibitionSubjectTypeException(subjectType);
+            throw new InvalidProhibitionSubjectTypeException(null);
         }
         switch (subjectType.toUpperCase()){
             case "UA":

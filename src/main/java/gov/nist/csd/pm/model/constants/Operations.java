@@ -1,7 +1,9 @@
 package gov.nist.csd.pm.model.constants;
 
+/**
+ * Constants for operations in the Policy Machine
+ */
 public class Operations {
-    //operations
     public static final String FILE_WRITE = "file write";
     public static final String FILE_READ = "file read";
     public static final String ASSIGN_OBJECT_ATTRIBUTE = "assign object attribute";
@@ -30,4 +32,6 @@ public class Operations {
     public static final String GET_ACCESSIBLE_CHILDREN = "get accessible children";
     public static final String GET_PROHIBITED_OPS = "get prohibited ops";
     public static final String GET_ACCESSIBLE_NODES = "get accessible nodes";
+    public static final String PROHIBIT_SUBJECT = "prohibit subject";
+    public static final String PROHIBIT_RESOURCE = "prohibit resource";
 }

@@ -7,7 +7,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * This object represents an Association in a NGAC graph
+ * This object represents an Association in a NGAC graph. An association is a relationship between two nodes,
+ * similar to an assignment, except an Association has a set of operations included.
  */
 public class NGACAssociation extends NGACRelationship {
     private HashSet<String> operations;
@@ -25,6 +26,13 @@ public class NGACAssociation extends NGACRelationship {
         this.operations = operations;
     }
 
+    /**
+     * Check if the provided types create a valid association.
+     * @param uaType The type of the source node in the association. This should always be a user Attribute,
+     *               so an InvalidAssociationException will be thrown if it's not.
+     * @param targetType The type of the target node. This can be either an Object Attribute or a User Attribute.
+     * @throws InvalidAssociationException When the provided types do not make a valid Association under NGAC
+     */
     public static void checkAssociation(NodeType uaType, NodeType targetType) throws InvalidAssociationException {
         switch (uaType) {
             case PC:
@@ -35,6 +43,7 @@ public class NGACAssociation extends NGACRelationship {
             case UA:
                 switch (targetType) {
                     case OA:
+                    case UA:
                         break;
                     default: throw new InvalidAssociationException(uaType, targetType);
                 }

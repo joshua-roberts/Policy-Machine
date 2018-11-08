@@ -3,6 +3,9 @@ package gov.nist.csd.pm.model.graph.nodes;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents a Node in an NGAC graph
+ */
 public class Node {
     private long                    id;
     private String                  name;
@@ -11,6 +14,28 @@ public class Node {
 
     private static final String NULL_NAME_ERR = "The name of a node cannot be null";
     private static final String NULL_TYPE_ERR = "The type of a node cannot be null";
+
+    /**
+     * Method to hash the name, type and namespace of a node and return a Long value
+     * @param name The name of the node.
+     * @param type The type of the node.
+     * @param namespace The namespace of the node.
+     * @return A Long value representing the hashing of the name, type, and namespace.
+     */
+    public static long hashID(String name, NodeType type, String namespace) {
+        //if the namespace is null, the node is in the "default" namespace.
+        //set the namespace to default to improve hashing of ID
+        if(namespace == null || namespace.isEmpty()) {
+            namespace = "default";
+        }
+
+        long result = 17;
+        result = 37*result + name.hashCode();
+        result = 37*result + type.hashCode();
+        result = 37*result + namespace.hashCode();
+        return result;
+    }
+
 
     public Node() {
         this.properties = new HashMap<>();
@@ -78,21 +103,6 @@ public class Node {
         this.id = id;
         this.type = type;
         this.properties = properties == null ? new HashMap<>() : properties;
-    }
-
-    /**
-     * Builder method to add a type to a node.
-     * @param type The type to add to the node.
-     * @return The current node with the given type.
-     * @throws IllegalArgumentException If the type give is null.
-     */
-    public Node type(NodeType type) throws IllegalArgumentException {
-        if (type == null) {
-            throw new IllegalArgumentException("a node cannot have a null type");
-        }
-
-        this.type = type;
-        return this;
     }
 
     /**

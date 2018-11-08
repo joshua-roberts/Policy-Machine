@@ -45,6 +45,7 @@ public class ErrorCodes {
     public static final int ERR_LOADING_DB_CONFIG_PROPS  = 6042;
     public static final int ERR_HASHING_USER_PSWD  = 6043;
     public static final int ERR_NULL_OPERATIONS  = 6044;
+    public static final int ERR_AUTH  = 6045;
 
     public static final int ERR_DB  = 7000;
 }

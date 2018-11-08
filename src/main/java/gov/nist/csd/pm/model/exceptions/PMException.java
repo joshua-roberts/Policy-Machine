@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(value = {"stackTrace", "cause", "localizedMessage", "suppressed"})
 public class PMException extends Exception {
     private static final long serialVersionUID           = 1L;
-    public static final int SUCCESS                      = 200;
-    public static final int CLIENT_ERROR                 = 400;
-    public static final int SERVER_ERROR                 = 500;
 
     private int code;
 

@@ -5,23 +5,46 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Object representing a Prohibition.
+ */
 public class Prohibition  implements Serializable {
-    private ProhibitionSubject        subject;
-    private List<ProhibitionResource> resources;
+    /**
+     * The name of the prohibition.
+     */
     private String                    name;
+
+    /**
+     * The subject of the prohibition.
+     */
+    private ProhibitionSubject        subject;
+
+    /**
+     * The list of nodes that the prohibition is applied to.
+     */
+    private List<ProhibitionNode> nodes;
+
+    /**
+     * The set of operations being prohibited.
+     */
     private HashSet<String>           operations;
+
+    /**
+     * Whether this prohibition is applied to the intersection of all the nodes or not.
+     */
     private boolean                   intersection;
 
     public Prohibition(){
 
     }
 
-    public Prohibition(ProhibitionSubject subject, List<ProhibitionResource> resources, String name, HashSet<String> operations, boolean intersection) {
+    public Prohibition(String name, ProhibitionSubject subject, List<ProhibitionNode> nodes, HashSet<String> operations, boolean intersection) {
+        if(subject == null) {
+            throw new IllegalArgumentException("Prohibition subject cannot be null");
+        }
         this.subject = subject;
-        if(resources == null){
-            this.resources = new ArrayList<>();
-        }else {
-            this.resources = resources;
+        if(nodes == null){
+            nodes = new ArrayList<>();
         }
         this.name = name;
         this.operations = operations;
@@ -36,29 +59,25 @@ public class Prohibition  implements Serializable {
         this.subject = subject;
     }
 
-    public List<ProhibitionResource> getResources() {
-        return resources;
+    public List<ProhibitionNode> getNodes() {
+        return nodes;
     }
 
-    public void addResource(ProhibitionResource resource){
-        resources.add(resource);
+    public void addNode(ProhibitionNode node){
+        nodes.add(node);
     }
 
-    public void removeResource(long resourceId){
-        for(ProhibitionResource dr : resources){
-            if(dr.getResourceID() == resourceId){
-                resources.remove(dr);
+    public void removeNode(long id){
+        for(ProhibitionNode dr : nodes){
+            if(dr.getID() == id){
+                nodes.remove(dr);
                 return;
             }
         }
     }
 
-    public void clearResources() {
-        resources.clear();
-    }
-
-    public void setResources(List<ProhibitionResource> resources){
-        this.resources = resources;
+    public void setResources(List<ProhibitionNode> nodes){
+        this.nodes = nodes;
     }
 
     public String getName() {

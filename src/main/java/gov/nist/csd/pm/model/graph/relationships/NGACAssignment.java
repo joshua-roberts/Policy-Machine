@@ -12,6 +12,12 @@ public class NGACAssignment extends NGACRelationship {
         super(childID, parentID);
     }
 
+    /**
+     * Check if the assignment provided, is valid under NGAC.
+     * @param childType The type of the child.
+     * @param parentType The type of the parent.
+     * @throws InvalidAssignmentException When the child type is not allowed to be assigned to the parent type.
+     */
     public static void checkAssignment(NodeType childType, NodeType parentType) throws InvalidAssignmentException {
         switch (childType) {
             case PC:
@@ -29,6 +35,7 @@ public class NGACAssignment extends NGACRelationship {
                     case PC:
                     case UA:
                     case U:
+                    case O:
                         throw new InvalidAssignmentException(childType, parentType);
                 }
                 break;
