@@ -1,40 +1,71 @@
 package gov.nist.csd.pm.pdp.engine;
 
 import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.NGAC;
+import gov.nist.csd.pm.model.graph.Graph;
 import gov.nist.csd.pm.model.graph.nodes.Node;
 import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.pip.graph.NGACMem;
-import gov.nist.csd.pm.pip.loader.LoaderException;
-import jdk.nashorn.internal.ir.Assignment;
+import gov.nist.csd.pm.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.model.exceptions.LoaderException;
 
-import java.sql.SQLException;
 import java.util.*;
 
-public class MemPolicyDecider extends PolicyDecider {
+import static gov.nist.csd.pm.model.constants.Operations.ALL_OPERATIONS;
+import static gov.nist.csd.pm.model.constants.Operations.ANY_OPERATIONS;
 
-    public MemPolicyDecider(NGAC ngac, long userID, long processID) {
-        super(ngac, userID, processID);
+/**
+ * An implementation of the PolicyDecider interface that uses an in memory NGAC graph
+ */
+public class MemPolicyDecider implements PolicyDecider {
+
+    private Graph              graph;
+    private ProhibitionDecider prohibitionDecider;
+
+    /**
+     * Create a new PolicyDecider with with the given NGAC graph, user ID, and process ID.
+     * @param graph The NGAC Graph to use in the policy decision.
+     */
+    public MemPolicyDecider(Graph graph, Collection<Prohibition> prohibitions) throws IllegalArgumentException {
+        if (graph == null) {
+            throw new IllegalArgumentException("NGAC graph cannot be null");
+        } else if (prohibitions == null) {
+            prohibitions = new ArrayList<>();
+        }
+
+        this.graph = graph;
+        this.prohibitionDecider = new MemProhibitionDecider(graph, prohibitions);
     }
 
     @Override
-    public boolean hasPermissions(long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException {
-        return listPermissions(targetID).containsAll(Arrays.asList(perms));
+    public boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+        List<String> permsToCheck = Arrays.asList(perms);
+        HashSet<String> permissions = listPermissions(userID, processID, targetID);
+
+        //if just checking for any operations, return true if the resulting permissions set is not empty.
+        //if the resulting permissions set contains * or all operations, return true.
+        //if neither of the above apply, return true iff the resulting permissions set contains all the provided
+        // permissions to check for
+        if(permsToCheck.contains(ANY_OPERATIONS)) {
+            return !permissions.isEmpty();
+        } else if(permissions.contains(ALL_OPERATIONS)) {
+            return true;
+        } else {
+            return permissions.containsAll(permsToCheck);
+        }
     }
 
     @Override
-    public HashSet<String> listPermissions(long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException {
+    public HashSet<String> listPermissions(long userID, long processID, long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         HashSet<String> perms = new HashSet<>();
 
         //walk the user side and get all target nodes reachable by the user through associations
-        HashMap<Long, HashSet<String>> dc = getBorderTargets();
+        HashMap<Long, HashSet<String>> dc = getBorderTargets(userID);
         if(dc.isEmpty()){
             return perms;
         }
 
 
         HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes = new HashMap<>();
-        HashSet<Long> pcs = ngac.getPolicies();
+        HashSet<Long> pcs = graph.getPolicies();
         //visit the policy class nodes to signal the end of the dfs
         for(long pc : pcs){
             HashMap<Long, HashSet<String>> pcMap = new HashMap<>();
@@ -61,6 +92,10 @@ public class MemPolicyDecider extends PolicyDecider {
             }
         }
 
+        //remove permissions prohibited for the current user and process
+        perms.removeAll(prohibitionDecider.listProhibitedPermissions(userID, targetID));
+        perms.removeAll(prohibitionDecider.listProhibitedPermissions(processID, targetID));
+
         return perms;
     }
 
@@ -72,16 +107,16 @@ public class MemPolicyDecider extends PolicyDecider {
      * new operations to the already existing ones.
      * @return A Map of target nodes that the user can reach via associations and the operations the user has on each.
      */
-    private synchronized HashMap<Long, HashSet<String>> getBorderTargets() throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
+    private synchronized HashMap<Long, HashSet<String>> getBorderTargets(long userID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         HashMap<Long, HashSet<String>> borderTargets = new HashMap<>();
 
         //get the parents of the user to start bfs on user side
-        HashSet<Node> parents = ngac.getParents(userID);
+        HashSet<Node> parents = graph.getParents(userID);
         while(!parents.isEmpty()){
             Node parentNode = parents.iterator().next();
 
             //get the associations the current parent node is the source of
-            HashMap<Long, HashSet<String>> assocs = ngac.getSourceAssociations(parentNode.getID());
+            HashMap<Long, HashSet<String>> assocs = graph.getSourceAssociations(parentNode.getID());
 
             //collect the target and operation information for each association
             for (long targetID : assocs.keySet()) {
@@ -98,7 +133,7 @@ public class MemPolicyDecider extends PolicyDecider {
             }
 
             //add all of the current parent node's parents to the queue
-            parents.addAll(ngac.getParents(parentNode.getID()));
+            parents.addAll(graph.getParents(parentNode.getID()));
 
             //remove the current parent from the queue
             parents.remove(parentNode);
@@ -116,11 +151,11 @@ public class MemPolicyDecider extends PolicyDecider {
      * @param visitedNodes The map of nodes that have been visited
      * @param borderTargets The target nodes reachable by the user via associations
      */
-    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
+    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //visit the current target node
         visitedNodes.put(targetID, new HashMap<>());
 
-        HashSet<Node> parents = ngac.getParents(targetID);
+        HashSet<Node> parents = graph.getParents(targetID);
 
         //iterate over the parents of the target node
         for(Node parent : parents){
@@ -148,28 +183,32 @@ public class MemPolicyDecider extends PolicyDecider {
         }
     }
 
-    private synchronized Node createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeCtxException, LoaderException, NoIDException, SessionDoesNotExistException, MissingPermissionException {
+    private synchronized Node createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, LoaderException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
         Node vNode = new Node("VNODE", NodeType.OA);
-        vNode = ngac.createNode(vNode);
+        long vNodeID = graph.createNode(vNode);
         for(long nodeID : dc.keySet()){
-            ngac.assign(new Node().id(nodeID), vNode);
+            graph.assign(nodeID, NodeType.OA, vNode.getID(), NodeType.OA);
         }
-        return vNode;
+        return vNode.id(vNodeID);
     }
 
     @Override
-    public HashSet<Node> filter(HashSet<Node> nodes, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException {
-        for (Node node : nodes) {
-            if(!hasPermissions(node.getID(), perms)) {
-                nodes.remove(node);
+    public HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String... perms) {
+        nodes.removeIf((n) -> {
+            try {
+                return !hasPermissions(userID, processID, n.getID(), perms);
             }
-        }
+            catch (LoaderException | SessionDoesNotExistException | LoadConfigException | DatabaseException | MissingPermissionException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
+                e.printStackTrace();
+                return true;
+            }
+        });
         return nodes;
     }
 
     @Override
-    public HashSet<Node> getChildren(long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException {
-        HashSet<Node> children = ngac.getChildren(targetID);
-        return filter(children, perms);
+    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+        HashSet<Node> children = graph.getChildren(targetID);
+        return filter(userID, processID, children, perms);
     }
 }

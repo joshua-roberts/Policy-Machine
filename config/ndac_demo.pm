@@ -1,30 +1,27 @@
 {
    "nodes":[
-   {
-            "id":1,
-            "name":"Super PC",
-            "type":"PC"
-         },
-         {
-            "id":2,
-            "name":"super",
-            "type":"UA",
-            "properties":
-               {
-                   "namespace": "super"
-               }
-
-         },
-         {
-            "id":3,
-            "name":"super",
-            "type":"U",
-            "properties":
-               {
-                   "password": "super",
-                   "test": "test"
-               }
-         },
+      {
+         "id":1,
+         "name":"Super PC",
+         "type":"PC"
+      },
+      {
+         "id":2,
+         "name":"super",
+         "type":"UA",
+         "properties":{
+            "namespace":"super"
+         }
+      },
+      {
+         "id":3,
+         "name":"super",
+         "type":"U",
+         "properties":{
+            "password":"super",
+            "test":"test"
+         }
+      },
       {
          "id":1067,
          "name":"pm_health",
@@ -9379,14 +9376,14 @@
       }
    ],
    "assignments":[
-   {
-            "child":2,
-            "parent":1
-         },
-         {
-            "child":3,
-            "parent":2
-         },
+      {
+         "child":2,
+         "parent":1
+      },
+      {
+         "child":3,
+         "parent":2
+      },
       {
          "child":1060,
          "parent":11010

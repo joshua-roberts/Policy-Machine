@@ -1,39 +1,15 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.LoadConfigException;
-import gov.nist.csd.pm.model.exceptions.MissingPermissionException;
-import gov.nist.csd.pm.model.exceptions.SessionDoesNotExistException;
+import gov.nist.csd.pm.model.exceptions.*;
 import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.NGAC;
-import gov.nist.csd.pm.pip.loader.LoaderException;
+import gov.nist.csd.pm.model.exceptions.LoaderException;
 
 import java.util.HashSet;
 
-public abstract class PolicyDecider {
-
-    NGAC ngac;
-    long userID;
-    long processID;
-
-    /**
-     * Create a new PolicyDecider with with the given NGAC graph, user ID, and process ID.
-     * @param ngac The NGAC Graph to use in the policy decision.
-     * @param userID The ID of the user to make a policy decision for.
-     * @param processID the ID of the process to make a policy decision for.
-     */
-    public PolicyDecider(NGAC ngac, long userID, long processID) throws IllegalArgumentException {
-        if(userID == 0) {
-            throw new IllegalArgumentException("user ID cannot be 0");
-        } else if (ngac == null) {
-            throw new IllegalArgumentException("NGAC graph cannot be null");
-        }
-
-        this.ngac = ngac;
-        this.userID = userID;
-        this.processID = processID;
-    }
-
+/**
+ * Interface for querying the access state of a NGAC Graph
+ */
+public interface PolicyDecider {
     /**
      * Check if the user has the permissions on the target node. Use '*' as the permission to check
      * if the user has any permissions on the node.
@@ -41,14 +17,14 @@ public abstract class PolicyDecider {
      * @param perms The array of permission sto check for.
      * @return True if the user has the permissions on the target node, false otherwise.
      */
-    public abstract boolean hasPermissions(long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException;
+    boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 
     /**
      * List the permissions that the user has on the target node.
      * @param targetID The ID of the target node.
      * @return The set of operations that the user is allowed to perform on the target.
      */
-    public abstract HashSet<String> listPermissions(long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException;
+    HashSet<String> listPermissions(long userID, long processID, long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 
     /**
      * Given a list of nodes filter out any nodes that the given user does not have the given permissions on.
@@ -57,7 +33,7 @@ public abstract class PolicyDecider {
      * @param perms The permissions to check for.
      * @return A subset of the given nodes that the user has the given permissions on.
      */
-    public abstract HashSet<Node> filter(HashSet<Node> nodes, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException;
+    HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException;
 
     /**
      * Get the children of the target node that the user has the given permissions on.
@@ -65,5 +41,5 @@ public abstract class PolicyDecider {
      * @param perms The permissions the user must have on the child nodes.
      * @return The set of NGACNodes that are children of the target node and the user has the given permissions on.
      */
-    public abstract HashSet<Node> getChildren(long targetID, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException;
+    HashSet<Node> getChildren(long userID, long processID, long targetID, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 }
