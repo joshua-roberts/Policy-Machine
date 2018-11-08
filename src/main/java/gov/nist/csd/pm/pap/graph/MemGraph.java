@@ -24,9 +24,9 @@ public class MemGraph implements Graph {
     /**
      * Create a new in-memory graph.
      * @param graphLoader The loader to load a graph from.
-     * @throws LoaderException If an error occurs when loading.
+     * @throws DatabaseException If an error occurs when loading the graph from the database
      */
-    public MemGraph(GraphLoader graphLoader) throws LoaderException {
+    public MemGraph(GraphLoader graphLoader) throws DatabaseException {
         graph = new DirectedMultigraph<>(NGACRelationship.class);
 
         //load the graph using the graphLoader

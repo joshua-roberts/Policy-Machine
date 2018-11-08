@@ -1,6 +1,5 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.model.graph.nodes.Node;
 import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
@@ -17,14 +16,14 @@ public interface GraphLoader {
      * @return A set of all the Policy Classes in the graph.
      * @throws DatabaseException When there is an error loading the Policy Classes.
      */
-    HashSet<Node> getPolicies() throws DatabaseException;
+    HashSet<Long> getPolicies() throws DatabaseException;
 
     /**
      * Get all of the nodes in the graph.
      * @return The set of all nodes in the graph.
      * @throws DatabaseException When there is an error loading the nodes.
      */
-    HashSet<Node> getNodes() throws DatabaseException;
+    HashSet<Long> getNodes() throws DatabaseException;
 
     /**
      * Get all of the assignments in the graph.

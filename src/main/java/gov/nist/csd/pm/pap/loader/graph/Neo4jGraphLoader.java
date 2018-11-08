@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
 import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.graph.nodes.Node;
 import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
@@ -36,30 +35,34 @@ public class Neo4jGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Node> getPolicies() throws DatabaseException {
-        String cypher = "match(n:PC) return n";
-        return getNodes(cypher);
+    public HashSet<Long> getPolicies() throws DatabaseException {
+        String cypher = "match(n) where n:PC return n.id";
+        return getNodeIDs(cypher);
     }
 
     @Override
-    public HashSet<Node> getNodes() throws DatabaseException {
-        String cypher = "match(n:NODE) return n";
-        return getNodes(cypher);
+    public HashSet<Long> getNodes() throws DatabaseException {
+        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n.id";
+        return getNodeIDs(cypher);
     }
 
     /**
-     * Given a cypher query, return all the nodes that are returned from the query.
+     * Given a cypher query, return all the node IDs that are returned from the query.
      * @param cypher The neo4j cypher query to execute.
-     * @return The set of all nodes
+     * @return The set of all nodes' IDs
      * @throws DatabaseException When there is an error loading the nodes from the database.
      */
-    private HashSet<Node> getNodes(String cypher) throws DatabaseException {
+    private HashSet<Long> getNodeIDs(String cypher) throws DatabaseException {
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            return Neo4jHelper.getNodesFromResultSet(rs);
+            HashSet<Long> nodeIDs = new HashSet<>();
+            while (rs.next()) {
+                nodeIDs.add(rs.getLong(1));
+            }
+            return nodeIDs;
         } catch (SQLException e) {
             throw new DatabaseException(ERR_DB, e.getMessage());
         }

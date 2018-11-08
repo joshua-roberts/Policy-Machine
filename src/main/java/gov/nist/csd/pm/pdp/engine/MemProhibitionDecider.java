@@ -39,24 +39,24 @@ public class MemProhibitionDecider implements ProhibitionDecider {
                     getSubGraph(prohibition.getSubject().getSubjectID()).contains(subjectID);
             if(matches){
                 boolean inter = prohibition.isIntersection();
-                List<ProhibitionNode> nodes = prohibition.getResources();
+                List<ProhibitionNode> nodes = prohibition.getNodes();
 
                 HashMap<ProhibitionNode, HashSet<Long>> drSubGraph = new HashMap<>();
-                HashSet<Long> nodes = new HashSet<>();
+                HashSet<Long> nodeIDs = new HashSet<>();
                 for (ProhibitionNode dr : nodes) {
-                    HashSet<Long> subGraph = getSubGraph(dr.getId());
+                    HashSet<Long> subGraph = getSubGraph(dr.getID());
                     drSubGraph.put(dr, subGraph);
-                    nodes.addAll(subGraph);
+                    nodeIDs.addAll(subGraph);
                 }
 
                 boolean addOps = false;
                 if(inter) {
                     for (ProhibitionNode dr : drSubGraph.keySet()) {
                         if (dr.isComplement()) {
-                            nodes.removeAll(drSubGraph.get(dr));
+                            nodeIDs.removeAll(drSubGraph.get(dr));
                         }
                     }
-                    if (nodes.contains(targetID)) {
+                    if (nodeIDs.contains(targetID)) {
                         addOps = true;
                     }
                 }else{
