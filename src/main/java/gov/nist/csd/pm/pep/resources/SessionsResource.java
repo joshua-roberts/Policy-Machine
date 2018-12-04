@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pep.resources;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+
 import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.requests.CreateSessionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 public class SessionsResource {
 
     @POST
-    public Response createSession(CreateSessionRequest request) throws DatabaseException, HashingUserPasswordException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, PMAuthenticationException, LoaderException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public Response createSession(CreateSessionRequest request) throws DatabaseException, HashingUserPasswordException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, PMAuthenticationException, MissingPermissionException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
         String username = request.getUsername();
         String password = request.getPassword();
 
@@ -31,7 +31,7 @@ public class SessionsResource {
 
     @Path("/{session}")
     @DELETE
-    public Response deleteSession(@PathParam("session") String session) throws DatabaseException, LoadConfigException, LoaderException, InvalidProhibitionSubjectTypeException {
+    public Response deleteSession(@PathParam("session") String session) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
         SessionsService sessionsService = new SessionsService();
         sessionsService.deleteSession(session);
         return ApiResponse.Builder
@@ -42,7 +42,7 @@ public class SessionsResource {
 
     @Path("/{session}")
     @GET
-    public Response getSessionUser(@PathParam("session") String session) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+    public Response getSessionUser(@PathParam("session") String session) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
         SessionsService sessionsService = new SessionsService();
         long userID = sessionsService.getSessionUserID();
         return ApiResponse.Builder

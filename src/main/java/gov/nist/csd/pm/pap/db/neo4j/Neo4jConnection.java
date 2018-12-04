@@ -1,13 +1,13 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
 
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * Object that stores a connection to a neo4j database.

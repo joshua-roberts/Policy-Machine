@@ -1,16 +1,16 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
+
 
 import java.util.*;
 
-import static gov.nist.csd.pm.model.constants.Operations.ALL_OPERATIONS;
-import static gov.nist.csd.pm.model.constants.Operations.ANY_OPERATIONS;
+import static gov.nist.csd.pm.common.constants.Operations.ALL_OPERATIONS;
+import static gov.nist.csd.pm.common.constants.Operations.ANY_OPERATIONS;
 
 /**
  * An implementation of the PolicyDecider interface that uses an in memory NGAC graph
@@ -36,7 +36,7 @@ public class MemPolicyDecider implements PolicyDecider {
     }
 
     @Override
-    public boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         List<String> permsToCheck = Arrays.asList(perms);
         HashSet<String> permissions = listPermissions(userID, processID, targetID);
 
@@ -54,7 +54,7 @@ public class MemPolicyDecider implements PolicyDecider {
     }
 
     @Override
-    public HashSet<String> listPermissions(long userID, long processID, long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<String> listPermissions(long userID, long processID, long targetID) throws DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         HashSet<String> perms = new HashSet<>();
 
         //walk the user side and get all target nodes reachable by the user through associations
@@ -107,7 +107,7 @@ public class MemPolicyDecider implements PolicyDecider {
      * new operations to the already existing ones.
      * @return A Map of target nodes that the user can reach via associations and the operations the user has on each.
      */
-    private synchronized HashMap<Long, HashSet<String>> getBorderTargets(long userID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    private synchronized HashMap<Long, HashSet<String>> getBorderTargets(long userID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         HashMap<Long, HashSet<String>> borderTargets = new HashMap<>();
 
         //get the parents of the user to start bfs on user side
@@ -151,7 +151,7 @@ public class MemPolicyDecider implements PolicyDecider {
      * @param visitedNodes The map of nodes that have been visited
      * @param borderTargets The target nodes reachable by the user via associations
      */
-    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //visit the current target node
         visitedNodes.put(targetID, new HashMap<>());
 
@@ -183,7 +183,7 @@ public class MemPolicyDecider implements PolicyDecider {
         }
     }
 
-    private synchronized Node createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, LoaderException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
+    private synchronized Node createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
         Node vNode = new Node("VNODE", NodeType.OA);
         long vNodeID = graph.createNode(vNode);
         for(long nodeID : dc.keySet()){
@@ -198,7 +198,7 @@ public class MemPolicyDecider implements PolicyDecider {
             try {
                 return !hasPermissions(userID, processID, n.getID(), perms);
             }
-            catch (LoaderException | SessionDoesNotExistException | LoadConfigException | DatabaseException | MissingPermissionException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
+            catch (SessionDoesNotExistException | LoadConfigException | DatabaseException | MissingPermissionException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
                 e.printStackTrace();
                 return true;
             }
@@ -207,7 +207,7 @@ public class MemPolicyDecider implements PolicyDecider {
     }
 
     @Override
-    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         HashSet<Node> children = graph.getChildren(targetID);
         return filter(userID, processID, children, perms);
     }

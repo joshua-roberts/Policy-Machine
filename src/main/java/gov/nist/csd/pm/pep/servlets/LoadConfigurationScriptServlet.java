@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+
 import gov.nist.csd.pm.pdp.services.ConfigurationService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -50,7 +50,7 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
                 MissingPermissionException | NoIDException | InvalidAssociationException |
                 NullNameException | SessionDoesNotExistException | InvalidNodeTypeException |
                 NullTypeException | NullNodeException | HashingUserPasswordException |
-                NodeNotFoundException | LoadConfigException | LoaderException | InvalidProhibitionSubjectTypeException e) {
+                NodeNotFoundException | LoadConfigException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidProhibitionSubjectTypeException;
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
 import java.util.List;
 

@@ -2,9 +2,9 @@ package gov.nist.csd.pm.pdp.services;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -12,8 +12,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static gov.nist.csd.pm.model.constants.Properties.HASH_LENGTH;
-import static gov.nist.csd.pm.model.constants.Properties.PASSWORD_PROPERTY;
+import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;
+import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
+import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
@@ -26,7 +27,7 @@ public class ConfigurationService extends Service {
         super("CONFIG_SESSION_ID", 0);
     }
 
-    public String save() throws LoadConfigException, DatabaseException, LoaderException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
+    public String save() throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         HashSet<Node> nodes = getGraphDB().getNodes();
@@ -51,7 +52,7 @@ public class ConfigurationService extends Service {
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) throws HashingUserPasswordException, LoadConfigException, DatabaseException, LoaderException, NullNodeException, NoIDException, NullTypeException, NullNameException, NodeNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, MissingPermissionException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
+    public void load(String config) throws HashingUserPasswordException, LoadConfigException, DatabaseException, NullNodeException, NoIDException, NullTypeException, NullNameException, NodeNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, MissingPermissionException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<Node> nodes = graph.getNodes();
@@ -97,7 +98,7 @@ public class ConfigurationService extends Service {
         }
     }
 
-    public void reset() throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    public void reset() throws DatabaseException, LoadConfigException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
         HashSet<Node> nodes = getGraphMem().getNodes();
         for(Node node : nodes) {
             getGraphDB().deleteNode(node.getID());

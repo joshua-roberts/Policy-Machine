@@ -1,11 +1,11 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidProhibitionSubjectTypeException;
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
-import gov.nist.csd.pm.model.prohibitions.ProhibitionSubjectType;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubjectType;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * Neo4j implementation of the ProhibitionsLoader interface. Load prohibitions from a Neo4j instance into memory.

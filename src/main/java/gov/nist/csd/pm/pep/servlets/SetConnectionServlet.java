@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
 import gov.nist.csd.pm.pap.PAP;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+
 
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -36,7 +36,7 @@ public class SetConnectionServlet extends HttpServlet {
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
-        catch (DatabaseException | LoaderException | InvalidProhibitionSubjectTypeException e) {
+        catch (DatabaseException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

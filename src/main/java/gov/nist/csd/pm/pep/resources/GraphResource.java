@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pep.resources;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pdp.services.GraphService;
 import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
 import gov.nist.csd.pm.pep.requests.UpdateNodeRequest;
@@ -23,7 +23,7 @@ public class GraphResource {
     @GET
     public Response getNodes(@Context UriInfo uriInfo,
                              @QueryParam("session") String session,
-                             @QueryParam("process") long process) throws LoadConfigException, LoaderException, DatabaseException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+                             @QueryParam("process") long process) throws LoadConfigException, DatabaseException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
         MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
         Map<String, String> properties = new HashMap<>();
         for (String key : queryParameters.keySet()) {
@@ -50,9 +50,8 @@ public class GraphResource {
     @Path("/nodes")
     @POST
     public Response createNode(CreateNodeRequest request,
-                               @QueryParam("content") boolean content,
                                @QueryParam("session") String session,
-                               @QueryParam("process") long process) throws InvalidNodeTypeException, NullNameException, LoaderException, LoadConfigException, NoIDException, DatabaseException, NodeNotFoundException, HashingUserPasswordException, NullNodeException, NullTypeException, SessionDoesNotExistException, MissingPermissionException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
+                               @QueryParam("process") long process) throws InvalidNodeTypeException, NullNameException, LoadConfigException, NoIDException, DatabaseException, NodeNotFoundException, HashingUserPasswordException, NullNodeException, NullTypeException, SessionDoesNotExistException, MissingPermissionException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the request parameters
@@ -61,9 +60,12 @@ public class GraphResource {
         NodeType type = NodeType.toNodeType(request.getType());
         HashMap<String, String> properties = request.getProperties();
 
-        //check that the given parent ID is not 0
-        if(parentID == 0) {
-            throw new NodeNotFoundException(0);
+        if (name == null) {
+            throw new IllegalArgumentException("the node name cannot be null");
+        }else if (type == null) {
+            throw new IllegalArgumentException("the node type cannot be null");
+        } else if(parentID == 0 && !type.equals(NodeType.PC)) {
+            throw new IllegalArgumentException("need to provide a parentID to create the new node in");
         }
 
         //send the node to be created to the pdp
@@ -79,7 +81,7 @@ public class GraphResource {
     @GET
     public Response getNode(@PathParam("nodeID") long nodeID,
                             @QueryParam("session") String session,
-                            @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+                            @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
         Node node = graphService.getNode(nodeID);
         return ApiResponse.Builder
@@ -93,7 +95,7 @@ public class GraphResource {
     public Response updateNode(@PathParam("nodeID") long nodeID,
                                UpdateNodeRequest request,
                                @QueryParam("session") String session,
-                               @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, NullNodeException, NoIDException, InvalidProhibitionSubjectTypeException {
+                               @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, NullNodeException, NoIDException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
         graphService.updateNode(new Node().id(nodeID).name(request.getName()).properties(request.getProperties()));
         return ApiResponse.Builder
@@ -106,7 +108,7 @@ public class GraphResource {
     @DELETE
     public Response deleteNode(@PathParam("nodeID") long id,
                                @QueryParam("session") String session,
-                               @QueryParam("process") long process) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+                               @QueryParam("process") long process) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
         graphService.deleteNode(id);
         return ApiResponse.Builder
@@ -119,7 +121,7 @@ public class GraphResource {
     public Response getNodeChildren(@PathParam("nodeID") long id,
                                     @QueryParam("type") String type,
                                     @QueryParam("session") String session,
-                                    @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+                                    @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
         HashSet<Node> children = graphService.getChildren(id);
         return ApiResponse.Builder
@@ -133,7 +135,7 @@ public class GraphResource {
     public Response getNodeParents(@PathParam("nodeID") long id,
                                    @QueryParam("type") String type,
                                    @QueryParam("session") String session,
-                                   @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+                                   @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
         HashSet<Node> parents = graphService.getParents(id);
         return ApiResponse.Builder
@@ -147,7 +149,7 @@ public class GraphResource {
     public Response createAssignment(@PathParam("var1") PathSegment childPs,
                                      @PathParam("var2") PathSegment parentPs,
                                      @QueryParam("session") String session,
-                                     @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, InvalidNodeTypeException, InvalidAssignmentException, NullNodeException, SessionDoesNotExistException, NullTypeException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+                                     @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, InvalidNodeTypeException, InvalidAssignmentException, NullNodeException, SessionDoesNotExistException, NullTypeException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the assignment parameters from the url
@@ -177,7 +179,7 @@ public class GraphResource {
     public Response deleteAssignment(@PathParam("var1") PathSegment childPs,
                                      @PathParam("var2") PathSegment parentPs,
                                      @QueryParam("session") String session,
-                                     @QueryParam("process") long process) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, LoaderException, MissingPermissionException, InvalidNodeTypeException, NullNodeException, NullTypeException {
+                                     @QueryParam("process") long process) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException, InvalidNodeTypeException, NullNodeException, NullTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the assignment parameters from the url
@@ -204,19 +206,19 @@ public class GraphResource {
 
     @Path("/{nodeID}/associations")
     @GET
-    public Response getAssociations(@QueryParam("sourceID") long sourceID,
-                                    @QueryParam("targetID") long targetID,
+    public Response getAssociations(@PathParam("nodeID") long nodeID,
+                                    @QueryParam("type") String type,
                                     @QueryParam("session") String session,
-                                    @QueryParam("process") long process) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+                                    @QueryParam("process") long process) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
 
         HashMap<Long, HashSet<String>> associations = new HashMap<>();
-        //if the sourceID is present get the associations for the source node
-        //otherwise, if the target is present get the associations for the target node
-        if (sourceID != 0) {
-            associations.putAll(graphService.getSourceAssociations(sourceID));
-        } else if (targetID != 0) {
-            associations.putAll(graphService.getTargetAssociations(targetID));
+        // if the type is source, return the source associations
+        // else return the target associations
+        if (type.equals("source")) {
+            associations.putAll(graphService.getSourceAssociations(nodeID));
+        } else if (type.equals("target")) {
+            associations.putAll(graphService.getTargetAssociations(nodeID));
         }
 
         return ApiResponse.Builder
@@ -231,7 +233,7 @@ public class GraphResource {
                                       @PathParam("var1") PathSegment targetPs,
                                       HashSet<String> operations,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process) throws DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
+                                      @QueryParam("process") long process) throws DatabaseException, LoadConfigException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the target parameters from the url
@@ -253,7 +255,7 @@ public class GraphResource {
                                       @PathParam("var1") PathSegment targetPs,
                                       HashSet<String> operations,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process) throws NodeNotFoundException, DatabaseException, MissingPermissionException, SessionDoesNotExistException, InvalidNodeTypeException, LoaderException, InvalidAssociationException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+                                      @QueryParam("process") long process) throws NodeNotFoundException, DatabaseException, MissingPermissionException, SessionDoesNotExistException, InvalidNodeTypeException, InvalidAssociationException, LoadConfigException, InvalidProhibitionSubjectTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the target parameters from the url
@@ -273,7 +275,7 @@ public class GraphResource {
     public Response deleteAssociation(@PathParam("uaID") long uaID,
                                       @PathParam("var1") PathSegment targetPs,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process) throws NodeNotFoundException, DatabaseException, MissingPermissionException, SessionDoesNotExistException, LoadConfigException, LoaderException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
+                                      @QueryParam("process") long process) throws NodeNotFoundException, DatabaseException, MissingPermissionException, SessionDoesNotExistException, LoadConfigException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
         GraphService graphService = new GraphService(session, process);
 
         //get the target parameters from the url

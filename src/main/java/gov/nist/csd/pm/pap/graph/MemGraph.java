@@ -1,12 +1,12 @@
 package gov.nist.csd.pm.pap.graph;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
-import gov.nist.csd.pm.model.graph.relationships.NGACRelationship;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACRelationship;
 import gov.nist.csd.pm.pap.loader.graph.GraphLoader;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DirectedMultigraph;

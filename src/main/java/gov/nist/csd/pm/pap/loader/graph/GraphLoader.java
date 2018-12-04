@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
 
 import java.util.HashSet;
 

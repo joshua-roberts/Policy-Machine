@@ -1,12 +1,13 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
+import gov.nist.csd.pm.pap.db.sql.SQLHelper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,7 +15,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 public class SQLGraphLoader implements GraphLoader {
 
@@ -34,7 +35,7 @@ public class SQLGraphLoader implements GraphLoader {
 
     @Override
     public HashSet<Long> getPolicies() throws DatabaseException {
-        String sql = String.format("select node_id from nodes where node_type_id=%d", NodeType.PC_ID);
+        String sql = String.format("select node_id from nodes where node_type_id=%d", SQLHelper.PC_ID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
@@ -69,7 +70,9 @@ public class SQLGraphLoader implements GraphLoader {
 
     @Override
     public HashSet<NGACAssignment> getAssignments() throws DatabaseException {
-        String sql = String.format("SELECT start_node_id,end_node_id FROM assignment join node a on start_node_id = a.node_id and a.node_type_id <> %d join node b on end_node_id=b.node_id and b.node_type_id <> %d where assignment.depth=1;", NodeType.OS_ID, NodeType.OS_ID);
+        String sql = String.format("SELECT start_node_id,end_node_id FROM assignment " +
+                "join node a on start_node_id = a.node_id and a.node_type_id <> %d " +
+                "join node b on end_node_id=b.node_id and b.node_type_id <> %d where assignment.depth=1;", SQLHelper.OS_ID, SQLHelper.OS_ID);
         try(
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)

@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+
 
 import java.util.HashSet;
 
@@ -17,14 +17,14 @@ public interface PolicyDecider {
      * @param perms The array of permission sto check for.
      * @return True if the user has the permissions on the target node, false otherwise.
      */
-    boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
+    boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 
     /**
      * List the permissions that the user has on the target node.
      * @param targetID The ID of the target node.
      * @return The set of operations that the user is allowed to perform on the target.
      */
-    HashSet<String> listPermissions(long userID, long processID, long targetID) throws LoaderException, DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
+    HashSet<String> listPermissions(long userID, long processID, long targetID) throws DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 
     /**
      * Given a list of nodes filter out any nodes that the given user does not have the given permissions on.
@@ -33,7 +33,7 @@ public interface PolicyDecider {
      * @param perms The permissions to check for.
      * @return A subset of the given nodes that the user has the given permissions on.
      */
-    HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException;
+    HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String ... perms) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException;
 
     /**
      * Get the children of the target node that the user has the given permissions on.
@@ -41,5 +41,5 @@ public interface PolicyDecider {
      * @param perms The permissions the user must have on the child nodes.
      * @return The set of NGACNodes that are children of the target node and the user has the given permissions on.
      */
-    HashSet<Node> getChildren(long userID, long processID, long targetID, String ... perms) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
+    HashSet<Node> getChildren(long userID, long processID, long targetID, String ... perms) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException;
 }

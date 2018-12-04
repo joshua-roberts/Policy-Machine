@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pep.response;
 
-import gov.nist.csd.pm.model.exceptions.PMException;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
 import javax.ws.rs.core.Response;
 

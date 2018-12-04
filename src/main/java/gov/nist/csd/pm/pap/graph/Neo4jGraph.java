@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pap.graph;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.exceptions.ErrorCodes;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.exceptions.ErrorCodes;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -16,8 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.csd.pm.model.constants.Properties.NAMESPACE_PROPERTY;
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 import static gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper.mapToNode;
 
 /**
@@ -178,7 +177,7 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public boolean exists(long nodeID) throws DatabaseException {
-        String cypher = "match(n{id: %d}) return n";
+        String cypher = String.format("match(n{id: %d}) return n", nodeID);
         try (
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
@@ -192,7 +191,7 @@ public class Neo4jGraph implements Graph {
     }
 
     /**
-     * Retreive all the nodes from the database.
+     * Retrieve all the nodes from the database.
      *
      * @return The set of all nodes in the database.
      * @throws DatabaseException If there is an error retrieving the nodes from the database.
@@ -384,6 +383,7 @@ public class Neo4jGraph implements Graph {
             HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long targetID = rs.getLong(1);
+
                 //get operations as json
                 String opsStr = rs.getString(2);
                 //convert ops json to hashset
@@ -409,7 +409,7 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws DatabaseException {
-        String cypher = String.format("match(source)<-[a:associated_with]-(target{id:%d}) return target.id, a.operations", targetID);
+        String cypher = String.format("match(source)-[a:associated_with]->(target{id:%d}) return source.id, a.operations", targetID);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
@@ -417,12 +417,14 @@ public class Neo4jGraph implements Graph {
         ) {
             HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
+                long sourceID = rs.getLong(1);
+
                 //get operations as json
                 String opsStr = rs.getString(2);
                 //convert ops json to hashset
                 HashSet<String> opsSet = Neo4jHelper.getStringSetFromJson(opsStr);
 
-                associations.put(targetID, opsSet);
+                associations.put(sourceID, opsSet);
             }
 
             return associations;

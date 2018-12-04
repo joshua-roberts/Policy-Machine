@@ -1,16 +1,17 @@
 package gov.nist.csd.pm.pap.graph;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
+import gov.nist.csd.pm.pap.db.sql.SQLHelper;
 
 import java.sql.*;
 import java.util.*;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 public class SQLGraph implements Graph {
 
@@ -155,7 +156,7 @@ public class SQLGraph implements Graph {
         ) {
             rs.next();
             String name = rs.getString(2);
-            NodeType type = NodeType.toNodeType(rs.getInt(3));
+            NodeType type = SQLHelper.toNodeType(rs.getInt(3));
             HashMap<String, String> properties = getNodeProps(id);
 
             return new Node(id, name, type, properties);
@@ -185,7 +186,7 @@ public class SQLGraph implements Graph {
 
     @Override
     public HashSet<Long> getPolicies() throws DatabaseException {
-        String sql = String.format("select node_id from nodes where node_type_id=%d", NodeType.PC_ID);
+        String sql = String.format("select node_id from nodes where node_type_id=%d", SQLHelper.PC_ID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
@@ -274,7 +275,7 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException, NodeNotFoundException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
+    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws DatabaseException {
         String ops = "";
         for (String op : operations) {
             ops += op + ",";
@@ -328,7 +329,7 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException {
         try (
                 CallableStatement stmt = conn.getConnection().prepareCall("{call delete_association(?,?,?)}")
         ) {

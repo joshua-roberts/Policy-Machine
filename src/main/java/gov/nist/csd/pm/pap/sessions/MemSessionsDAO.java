@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.sessions;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
 import gov.nist.csd.pm.pap.loader.sessions.SessionsLoader;
 
 import java.util.HashMap;

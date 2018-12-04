@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Search;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+
 import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
 import gov.nist.csd.pm.pdp.engine.PolicyDecider;
 
@@ -24,7 +24,7 @@ public class AnalyticsService extends Service {
      * @param targetID The ID of the target node.
      * @return The set of operations the current user has on the target node.
      */
-    public HashSet<String> getPermissions(long targetID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public HashSet<String> getPermissions(long targetID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         return decider.listPermissions(getSessionUserID(), getProcessID(), targetID);
     }
@@ -41,7 +41,7 @@ public class AnalyticsService extends Service {
      * @throws NodeNotFoundException
      * @throws MissingPermissionException
      */
-    public HashSet<Node> getPos() throws SessionDoesNotExistException, DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getPos() throws SessionDoesNotExistException, DatabaseException, LoadConfigException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
         // Prepare the hashset to return.
         HashSet<Long> hsOa = new HashSet<>();
 
@@ -83,7 +83,7 @@ public class AnalyticsService extends Service {
         return nodes;
     }
 
-    private Hashtable findBorderOaPrivRestrictedInternal() throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    private Hashtable findBorderOaPrivRestrictedInternal() throws SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         long userID = getSessionUserID();
 
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
@@ -201,7 +201,7 @@ public class AnalyticsService extends Service {
         return htReachableOas;
     }
 
-    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws LoadConfigException, DatabaseException, LoaderException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
         HashSet<Long> reachable = new HashSet<>();
 
         // Init the queue, visited
@@ -240,7 +240,7 @@ public class AnalyticsService extends Service {
         return reachable;
     }
 
-    private boolean inMemUattrHasOpsets(Node uaNode) throws LoadConfigException, DatabaseException, LoaderException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    private boolean inMemUattrHasOpsets(Node uaNode) throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
         return !getGraphMem().getSourceAssociations(uaNode.getID()).isEmpty();
     }
 }

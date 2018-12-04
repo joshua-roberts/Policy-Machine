@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
-import gov.nist.csd.pm.model.exceptions.NodeNotFoundException;
-import gov.nist.csd.pm.model.graph.Search;
-import gov.nist.csd.pm.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.InvalidNodeTypeException;
+import gov.nist.csd.pm.common.exceptions.NodeNotFoundException;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * Neo4j extension of the Search class.
@@ -85,7 +85,7 @@ public class Neo4jSearch implements Search {
     /**
      * Build the cypher query according to the given parameters.
      */
-    private String getSearchCypher(String name, String type, Map<String,String> properties) {
+    protected static String getSearchCypher(String name, String type, Map<String,String> properties) {
         String propsStr = "";
         if (name != null && !name.isEmpty()){
             propsStr = String.format("name: \"%s\"", name);

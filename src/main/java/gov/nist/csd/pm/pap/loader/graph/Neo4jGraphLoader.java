@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * A Neo4j implementation of the GraphLoader interface.

@@ -34,10 +34,6 @@
         function hideForm(name) {
             document.getElementById(name + 'Form').style.display = 'none';
         }
-
-        function message() {
-
-        }
     </script>
 </head>
 <body>
@@ -72,7 +68,7 @@
 </div>
 
 <div style="margin: 2% 15%; background-color: white; padding: 10px">
-    <h4>Step 1. Connect to a database.</h4>
+    <h2>Connect to a database.</h2>
     <div class="row" style="margin: 0; padding: 20px">
         <button class="btn btn-success col-lg-3" style="margin-right: 10px" onclick="showForm('neo4j')">Neo4j</button>
         <button class="btn btn-primary col-lg-3" onclick="showForm('mysql')">MySQL</button>
@@ -145,15 +141,27 @@
             </fieldset>
         </form>
     </div>
-    <h4 style="margin-top: 10px">Step 2. Configuration</h4>
+    <h2 style="margin-top: 10px">Configuration</h2>
     <div class="row" style="margin: 0; padding: 20px">
-        <div id="loadForm" class="col-lg-6" style="background-color: white; height: inherit; color: #008cba">
-            <form  enctype="multipart/form-data" action="load" method="post">
+        <div id="resetForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
+            <form action="Reset" method="post">
+                <fieldset>
+                    <legend>Reset</legend>
+                    <p class="text-danger">This will delete any existing data in the PM, including Policy Classes.</p>
+                    <div class="row">
+                        <div class="form-group col-lg-3">
+                            <button type="submit" class="btn btn-primary">Reset</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div id="loadForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
+            <form enctype="multipart/form-data" action="load" method="post">
                 <fieldset>
                     <legend>Load</legend>
-                    <p class="text-danger">
-                        This will delete any existing data in the PM.
-                    </p>
+                    <p>Load a previously saved configuration into the PM.</p>
+                    <p class="text-danger">This will delete any existing data in the PM.</p>
                     <div class="row">
                         <div class="form-group col-lg-6">
                             <input type="file" name="configFile" accept=".pm">
@@ -167,15 +175,13 @@
                 </fieldset>
             </form>
         </div>
-        <div id="saveForm" class="col-lg-6" style="background-color: white; height: inherit; color: #008cba">
+        <div id="saveForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
             <form action="save" method="post">
                 <fieldset>
                     <legend>Save</legend>
-                    <p class="text-muted">
-                        Save the current policy configurations in the Policy Machine.
-                    </p>
+                    <p class="text-muted">Save the current policy configurations in the Policy Machine.</p>
                     <div class="row">
-                        <div class="form-group col-lg-6">
+                        <div class="form-group">
                             <input class="form-control" name="configName" placeholder="Configuration Name" type="text">
                         </div>
                     </div>

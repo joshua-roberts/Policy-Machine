@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+
 import gov.nist.csd.pm.pdp.services.ConfigurationService;
 
 import javax.servlet.ServletException;
@@ -19,7 +19,7 @@ public class ResetServlet extends HttpServlet {
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Data+reset+successfully").forward(request, response);
         }
-        catch (DatabaseException | LoaderException | SessionDoesNotExistException | MissingPermissionException | LoadConfigException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
+        catch (DatabaseException | SessionDoesNotExistException | MissingPermissionException | LoadConfigException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

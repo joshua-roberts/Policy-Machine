@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.sessions;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * MySQL implementation of te SessionsLoader interface

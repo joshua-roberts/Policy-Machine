@@ -1,12 +1,13 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidNodeTypeException;
-import gov.nist.csd.pm.model.graph.Search;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.InvalidNodeTypeException;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
+import gov.nist.csd.pm.pap.db.sql.SQLHelper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 
 /**
  * Implementation of the Search interface using SQL
@@ -40,14 +41,14 @@ public class SQLSearch implements Search {
     }
 
     @Override
-    public Node getNode(long id) throws InvalidNodeTypeException, DatabaseException {
+    public Node getNode(long id) throws DatabaseException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
         ) {
             rs.next();
             String name = rs.getString(2);
-            NodeType type = NodeType.toNodeType(rs.getInt(3));
+            NodeType type = SQLHelper.toNodeType(rs.getInt(3));
             HashMap<String, String> properties = getNodeProps(id);
 
             return new Node(id, name, type, properties);

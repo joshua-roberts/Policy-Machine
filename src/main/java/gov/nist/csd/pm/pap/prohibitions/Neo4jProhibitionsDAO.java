@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pap.prohibitions;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.prohibitions.*;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.prohibitions.*;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
 import static gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper.setToCypherArray;
 
 /**

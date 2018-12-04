@@ -1,11 +1,10 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 
 import java.util.*;
 
@@ -14,7 +13,7 @@ public class MemProhibitionDecider implements ProhibitionDecider {
     private Graph                   graph;
     private Collection<Prohibition> prohibitions;
 
-    MemProhibitionDecider(Graph graph, Collection<Prohibition> prohibitions) {
+    public MemProhibitionDecider(Graph graph, Collection<Prohibition> prohibitions) {
         if(prohibitions == null) {
             this.prohibitions = new ArrayList<>();
         }
@@ -24,7 +23,7 @@ public class MemProhibitionDecider implements ProhibitionDecider {
     }
 
     @Override
-    public HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, LoaderException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         HashSet<String> prohibitedOps = new HashSet<>();
 
         //if the subject ID or target ID are 0, return an empty set
@@ -84,7 +83,7 @@ public class MemProhibitionDecider implements ProhibitionDecider {
         return prohibitedOps;
     }
 
-    private HashSet<Long> getSubGraph(long id) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, LoaderException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    private HashSet<Long> getSubGraph(long id) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         HashSet<Long> nodes = new HashSet<>();
         HashSet<Node> children = graph.getChildren(id);
         if(children.isEmpty()){

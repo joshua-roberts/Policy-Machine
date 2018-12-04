@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pep.requests;
 
-import gov.nist.csd.pm.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.model.prohibitions.ProhibitionSubject;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
+import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
 
 import java.util.HashSet;
 import java.util.List;

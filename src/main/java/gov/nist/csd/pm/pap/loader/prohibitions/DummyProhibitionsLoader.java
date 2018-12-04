@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
 import java.util.ArrayList;
 import java.util.List;

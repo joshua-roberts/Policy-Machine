@@ -7,8 +7,12 @@
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>gov.nist</param-value>
+			<param-value>gov.nist.csd.pm</param-value>
 		</init-param>
+        <init-param>
+            <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+            <param-value>gov.nist.csd.pm.pep.filter.CORSFilter</param-value>
+        </init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>
@@ -71,5 +75,13 @@
 	<servlet-mapping>
 		<servlet-name>Reset</servlet-name>
 		<url-pattern>/Reset</url-pattern>
+	</servlet-mapping>
+	<servlet>
+		<servlet-name>AddPolicies</servlet-name>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.AddPoliciesServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>AddPolicies</servlet-name>
+		<url-pattern>/AddPolicies</url-pattern>
 	</servlet-mapping>
 </web-app>

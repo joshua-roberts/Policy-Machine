@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.*;
 
 import java.util.HashSet;
 
@@ -13,5 +12,5 @@ public interface ProhibitionDecider {
      * @param targetID The ID of the target to get the prohibited permissions on.
      * @return The set of permissions that are denied for the subject on the target.
      */
-    HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, LoaderException, MissingPermissionException, InvalidProhibitionSubjectTypeException;
+    HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException;
 }

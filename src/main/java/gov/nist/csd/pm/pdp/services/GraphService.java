@@ -1,12 +1,12 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.graph.Graph;
-import gov.nist.csd.pm.model.graph.Search;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
+import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
 import gov.nist.csd.pm.pdp.engine.PolicyDecider;
 
@@ -16,8 +16,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static gov.nist.csd.pm.model.constants.Operations.*;
-import static gov.nist.csd.pm.model.constants.Properties.PASSWORD_PROPERTY;
+import static gov.nist.csd.pm.common.constants.Operations.*;
+import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
+import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
+import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 /**
  * GraphService provides methods to maintain an NGAC graph, while also ensuring any user interacting with the graph,
@@ -40,23 +42,9 @@ public class GraphService extends Service implements Graph, Search {
      * @param ctx The Node to create.
      * @return The new node created with it's ID.
      */
-    public Node createNode(long parentID, Node ctx) throws NullNameException, NullTypeException, DatabaseException, LoadConfigException, LoaderException, NodeNotFoundException, HashingUserPasswordException, NullNodeException, NoIDException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
+    public Node createNode(long parentID, Node ctx) throws NullNameException, NullTypeException, DatabaseException, LoadConfigException, NodeNotFoundException, HashingUserPasswordException, NullNodeException, NoIDException, MissingPermissionException, InvalidNodeTypeException, SessionDoesNotExistException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
         if(ctx == null) {
             throw new NullNodeException();
-        }
-
-        String name = ctx.getName();
-        NodeType type = ctx.getType();
-        HashMap<String, String> properties = ctx.getProperties();
-
-        //check that the node parameters are not null
-        if(name == null) {
-            throw new NullNameException();
-        }else if (type == null) {
-            throw new NullTypeException();
-        } else if (properties == null) {
-            // if the properties are null, instantiate
-            properties = new HashMap<>();
         }
 
         //check that the parent node exists
@@ -65,6 +53,7 @@ public class GraphService extends Service implements Graph, Search {
         }
 
         //if this node is a user, hash the password if present in the properties
+        HashMap<String, String> properties = ctx.getProperties();
         if(properties.containsKey(PASSWORD_PROPERTY)) {
             try {
                 properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
@@ -74,17 +63,34 @@ public class GraphService extends Service implements Graph, Search {
             }
         }
 
+        // if the node is a policy class, check that the user has permissions on super o
+        // this will enforce only users with super permissions can create policy classes
+        if(ctx.getType().equals(NodeType.PC)) {
+            PolicyDecider decider = newPolicyDecider();
+            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
+                throw new MissingPermissionException("missing permissions to create a Policy Class");
+            }
+        }
+
         //create the node
         long id = createNode(ctx);
-        Node childNode = getNode(id);
+        ctx.id(id);
 
         //get the parent node to make the assignment
         Node parentNode = getNode(parentID);
 
         //assign the new node to the parent
-        assign(childNode.getID(), childNode.getType(), parentNode.getID(), parentNode.getType());
+        try {
+            assign(ctx.getID(), ctx.getType(), parentNode.getID(), parentNode.getType());
+        } catch (NullNodeException | SessionDoesNotExistException | LoadConfigException |
+                DatabaseException | MissingPermissionException | NullTypeException |
+                NodeNotFoundException | InvalidAssignmentException | InvalidProhibitionSubjectTypeException e) {
+            // delete the newly created node if the assignment fails
+            getGraphDB().deleteNode(id);
+            getGraphMem().deleteNode(id);
+        }
 
-        return childNode;
+        return ctx;
     }
 
     /**
@@ -93,7 +99,6 @@ public class GraphService extends Service implements Graph, Search {
      *
      * @param node The context of the node to create.  This includes the id, name, type, and properties.
      * @return The Node representing the node that was just created.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws NullNodeException If the provided Node context is null.
@@ -102,7 +107,7 @@ public class GraphService extends Service implements Graph, Search {
      * @throws NullNameException If the given node context does not have a name.
      */
     @Override
-    public long createNode(Node node) throws LoadConfigException, DatabaseException, LoaderException, NullNodeException, NoIDException, NullTypeException, NullNameException, InvalidProhibitionSubjectTypeException {
+    public long createNode(Node node) throws LoadConfigException, DatabaseException, NullNodeException, NoIDException, NullTypeException, NullNameException, InvalidProhibitionSubjectTypeException {
         if(node == null) {
             throw new NullNodeException();
         }
@@ -119,13 +124,12 @@ public class GraphService extends Service implements Graph, Search {
      * Update the node in the database and in the in-memory graph
      * @param node The context of the node to update. This includes the id, name, type, and properties.
      * @throws NullNodeException If either of the provided Node contexts are null.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws NullNodeException If the provided Node context is null.
      */
     @Override
-    public void updateNode(Node node) throws LoadConfigException, DatabaseException, LoaderException, NullNodeException, NoIDException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public void updateNode(Node node) throws LoadConfigException, DatabaseException, NullNodeException, NoIDException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         if(node == null) {
             throw new NullNodeException();
         } else if (!exists(node.getID())) {
@@ -143,14 +147,13 @@ public class GraphService extends Service implements Graph, Search {
      * has the correct permissions to do so. Do this by checking that the user has the permission to deassign from each
      * of the node's parents, and that the user can delete the object
      * @param nodeID the ID of the node to delete.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws MissingPermissionException If the current user does not the correct permissions.
      */
     @Override
-    public void deleteNode(long nodeID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public void deleteNode(long nodeID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //check that the user can delete the node
         PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if (!decider.hasPermissions(getSessionUserID(), getProcessID(), nodeID, DELETE_NODE)) {
@@ -181,12 +184,11 @@ public class GraphService extends Service implements Graph, Search {
      * Check that a node with the given ID exists.  Just checking the in-memory graph is faster.
      * @param nodeID the ID of the node to check for.
      * @return True if a node with the given ID exists, false otherwise.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      */
     @Override
-    public boolean exists(long nodeID) throws LoadConfigException, DatabaseException, LoaderException, InvalidProhibitionSubjectTypeException {
+    public boolean exists(long nodeID) throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
         return getGraphMem().exists(nodeID);
     }
 
@@ -194,24 +196,22 @@ public class GraphService extends Service implements Graph, Search {
      * Retrieve the list of all nodes in the graph.  Go to the database to do this, since it is more likely to have
      * all of the node information.
      * @return The set of all nodes in the graph.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      */
     @Override
-    public HashSet<Node> getNodes() throws LoadConfigException, DatabaseException, LoaderException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getNodes() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
         return getGraphDB().getNodes();
     }
 
     /**
      * Get the set of policy class IDs. This can be performed by the in-memory graph.
      * @return The set of IDs for the policy classes in the graph.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      */
     @Override
-    public HashSet<Long> getPolicies() throws LoadConfigException, DatabaseException, LoaderException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Long> getPolicies() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
         return getGraphMem().getPolicies();
     }
 
@@ -220,14 +220,13 @@ public class GraphService extends Service implements Graph, Search {
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID The ID of the node to get the children of.
      * @return The children of the given Node that the user has any permissions on.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
 
      */
     @Override
-    public HashSet<Node> getChildren(long nodeID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getChildren(long nodeID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         if(!exists(nodeID)) {
             throw new NodeNotFoundException(nodeID);
         }
@@ -243,13 +242,12 @@ public class GraphService extends Service implements Graph, Search {
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID The ID of the node to get the parents of.
      * @return The parents of the given Node that the user has any permissions on.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      */
     @Override
-    public HashSet<Node> getParents(long nodeID) throws LoadConfigException, DatabaseException, LoaderException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getParents(long nodeID) throws LoadConfigException, DatabaseException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         if(!exists(nodeID)) {
             throw new NodeNotFoundException(nodeID);
         }
@@ -268,7 +266,6 @@ public class GraphService extends Service implements Graph, Search {
      * @param parentID The the ID of the parent node.
      * @param parentType The type of the parent node.
      * @throws NullNodeException If either of the provided Node contexts are null.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
@@ -276,7 +273,7 @@ public class GraphService extends Service implements Graph, Search {
      * @throws NullTypeException If either of the provided contexts have a null type.
      */
     @Override
-    public void assign(long childID, NodeType childType, long parentID, NodeType parentType) throws NullNodeException, LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
+    public void assign(long childID, NodeType childType, long parentID, NodeType parentType) throws NullNodeException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NullTypeException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
         //check that the nodes exist
         if(!exists(childID)) {
             throw new NodeNotFoundException(childID);
@@ -288,14 +285,24 @@ public class GraphService extends Service implements Graph, Search {
         //check if the assignment is valid
         NGACAssignment.checkAssignment(childType, parentType);
 
+        // if assigning to a pc, check that the user can assign to the super o
+
         //check the user can assign the child
         PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), childID, ASSIGN)) {
             throw new MissingPermissionException(childID, ASSIGN);
         }
+        
         //check that the user can assign to the parent
-        if(!decider.hasPermissions(getSessionUserID(), getProcessID(), parentID, ASSIGN_TO)) {
-            throw new MissingPermissionException(parentID, ASSIGN_TO);
+        // if the parent is a PC, check for permissions on the super o
+        if(parentType.equals(NodeType.PC)) {
+            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
+                throw new MissingPermissionException(parentID, ASSIGN_TO);
+            }
+        } else {
+            if (!decider.hasPermissions(getSessionUserID(), getProcessID(), parentID, ASSIGN_TO)) {
+                throw new MissingPermissionException(parentID, ASSIGN_TO);
+            }
         }
 
         //create assignment in db
@@ -311,7 +318,6 @@ public class GraphService extends Service implements Graph, Search {
      * @param childType The type of the child node.
      * @param parentID The ID of the parent node.
      * @param parentType The type of the parent node.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
@@ -319,7 +325,7 @@ public class GraphService extends Service implements Graph, Search {
      * @throws NullTypeException If either of the provided contexts have a null type.
      */
     @Override
-    public void deassign(long childID, NodeType childType, long parentID, NodeType parentType) throws InvalidProhibitionSubjectTypeException, LoaderException, LoadConfigException, DatabaseException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, NullNodeException, NullTypeException {
+    public void deassign(long childID, NodeType childType, long parentID, NodeType parentType) throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException, NodeNotFoundException, SessionDoesNotExistException, MissingPermissionException, NullNodeException, NullTypeException {
 
         //check nodes exist
         if(!exists(childID)) {
@@ -335,8 +341,15 @@ public class GraphService extends Service implements Graph, Search {
             throw new MissingPermissionException(childID, DEASSIGN);
         }
         //check that the user can deassign from the parent
-        if(!decider.hasPermissions(getSessionUserID(), getProcessID(),parentID, DEASSIGN_FROM)) {
-            throw new MissingPermissionException(parentID, DEASSIGN);
+        // if the parent is a PC, check for permissions on the super o
+        if(parentType.equals(NodeType.PC)) {
+            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
+                throw new MissingPermissionException(parentID, DEASSIGN_FROM);
+            }
+        } else {
+            if (!decider.hasPermissions(getSessionUserID(), getProcessID(), parentID, DEASSIGN_FROM)) {
+                throw new MissingPermissionException(parentID, DEASSIGN_FROM);
+            }
         }
 
         //delete assignment in db
@@ -351,14 +364,13 @@ public class GraphService extends Service implements Graph, Search {
      * @param uaID The ID of the User Attribute.
      * @param targetID The ID of the target node.
      * @param operations A Set of operations to add to the Association.
-     * @throws LoaderException If there is an error loading the graph into memory.
      * @throws SessionDoesNotExistException If the current session ID does not exist.
      * @throws LoadConfigException If the server cannot load the database configuration.
      * @throws DatabaseException If there is an error performing this action in the database or connecting to the database.
      * @throws MissingPermissionException If the current user does not the correct permissions.
      */
     @Override
-    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws DatabaseException, LoadConfigException, LoaderException, MissingPermissionException, SessionDoesNotExistException, NodeNotFoundException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
+    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws DatabaseException, LoadConfigException, MissingPermissionException, SessionDoesNotExistException, NodeNotFoundException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
         //check that the nodes exist and the operations are not null
         if(!exists(uaID)) {
             throw new NodeNotFoundException(uaID);
@@ -397,7 +409,7 @@ public class GraphService extends Service implements Graph, Search {
      * @param targetID The ID of the target node.
      */
     @Override
-    public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException, LoaderException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //check the user can associate the source and target nodes
         PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), uaID, DISASSOCIATE)) {
@@ -420,7 +432,7 @@ public class GraphService extends Service implements Graph, Search {
      * @return A map of the target ID and operations for each association the given node is the source of.
      */
     @Override
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         if(!exists(sourceID)) {
             throw new NodeNotFoundException(sourceID);
         }
@@ -441,7 +453,7 @@ public class GraphService extends Service implements Graph, Search {
      * @return A map of the source ID and operations for each association the given node is the target of.
      */
     @Override
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws LoaderException, SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         if(!exists(targetID)) {
             throw new NodeNotFoundException(targetID);
         }
@@ -466,13 +478,12 @@ public class GraphService extends Service implements Graph, Search {
      * @param properties The properties of the nodes to search for.
      * @return A Response with the nodes that match the given search criteria.
      * @throws LoadConfigException If the PAP was unable to load the database configuration.
-     * @throws LoaderException If the PAP was unable to load the graph into memory.
      * @throws DatabaseException If there is an error communicating with the database or retrieving information from the database.
      * @throws SessionDoesNotExistException If the session ID provided does not exist.
      * @throws MissingPermissionException If the given user is not allowed to perform the operation.
      */
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, LoaderException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException {
         // user the PIP searcher to search for the intended nodes
         HashSet<Node> nodes = getSearch().search(name, type, properties);
         //filter out any nodes the user doesn't have any permissions on
@@ -489,11 +500,10 @@ public class GraphService extends Service implements Graph, Search {
      * @throws InvalidNodeTypeException If the provided Node type is invalid.
      * @throws SessionDoesNotExistException  If the current session ID does not exist.
      * @throws LoadConfigException If the PAP was unable to load the database configuration.
-     * @throws LoaderException If the PAP was unable to load the graph into memory.
      * @throws MissingPermissionException If the given user is not allowed to perform the operation.
      */
     @Override
-    public Node getNode(long id) throws NodeNotFoundException, DatabaseException, InvalidNodeTypeException, SessionDoesNotExistException, LoadConfigException, LoaderException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public Node getNode(long id) throws NodeNotFoundException, DatabaseException, InvalidNodeTypeException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         if(!exists(id)) {
             throw new NodeNotFoundException(id);
         }

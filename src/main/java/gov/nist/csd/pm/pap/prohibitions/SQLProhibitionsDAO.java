@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pap.prohibitions;
 
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.LoadConfigException;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
-import gov.nist.csd.pm.model.exceptions.ProhibitionDoesNotExistException;
-import gov.nist.csd.pm.model.prohibitions.*;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.LoadConfigException;
+
+import gov.nist.csd.pm.common.exceptions.ProhibitionDoesNotExistException;
+import gov.nist.csd.pm.common.model.prohibitions.*;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 
@@ -74,12 +74,12 @@ public class SQLProhibitionsDAO implements ProhibitionsDAO {
     }
 
     @Override
-    public List<Prohibition> getProhibitions() throws LoadConfigException, DatabaseException, LoaderException {
+    public List<Prohibition> getProhibitions() throws LoadConfigException, DatabaseException {
         return null;
     }
 
     @Override
-    public Prohibition getProhibition(String prohibitionName) throws ProhibitionDoesNotExistException, DatabaseException, LoadConfigException, LoaderException {
+    public Prohibition getProhibition(String prohibitionName) throws ProhibitionDoesNotExistException, DatabaseException, LoadConfigException {
         return null;
     }
 

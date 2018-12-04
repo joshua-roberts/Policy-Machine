@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.InvalidProhibitionSubjectTypeException;
-import gov.nist.csd.pm.model.exceptions.LoadConfigException;
+import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.exceptions.LoadConfigException;
 import gov.nist.csd.pm.pap.PAP;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.LoaderException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+
 
 import javax.servlet.http.HttpServlet;
 
@@ -15,7 +15,7 @@ public class StartupServlet extends HttpServlet {
         try {
             PAP.getPAP();
         }
-        catch (DatabaseException | LoadConfigException | LoaderException | InvalidProhibitionSubjectTypeException e) {
+        catch (DatabaseException | LoadConfigException | InvalidProhibitionSubjectTypeException e) {
             e.printStackTrace();
         }
     }

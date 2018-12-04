@@ -1,13 +1,13 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.model.exceptions.*;
-import gov.nist.csd.pm.model.prohibitions.*;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.prohibitions.*;
 import gov.nist.csd.pm.pdp.engine.PolicyDecider;
 
 import java.util.List;
 
-import static gov.nist.csd.pm.model.constants.Operations.ANY_OPERATIONS;
-import static gov.nist.csd.pm.model.constants.Operations.PROHIBIT_SUBJECT;
+import static gov.nist.csd.pm.common.constants.Operations.ANY_OPERATIONS;
+import static gov.nist.csd.pm.common.constants.Operations.PROHIBIT_SUBJECT;
 
 public class ProhibitionsService extends Service implements ProhibitionsDAO {
 
@@ -16,7 +16,7 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
     }
 
     @Override
-    public void createProhibition(Prohibition prohibition) throws DatabaseException, NullNameException, ProhibitionNameExistsException, LoadConfigException, LoaderException, SessionDoesNotExistException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public void createProhibition(Prohibition prohibition) throws DatabaseException, NullNameException, ProhibitionNameExistsException, LoadConfigException, SessionDoesNotExistException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
         String name = prohibition.getName();
         ProhibitionSubject subject = prohibition.getSubject();
         List<ProhibitionNode> nodes = prohibition.getNodes();
@@ -53,13 +53,13 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
     }
 
     @Override
-    public List<Prohibition> getProhibitions() throws LoadConfigException, DatabaseException, LoaderException, InvalidProhibitionSubjectTypeException {
+    public List<Prohibition> getProhibitions() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
         return getProhibitionsMem().getProhibitions();
     }
 
     @Override
     public Prohibition getProhibition(String prohibitionName)
-            throws ProhibitionDoesNotExistException, DatabaseException, LoadConfigException, LoaderException, InvalidProhibitionSubjectTypeException {
+            throws ProhibitionDoesNotExistException, DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
         List<Prohibition> prohibitions = getProhibitions();
         for(Prohibition prohibition : prohibitions) {
             if(prohibition.getName().equals(prohibitionName)) {
@@ -70,7 +70,7 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
     }
 
     @Override
-    public void updateProhibition(Prohibition prohibition) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException, LoaderException {
+    public void updateProhibition(Prohibition prohibition) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
         //create prohibition in PAP
         getProhibitionsDB().updateProhibition(prohibition);
         getProhibitionsMem().updateProhibition(prohibition);
@@ -78,7 +78,7 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
 
     @Override
     public void deleteProhibition(String prohibitionName)
-            throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException, LoaderException, ProhibitionDoesNotExistException {
+            throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException, ProhibitionDoesNotExistException {
         //check that the prohibition exists
         getProhibition(prohibitionName);
 
