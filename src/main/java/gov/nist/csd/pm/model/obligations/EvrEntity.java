@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.model.obligations;
 
-import gov.nist.csd.pm.model.exceptions.InvalidEntityException;
-import gov.nist.csd.pm.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.exceptions.InvalidEntityException;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
 
 import java.util.ArrayList;
 import java.util.List;

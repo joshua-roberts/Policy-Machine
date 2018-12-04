@@ -1,4 +1,4 @@
-/*
+package gov.nist.csd.pm.pep.resources;/*
 package gov.nist.csd.pm.pep.resources;
 
 import com.google.gson.Gson;

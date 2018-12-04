@@ -1,45 +1,46 @@
 package gov.nist.csd.pm.pip.graph;
 
-import gov.nist.csd.pm.model.exceptions.NoIDException;
-import gov.nist.csd.pm.model.exceptions.NullNodeCtxException;
-import gov.nist.csd.pm.model.exceptions.NullTypeException;
-import gov.nist.csd.pm.model.graph.nodes.Node;
-import gov.nist.csd.pm.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.pip.loader.DummyLoader;
-import gov.nist.csd.pm.pip.loader.LoaderException;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.NoIDException;
+import gov.nist.csd.pm.common.exceptions.NullNodeException;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.pap.graph.MemGraph;
+import gov.nist.csd.pm.pap.loader.graph.DummyGraphLoader;
 import org.junit.jupiter.api.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NGACMemTest {
 
-    NGACMem mem;
+    MemGraph mem;
 
     @BeforeEach
     void setUp() {
         try {
-            mem = new NGACMem(new DummyLoader());
+            mem = new MemGraph(new DummyGraphLoader());
 
             //create nodes
-            Node pc1 = mem.createNode(new Node(1, "pc1", NodeType.PC, null));
-            Node oa1 = mem.createNode(new Node(2, "oa1", NodeType.OA, null));
-            Node o1 = mem.createNode(new Node(3, "o1", NodeType.O, null));
-            Node ua1 = mem.createNode(new Node(4, "ua1", NodeType.UA, null));
-            Node u1 = mem.createNode(new Node(5, "u1", NodeType.U, null));
+            long pc1 = mem.createNode(new Node(1, "pc1", PC, null));
+            long oa1 = mem.createNode(new Node(2, "oa1", NodeType.OA, null));
+            long o1 = mem.createNode(new Node(3, "o1", NodeType.O, null));
+            long ua1 = mem.createNode(new Node(4, "ua1", NodeType.UA, null));
+            long u1 = mem.createNode(new Node(5, "u1", NodeType.U, null));
 
             //create assignments
-            mem.assign(oa1, pc1);
-            mem.assign(o1, oa1);
-            mem.assign(ua1, pc1);
-            mem.assign(u1, ua1);
+            mem.assign(oa1, OA, pc1, PC);
+            mem.assign(o1, O, oa1, OA);
+            mem.assign(ua1, UA, pc1, PC);
+            mem.assign(u1, U, ua1, UA);
 
             //create associations
-            mem.associate(ua1.getID(), oa1.getID(), new HashSet<>(Arrays.asList("read", "write")));
+            mem.associate(ua1, oa1, OA, new HashSet<>(Arrays.asList("read", "write")));
         }
-        catch (LoaderException | NoIDException | NullNodeCtxException e) {
+        catch (DatabaseException | NoIDException | NullNodeException e) {
             fail(e.getMessage());
         }
     }
@@ -52,10 +53,10 @@ class NGACMemTest {
         @DisplayName("test create node")
         void test1() {
             try {
-                Node test_oa = mem.createNode(new Node(6, "test_oa", NodeType.OA, null));
-                assertTrue(mem.exists(test_oa.getID()));
+                long test_oa = mem.createNode(new Node(6, "test_oa", NodeType.OA, null));
+                assertTrue(mem.exists(test_oa));
             }
-            catch (NoIDException | NullNodeCtxException e) {
+            catch (NoIDException | NullNodeException e) {
                 fail(e.getMessage());
             }
         }
@@ -69,7 +70,7 @@ class NGACMemTest {
         @Test
         @DisplayName("test create node NullNodeCtxException")
         void test3() {
-            Assertions.assertThrows(NullNodeCtxException.class, () -> mem.createNode(null));
+            Assertions.assertThrows(NullNodeException.class, () -> mem.createNode(null));
         }
     }
 
@@ -160,15 +161,15 @@ class NGACMemTest {
         @DisplayName("test assign")
         void test1() {
             try {
-                Node testOA1 = mem.createNode(new Node(6, "test_oa1", NodeType.OA, null));
-                Node testOA2 = mem.createNode(new Node(7, "test_oa2", NodeType.OA, null));
-                mem.assign(testOA1, testOA2);
+                long testOA1 = mem.createNode(new Node(6, "test_oa1", NodeType.OA, null));
+                long testOA2 = mem.createNode(new Node(7, "test_oa2", NodeType.OA, null));
+                mem.assign(testOA1, OA, testOA2, OA);
                 //check that the assignment was made
-                HashSet<Node> children = mem.getChildren(testOA2.getID());
+                HashSet<Node> children = mem.getChildren(testOA2);
                 assertEquals(1, children.size());
                 assertEquals(6, children.iterator().next().getID());
             }
-            catch (NoIDException | NullNodeCtxException e) {
+            catch (NoIDException | NullNodeException e) {
                 fail(e.getMessage());
             }
         }
@@ -181,15 +182,10 @@ class NGACMemTest {
         @Test
         @DisplayName("test deassign")
         void test1() {
-            try {
-                mem.deassign(new Node().id(3), new Node().id(2));
-                //check that the assignment was deleted
-                HashSet<Node> children = mem.getChildren(2);
-                assertEquals(0, children.size());
-            }
-            catch (NullNodeCtxException e) {
-                fail(e.getMessage());
-            }
+            mem.deassign(3, O, 2, OA);
+            //check that the assignment was deleted
+            HashSet<Node> children = mem.getChildren(2);
+            assertEquals(0, children.size());
         }
     }
 

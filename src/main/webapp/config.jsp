@@ -16,17 +16,9 @@
             switch (name) {
                 case 'neo4j':
                     hideForm('mysql');
-                    hideForm('reset');
-                    hideForm('load');
-                    hideForm('save');
-                    hideForm('interval');
                     break;
                 case 'mysql':
                     hideForm('neo4j');
-                    hideForm('reset');
-                    hideForm('load');
-                    hideForm('save');
-                    hideForm('interval');
                     break;
             }
         }
@@ -73,7 +65,7 @@
         <button class="btn btn-success col-lg-3" style="margin-right: 10px" onclick="showForm('neo4j')">Neo4j</button>
         <button class="btn btn-primary col-lg-3" onclick="showForm('mysql')">MySQL</button>
     </div>
-    <div id="neo4jForm" class="col-lg-12 card-body" style="display: none; background-color: white; height: inherit;">
+    <div id="neo4jForm" class="col-lg-12 card-body" style="display: none; background-color: white;">
         <form action="SetConnection" method="post">
             <input type="hidden" name="database" value="neo4j">
             <fieldset>
@@ -105,7 +97,7 @@
             </fieldset>
         </form>
     </div>
-    <div id="mysqlForm" class="col-lg-12 card-body" style="display: none; background-color: white; height: inherit;">
+    <div id="mysqlForm" class="col-lg-12 card-body" style="display: none; background-color: white;">
         <form action="SetConnection" method="post">
             <input type="hidden" name="database" value="mysql">
             <fieldset>
@@ -143,7 +135,7 @@
     </div>
     <h2 style="margin-top: 10px">Configuration</h2>
     <div class="row" style="margin: 0; padding: 20px">
-        <div id="resetForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
+        <div id="resetForm" class="col-lg-4" style="background-color: white; color: #008cba">
             <form action="Reset" method="post">
                 <fieldset>
                     <legend>Reset</legend>
@@ -156,7 +148,7 @@
                 </fieldset>
             </form>
         </div>
-        <div id="loadForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
+        <div id="loadForm" class="col-lg-4" style="background-color: white; color: #008cba">
             <form enctype="multipart/form-data" action="load" method="post">
                 <fieldset>
                     <legend>Load</legend>
@@ -175,7 +167,7 @@
                 </fieldset>
             </form>
         </div>
-        <div id="saveForm" class="col-lg-4" style="background-color: white; height: inherit; color: #008cba">
+        <div id="saveForm" class="col-lg-4" style="background-color: white; color: #008cba">
             <form action="save" method="post">
                 <fieldset>
                     <legend>Save</legend>
