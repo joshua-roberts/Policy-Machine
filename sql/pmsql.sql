@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   KEY `idx_all_columns` (`start_node_id`,`depth`,`assignment_path_id`,`end_node_id`),
   CONSTRAINT `fk_endnode` FOREIGN KEY (`end_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `fk_startnode` FOREIGN KEY (`start_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=38135 DEFAULT CHARSET=utf8 COMMENT='This table stores assignment relations';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table stores assignment relations';
 
 -- Dumping data for table pmwsdb.assignment: ~0 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `assignment_path` (
   PRIMARY KEY (`assignment_path_id`),
   KEY `fk_assignment_node_id` (`assignment_node_id`),
   CONSTRAINT `fk_assignment_node_id` FOREIGN KEY (`assignment_node_id`) REFERENCES `node` (`node_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16461 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Dumping data for table pmwsdb.assignment_path: ~0 rows (approximately)
 /*!40000 ALTER TABLE `assignment_path` DISABLE KEYS */;
@@ -171,7 +171,7 @@ DROP VIEW IF EXISTS `association`;
 CREATE TABLE `association` (
 	`ua_id` BIGINT(11) NULL,
 	`opset_id` INT(11) NOT NULL,
-	`oa_id` INT(11) NOT NULL
+	`target_id` INT(11) NOT NULL
 ) ENGINE=MyISAM;
 
 -- Dumping structure for table pmwsdb.audit_information
@@ -1238,7 +1238,7 @@ CREATE TABLE IF NOT EXISTS `node` (
   PRIMARY KEY (`node_id`),
   KEY `node_type_id_idx` (`node_type_id`),
   CONSTRAINT `fk_node_type_id` FOREIGN KEY (`node_type_id`) REFERENCES `node_type` (`node_type_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=11317 DEFAULT CHARSET=utf8 COMMENT='This table contains all the nodes in the graph';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains all the nodes in the graph';
 
 -- Dumping data for table pmwsdb.node: ~0 rows (approximately)
 /*!40000 ALTER TABLE `node` DISABLE KEYS */;
@@ -1698,7 +1698,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP VIEW IF EXISTS `association`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `association`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `association` AS select (select `b`.`end_node_id` from `assignment` `b` where ((`b`.`start_node_id` = `a`.`end_node_id`) and isnull(`b`.`assignment_path_id`) and (`b`.`depth` = 1) and (`GET_NODE_TYPE`(`b`.`start_node_id`) = 7))) AS `ua_id`,`a`.`end_node_id` AS `opset_id`,`a`.`start_node_id` AS `oa_id` from `assignment` `a` where (isnull(`a`.`assignment_path_id`) and (`a`.`depth` = 1) and (`GET_NODE_TYPE`(`a`.`end_node_id`) = 7));
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `association` AS select (select `b`.`end_node_id` from `assignment` `b` where ((`b`.`start_node_id` = `a`.`end_node_id`) and isnull(`b`.`assignment_path_id`) and (`b`.`depth` = 1) and (`GET_NODE_TYPE`(`b`.`start_node_id`) = 7))) AS `ua_id`,`a`.`end_node_id` AS `opset_id`,`a`.`start_node_id` AS `target_id` from `assignment` `a` where (isnull(`a`.`assignment_path_id`) and (`a`.`depth` = 1) and (`GET_NODE_TYPE`(`a`.`end_node_id`) = 7));
 
 -- Dumping structure for view pmwsdb.object_view
 DROP VIEW IF EXISTS `object_view`;

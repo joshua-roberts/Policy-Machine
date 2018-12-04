@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.model.obligations.script;
 
-import gov.nist.csd.pm.model.exceptions.EvrRuleDoesNotExist;
+import gov.nist.csd.pm.common.exceptions.EvrRuleDoesNotExist;
 import gov.nist.csd.pm.model.obligations.EvrRule;
 
 import java.util.ArrayList;

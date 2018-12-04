@@ -1,0 +1,16 @@
+<graph>
+    <pc name="pc1">
+        <oa name="oa1">
+            <o name="o1"/>
+        </oa>
+        <ua name="ua1">
+            <u name="u1"/>
+        </ua>
+        <a>
+            <source name="ua1"/>
+            <oa name="oa1"/>
+            <op name="read"/>
+            <op name="write"/>
+        </a>
+    </pc>
+</graph>

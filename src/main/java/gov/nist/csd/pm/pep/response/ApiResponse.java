@@ -1,33 +1,20 @@
 package gov.nist.csd.pm.pep.response;
 
-import gov.nist.csd.pm.model.exceptions.PmException;
+import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
 import javax.ws.rs.core.Response;
 
-import static gov.nist.csd.pm.model.exceptions.ErrorCodes.SUCCESS;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class ApiResponse {
-    private Integer code                                     = null;
-    private String  message                                  = null;
-    private Object  entity                                   = null;
-
-    /*public static final String CLIENT_ERRMSG                      = "There was an error on the client side";
-    public static final String SERVER_ERRMSG                      = "There was an error on the server side";
-    public static final String NODE_NAME_EXISTS_ERRMSG            = "The server received a Node name that already exists.";
-    public static final String ASSIGNMENT_EXISTS_ERRMSG           = "There is already an assignment between %d (start) and %d (end)";
-    public static final String NO_ASSIGNMENT_EXISTS_ERRMSG        = "There is no assignment between %d (start) and %d (end)";
-    public static final String DUPLICATE_NAME_IN_PATH_ERRMSG      = "Node with name '%s' already exists in the path";
-    public static final String NODE_NOT_FOUND_ERRMSG              = "Node with id %d could not be found";
-    public static final String NULL_ID_ERRMSG                     = "The server received a null id";
-    public static final String NULL_NAME_ERRMSG                   = "The server received a null name";
-    public static final String NULL_TYPE_ERRMSG                   = "The server received a null type";
-    public static final String STARTUP_ERRMSG                     = "The server encountered an error on startup";
-    public static final String NODE_NOT_CONNECTED_TO_GRAPH_ERRMSG = "The start node with id %d has not been connected to the nodes yet.  Connect the start node to the nodes to complete this assignment.";
-    public static final String CREATE_NODE_ERR_MSG                = "Could not create node";
-    public static final String NO_ACL_ENTRY_FOUND                 = "No ACL Entry found for this node";
-    public static final String UPDATE_ACCESS_ERRMSG               = "Could not update access1";
-    public static final String ASSOCIATION_DOES_NOT_EXIST         = "Could not update access1";
-    public static final String PROP_NOT_FOUND_ERRMSG              = "Node with ID = %d does not have a property with key '%s'";*/
+    private int code;
+    private String  message;
+    private Object  entity;
 
     public static final String DELETE_ASSIGNMENT_SUCCESS      = "Assignment was successfully deleted";
     public static final String POST_NODE_PROPERTY_SUCCESS     = "The property was successfully added to the node";
@@ -38,8 +25,9 @@ public class ApiResponse {
     public static final String CREATE_ASSOCIATION_SUCCESS     = "Association was successfully created";
     public static final String UPDATE_ASSOCIATION_SUCCESS     = "Successfully updated the association";
     public static final String DELETE_NODE_SUCCESS            = "Node successfully deleted";
-    public static final String PUT_NODE_SUCCESS               = "Node was successfully updated";
+    public static final String UPDATE_NODE_SUCCESS               = "Node was successfully updated";
     public static final String CREATE_PROHIBITION_SUCCESS       = "The Prohibition was successfully created";
+    public static final String UPDATE_PROHIBITION_SUCCESS       = "The Prohibition was successfully updated";
     public static final String DELETE_PROHIBITION_SUCCESS       = "Prohibition was deleted successfully";
     public static final String ADD_PROHIBITION_RESOURCE_SUCCESS = "Resource was added to the prohibitions";
     public static final String REMOVE_PROHIBITION_RESOURCE_SUCCESS  = "The resource was successfully removed from the prohibitions";
@@ -49,38 +37,134 @@ public class ApiResponse {
     public static final String DELETE_NODE_IN_NAMESPACE_SUCCESS     = "The node was successfully deleted";
     public static final String DELETE_SESSION_SUCCESS     = "Session was deleted";
 
-
     private static final String SUCCESS_MSG = "Success";
 
-    public ApiResponse() {
+    private static final int SUCCESS_CODE = 9000;
+
+    public static class Builder implements Serializable {
+        private int code;
+        private String  message;
+        private Object  entity;
+
+        /**
+         * Create a new builder with the given response code
+         * @param code The code to give this builder.
+         */
+        public Builder(int code) {
+            this.code = code;
+        }
+
+        /**
+         * This method returns a Builder that has the success response code and message.
+         * @return A Builder with success response code and default message.
+         */
+        public static Builder success() {
+            Builder builder = new Builder(SUCCESS_CODE);
+            builder.message = SUCCESS_MSG;
+            return builder;
+        }
+
+        /**
+         * This method returns a Builder that has the given error response code and message.
+         * @param e The exception that represents the error.  The exception's error code and message will be
+         *          added to the Builder.
+         * @return A Builder with an error response code and default message.
+         */
+        public static Builder error(PMException e) {
+            Builder res = new Builder(e.getErrorCode());
+            res.message = e.getMessage();
+            return res;
+        }
+
+        /**
+         * 
+         * @param code
+         * @param message
+         * @return
+         */
+        public static Builder error(int code, String message) {
+            return new Builder(code).message(message);
+        }
+
+        /**
+         * Builder method to set the message of a Builder
+         * @param message the message to give this Builder
+         * @return The current Builder object with the given message
+         */
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        /**
+         * Builder method to set the code of a Builder
+         * @param code the code to give this Builder
+         * @return The current Builder object with the given code
+         */
+        public Builder code(int code) {
+            this.code = code;
+            return this;
+        }
+
+        /**
+         * Builder method to set the entity of this Builder to the given Object
+         * @param o The Object to set as this Builder's entity
+         * @return The current Builder with the given Object as the entity
+         */
+        public Builder entity(Object o) {
+            this.entity = o;
+            return this;
+        }
+
+        /**
+         * Build a new JAX-RS response from the current builder.
+         * @return The JAX-RS response constructed from the builder.
+         */
+        public Response build() {
+            ApiResponse response = new ApiResponse();
+            response.setCode(this.code);
+            response.setMessage(this.message);
+            response.setEntity(this.entity);
+
+            // convert the ApiResponse to a JAX-RS response object
+            // The JAX-RS response code will always be 200, The ApiResponse will have an error code if there is one.
+            return Response.ok()
+                    .entity(this)
+                    .build();
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Object getEntity() {
+            return entity;
+        }
+
+        public void setEntity(Object entity) {
+            this.entity = entity;
+        }
     }
 
-    public ApiResponse(Object entity) {
-        this.code = SUCCESS;
-        this.message = SUCCESS_MSG;
-        this.entity = entity;
-    }
-
-    public ApiResponse(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    public ApiResponse(PmException exception) {
-        this.code = exception.getErrorCode();
-        this.message = exception.getMessage();
-    }
-
-    public ApiResponse(Exception exception) {
-        this.code = exception.hashCode();
-        this.message = exception.toString();
-    }
+    private ApiResponse() {}
 
     public int getCode() {
         return code;
     }
 
-    public void setCode(int code) {
+    private void setCode(int code) {
         this.code = code;
     }
 
@@ -88,7 +172,7 @@ public class ApiResponse {
         return message;
     }
 
-    public void setMessage(String message) {
+    private void setMessage(String message) {
         this.message = message;
     }
 
@@ -96,13 +180,7 @@ public class ApiResponse {
         return entity;
     }
 
-    public void setEntity(Object entity) {
+    private void setEntity(Object entity) {
         this.entity = entity;
-    }
-
-    public Response toResponse() {
-        return Response.ok()
-                .entity(this)
-                .build();
     }
 }

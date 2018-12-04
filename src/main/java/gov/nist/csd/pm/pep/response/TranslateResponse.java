@@ -1,24 +1,10 @@
 package gov.nist.csd.pm.pep.response;
 
 public class TranslateResponse {
-    String id;
     String sql;
 
-    public TranslateResponse() {
-
-    }
-
-    public TranslateResponse(String id, String sql) {
-        this.id = id;
+    public TranslateResponse(String sql) {
         this.sql = sql;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getSql() {

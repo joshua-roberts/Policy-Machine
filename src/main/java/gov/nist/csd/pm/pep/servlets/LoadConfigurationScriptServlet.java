@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.*;
+
 import gov.nist.csd.pm.pdp.services.ConfigurationService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -14,12 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.sql.SQLException;
 import java.util.List;
-
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
 
 public class LoadConfigurationScriptServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
@@ -46,18 +42,15 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
 
                     ConfigurationService service = new ConfigurationService();
                     service.load(config);
-
-                    //build the graph in memory
-                    getDaoManager().getGraphDAO().buildGraph();
                 }
             }
-
-            getDaoManager().getGraphDAO().buildGraph();
-
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
-
         }
-        catch ( FileUploadException | InvalidPropertyException | DatabaseException | SQLException | ClassNotFoundException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+        catch ( FileUploadException | DatabaseException | InvalidAssignmentException |
+                MissingPermissionException | NoIDException | InvalidAssociationException |
+                NullNameException | SessionDoesNotExistException | InvalidNodeTypeException |
+                NullTypeException | NullNodeException | HashingUserPasswordException |
+                NodeNotFoundException | LoadConfigException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

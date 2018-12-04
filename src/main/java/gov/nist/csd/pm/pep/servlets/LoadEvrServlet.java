@@ -15,8 +15,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.List;
 
-import static gov.nist.csd.pm.pip.dao.DAOManager.getDaoManager;
-
 public class LoadEvrServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
                           HttpServletResponse response) throws IOException {
@@ -43,8 +41,6 @@ public class LoadEvrServlet extends HttpServlet {
                     //TODO
                 }
             }
-
-            getDaoManager().getGraphDAO().buildGraph();
         }catch (Exception e) {
             e.printStackTrace();
         }

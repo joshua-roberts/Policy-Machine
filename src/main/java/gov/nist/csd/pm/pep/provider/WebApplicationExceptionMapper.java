@@ -10,6 +10,8 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
     @Override
     public Response toResponse(WebApplicationException e) {
         e.printStackTrace();
-        return new ApiResponse(e.getResponse().getStatus(), e.getMessage()).toResponse();
+        return ApiResponse.Builder
+                .error(e.getResponse().getStatus(), e.getMessage())
+                .build();
     }
 }

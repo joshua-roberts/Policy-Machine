@@ -1,15 +1,15 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.pip.dao.DAOManager;
-import gov.nist.csd.pm.model.exceptions.DatabaseException;
-import gov.nist.csd.pm.model.exceptions.InvalidPropertyException;
+import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.pap.PAP;
+import gov.nist.csd.pm.common.exceptions.DatabaseException;
+
 
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.sql.SQLException;
 import java.util.Properties;
 
 public class SetConnectionServlet extends HttpServlet {
@@ -32,11 +32,11 @@ public class SetConnectionServlet extends HttpServlet {
         props.put("schema", schema == null ? "" : schema);
 
         try {
-            DAOManager.init(props);
+            PAP.init(props);
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
-        catch (DatabaseException | ClassNotFoundException | SQLException | InvalidPropertyException e) {
+        catch (DatabaseException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }

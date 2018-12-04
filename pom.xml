@@ -34,6 +34,11 @@
                     <password>password</password>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -81,7 +86,12 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j</artifactId>
-            <version>3.2.1</version>
+            <version>3.4.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-bolt</artifactId>
+            <version>3.4.9</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
@@ -119,17 +129,6 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.9.1</version>
         </dependency>
-        <!--<dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>2.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-joda</artifactId>
-            <version>2.4.0</version>
-        </dependency>-->
-
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jersey2-jaxrs</artifactId>
@@ -146,7 +145,18 @@
             <version>5.0.0-M4</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-kernel</artifactId>
+            <version>2.3.3</version>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-io</artifactId>
+            <version>2.3.3</version>
+            <type>test-jar</type>
+        </dependency>
     </dependencies>
     <properties>
         <jersey.version>2.16</jersey.version>

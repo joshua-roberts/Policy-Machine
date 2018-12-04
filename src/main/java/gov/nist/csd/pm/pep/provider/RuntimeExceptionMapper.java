@@ -9,7 +9,9 @@ public class RuntimeExceptionMapper implements ExceptionMapper<RuntimeException>
     @Override
     public Response toResponse(RuntimeException e) {
         e.printStackTrace();
-        return new ApiResponse(e.hashCode(), e.getMessage()).toResponse();
+        return ApiResponse.Builder
+                .error(e.hashCode(), e.getMessage())
+                .build();
     }
 }
 

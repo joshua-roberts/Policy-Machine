@@ -1,8 +1,10 @@
 package gov.nist.csd.pm.pep.requests;
 
+import java.util.HashMap;
+
 public class UpdateNodeRequest {
-    String name;
-    String description;
+    String                  name;
+    HashMap<String, String> properties;
 
     public String getName() {
         return name;
@@ -12,11 +14,11 @@ public class UpdateNodeRequest {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public HashMap<String, String> getProperties() {
+        return properties;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setProperties(HashMap<String, String> properties) {
+        this.properties = properties;
     }
 }

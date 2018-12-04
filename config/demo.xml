@@ -1,0 +1,186 @@
+<graph>
+    <pc name="ras1-repo PC">
+        <oa name="ras1-repo OA">
+            <oa name="sub1">
+                <o name="sub1.jpg" location="ras1"/>
+                <o name="sub1_proposal.txt" location="ras1"/>
+                <o name="sub1_file1.txt" location="ras1"/>
+                <o name="sub1_file2.txt" location="ras1"/>
+            </oa>
+        </oa>
+    </pc>
+    <pc name="ras2-repo PC">
+        <oa name="ras2-repo OA">
+            <oa name="sub2">
+                <o name="sub2.jpg" location="ras2"/>
+                <o name="sub2_proposal.txt" location="ras2"/>
+                <o name="sub2_file1.txt" location="ras2"/>
+                <o name="sub2_file2.txt" location="ras2"/>
+            </oa>
+        </oa>
+    </pc>
+    <pc name="ras3-repo PC">
+        <oa name="ras3-repo OA">
+            <oa name="sub3">
+                <o name="sub3.jpg" location="ras3"/>
+                <o name="sub3_proposal.txt" location="ras3"/>
+                <o name="sub3_file1.txt" location="ras3"/>
+                <o name="sub3_file2.txt" location="ras3"/>
+            </oa>
+        </oa>
+    </pc>
+    <pc name="super PC">
+        <ua name="super UA">
+            <u name="super" password="super"/>
+        </ua>
+    </pc>
+    <pc name="DAC">
+        <oa name="DAC OA">
+            <oa name="bob home">
+                <oa name="sub1"/>
+                <oa name="sub2"/>
+            </oa>
+            <oa name="alice home">
+                <oa name="sub2"/>
+                <oa name="sub3"/>
+            </oa>
+            <oa name="dave home">
+                <oa name="submarine proposals"/>
+            </oa>
+            <oa name="charlie home">
+                <oa name="submarine proposals"/>
+            </oa>
+            <oa name="inboxes">
+                <oa name="alice inbox" inbox="alice"/>
+                <oa name="bob inbox" inbox="bob"/>
+                <oa name="dave inbox" inbox="dave"/>
+                <oa name="charlie inbox" inbox="charlie"/>
+            </oa>
+            <oa name="outboxes">
+                <oa name="alice outbox" outbox="alice"/>
+                <oa name="bob outbox" outbox="bob"/>
+                <oa name="dave outbox" outbox="dave"/>
+                <oa name="charlie outbox" outbox="charlie"/>
+            </oa>
+        </oa>
+        <ua name="DAC UA">
+            <ua name="all users">
+                <u name="bob" password="bob"/>
+                <u name="alice" password="alice"/>
+                <u name="charlie" password="charlie"/>
+                <u name="dave" password="dave"/>
+            </ua>
+            <ua name="Bob">
+                <u name="bob"/>
+            </ua>
+            <ua name="Alice">
+                <u name="alice"/>
+            </ua>
+            <ua name="Dave">
+                <u name="dave"/>
+            </ua>
+            <ua name="Charlie">
+                <u name="charlie"/>
+            </ua>
+        </ua>
+        <ua name="DAC admin">
+            <u name="super"/>
+        </ua>
+    </pc>
+    <pc name="MLS">
+        <oa name="MLS OA">
+            <oa name="TopSecret OA">
+                <oa name="Secret OA">
+                    <oa name="Public OA">
+                        <oa name="sub1"/>
+                    </oa>
+                    <oa name="sub2"/>
+                </oa>
+                <oa name="sub3"/>
+            </oa>
+        </oa>
+        <ua name="MLS UA">
+            <ua name="Public UA">
+                <ua name="Secret UA">
+                    <ua name="TopSecret UA">
+                        <u name="alice"/>
+                    </ua>
+                    <u name="bob"/>
+                    <u name="dave"/>
+                </ua>
+                <u name="charlie"/>
+            </ua>
+        </ua>
+        <ua name="MLS admin">
+            <u name="super"/>
+        </ua>
+    </pc>
+    <pc name="RBAC">
+        <oa name="RBAC OA">
+            <oa name="submarine plans">
+                <oa name="sub1"/>
+                <oa name="sub2"/>
+                <oa name="sub3"/>
+            </oa>
+            <oa name="submarine proposals">
+                <o name="sub1_proposal.txt"/>
+                <o name="sub2_proposal.txt"/>
+                <o name="sub3_proposal.txt"/>
+            </oa>
+        </oa>
+        <ua name="RBAC UA">
+            <ua name="engineers">
+                <u name="alice"/>
+                <u name="bob"/>
+            </ua>
+            <ua name="proposal writers">
+                <u name="dave"/>
+            </ua>
+            <ua name="proposal reviewers">
+                <u name="charlie"/>
+            </ua>
+        </ua>
+        <ua name="RBAC admin">
+            <u name="super"/>
+        </ua>
+    </pc>
+
+    <a source="all users" oa="ras1-repo OA" ops="read, write, assign"/>
+    <a source="super UA" oa="ras1-repo OA" ops="read, write, assign"/>
+    <a source="all users" oa="ras2-repo OA" ops="read, write, assign"/>
+    <a source="super UA" oa="ras2-repo OA" ops="read, write, assign"/>
+    <a source="all users" oa="ras3-repo OA" ops="read, write, assign"/>
+    <a source="super UA" oa="ras3-repo OA" ops="read, write, assign"/>
+
+    <a source="RBAC admin" ua="RBAC UA" ops="read, write, assign, assign to"/>
+    <a source="RBAC admin" oa="RBAC OA" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="RBAC admin" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="RBAC UA" ops="read, write, assign, assign to"/>
+    <a source="super UA" oa="RBAC OA" ops="read, write, assign, assign to"/>
+
+    <a source="DAC admin" ua="DAC UA" ops="read, write, assign, assign to"/>
+    <a source="DAC admin" oa="DAC OA" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="DAC admin" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="DAC UA" ops="read, write, assign, assign to"/>
+    <a source="super UA" oa="DAC OA" ops="read, write, assign, assign to"/>
+    <a source="Bob" oa="bob home" ops="assign, assign to, read, write"/>
+    <a source="Alice" oa="alice home" ops="assign, assign to, read, write"/>
+    <a source="Dave" oa="dave home" ops="assign, assign to, read, write"/>
+    <a source="Charlie" oa="charlie home" ops="assign, assign to, read, write"/>
+
+    <a source="MLS admin" ua="MLS UA" ops="read, write, assign, assign to"/>
+    <a source="MLS admin" oa="MLS OA" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="MLS admin" ops="read, write, assign, assign to"/>
+    <a source="super UA" ua="MLS UA" ops="read, write, assign, assign to"/>
+    <a source="super UA" oa="MLS OA" ops="read, write, assign, assign to"/>
+    <a source="TopSecret UA" oa="TopSecret OA" ops="read, write, assign"/>
+    <a source="Secret UA" oa="Secret OA" ops="read, write, assign"/>
+    <a source="Public UA" oa="Public OA" ops="read, write, assign"/>
+
+    <a source="engineers" oa="submarine plans" ops="read, write, assign"/>
+    <a source="proposal writers" oa="submarine proposals" ops="read, write, assign"/>
+    <a source="proposal reviewers" oa="submarine proposals" ops="read"/>
+
+    <a source="all users" oa="inboxes" ops="assign, assign to, read, write"/>
+    <a source="all users" oa="outboxes" ops="assign, assign to, read, write"/>
+</graph>

@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.model.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.*;
+
 import gov.nist.csd.pm.pdp.services.ConfigurationService;
 
 import javax.servlet.ServletException;
@@ -8,7 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.sql.SQLException;
 
 public class ResetServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
@@ -19,7 +19,7 @@ public class ResetServlet extends HttpServlet {
 
             request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Data+reset+successfully").forward(request, response);
         }
-        catch (DatabaseException | SQLException | ClassNotFoundException | InvalidPropertyException e) {
+        catch (DatabaseException | SessionDoesNotExistException | MissingPermissionException | LoadConfigException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
             request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }
