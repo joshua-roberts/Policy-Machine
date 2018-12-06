@@ -1,3 +1,3 @@
 # Hello World MD
 
-[obligations documentation](/docs/obligations/obligations.md)
+[obligations documentation](obligations.md)
