@@ -39,7 +39,7 @@ First, some common elements that will be used throughout this specification.
 user:
   name:
   properties:
-  fun_...:
+  func_...:
 ```
 Specifies a User with the given name and properties.  It is possible to specify a group of users that share a property by omitting the name field and adding a property that they share.  A function can be used to specify a user so long as the function returns a user or set of users.
 
@@ -52,14 +52,14 @@ user: # all users who have the property key=sharedProperty
     key: "sharedProperty"  
 ###
 user:
-  fun_current_user:
+  func_current_user:
 ``` 
 ### user_attribute
 ```yaml
 user_attribute:
   name:
   properties:
-  fun_...:
+  func_...:
 ```
 Specifies a User Attribute with the given name and properties. If multiple User Attributes share a name, then this element will represent all of those User Attributes at processing time.  Use the properties field to differentiate User Attributes with the same name. A function can be used to specify a user_attribute so long as the function returns a user attribute or a set of user attributes.
 
@@ -71,17 +71,17 @@ user_attribute:
     key: "value"  
 ###
 user_attribute:
-  fun_uattrs_of_current_user:
+  func_uattrs_of_current_user:
 ``` 
 ### function
-A function refers to a previously defined function that is supported by the Policy Machine Event Processing Point (EPP).  A list of valid functions can be found below, as well as tutorial on how to add functions.  Every function must have the prefix `fun_` this will allow the parser to know it's found a function, and to look for a way to parse it. 
+A function refers to a previously defined function that is supported by the Policy Machine Event Processing Point (EPP).  A list of valid functions can be found below, as well as tutorial on how to add functions.  Every function must have the prefix `func_` this will allow the parser to know it's found a function, and to look for a way to parse it. 
 
 _Example_
 ```yaml
-fun_FUNCTION_NAME:
+func_FUNCTION_NAME:
   - arg1_name: "foo"
   - arg2_name:
-    fun_ANOTHER_FUNCTION:
+    func_ANOTHER_FUNCTION:
   - arg3_name:
     user_attribute:
       name: "uaName"
@@ -113,9 +113,9 @@ See [user](#user)
 ```yaml
 - user:
 - user_attribute:
-- fun_...:
+- func_...:
 ```
-If left empty, this event pattern will match any user.  The `any_user` element also accepts an array of `user`, `user_attribute`, and `fun_...`.
+If left empty, this event pattern will match any user.  The `any_user` element also accepts an array of `user`, `user_attribute`, and `func_...`.
 
 _Example:_
 ```yaml
@@ -130,14 +130,14 @@ any_user: # any user in UAttr123 and user123
     name: "user123"
 ###
 any_user: 
-  fun_a_function: # a function that returns a set of entities
+  func_a_function: # a function that returns a set of entities
 ```
 #### process
 ```yaml
 process: # can be a string value
   fun...: # or it can be a function
 ```
-A process is optional, and if omitted than it will be ignored.  A process can be a string value (ex: 'a_process_id') or it an be a function such as `fun_current_process`. If the process element is present but is empty than any process will match this pattern.
+A process is optional, and if omitted than it will be ignored.  A process can be a string value (ex: 'a_process_id') or it an be a function such as `func_current_process`. If the process element is present but is empty than any process will match this pattern.
 
 _Example:_
 ```yaml
@@ -146,7 +146,7 @@ process: "a_process_id" # pattern matches the process with "a_process_id" as it'
 process: # any event with a process ID present
 ###
 process:
-  fun_current_process: 
+  func_current_process: 
 ```
 
 ### Policy Class
