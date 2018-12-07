@@ -81,10 +81,10 @@ _Example_
 func_FUNCTION_NAME:
   - arg1_name: "foo"
   - arg2_name:
-	  func_ANOTHER_FUNCTION:
+    func_ANOTHER_FUNCTION:
   - arg3_name:
-	  user_attribute:
-        name: "uaName"
+    user_attribute:
+      name: "uaName"
 ```
 ## Event Pattern
 ```yaml
