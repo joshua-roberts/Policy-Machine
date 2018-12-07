@@ -74,17 +74,17 @@ user_attribute:
   func_uattrs_of_current_user:
 ``` 
 ### function
-A function refers to a previously defined function that is supported by the Policy Machine Event Processing Point (EPP).  A list of valid functions can be found below, as well as tutorial on how to add functions.  Every function must have the prefix `func_` this will allow the parser to know it's found a function, and to look for a way to parse it. 
+A function refers to a previously defined function that is supported by the Policy Machine Event Processing Point (EPP).  A list of valid functions, as well as tutorial on how to add functions can be found [here](#functions).  Every function must have the prefix `func_` this will allow the parser to know it's found a function, and to look for a way to parse it. 
 
 _Example_
 ```yaml
 func_FUNCTION_NAME:
   - arg1_name: "foo"
   - arg2_name:
-    func_ANOTHER_FUNCTION:
+	  func_ANOTHER_FUNCTION:
   - arg3_name:
-    user_attribute:
-      name: "uaName"
+	  user_attribute:
+        name: "uaName"
 ```
 ## Event Pattern
 ```yaml
@@ -96,7 +96,7 @@ event:
 ```
 The Event Pattern specifies an event involving the policy elements of the Policy Machine.  An example is a user performing a read operation on an object.  This is called an access event, which is the primary focus of obligations as described in the NGAC standard. An access event has four components: The subject, policy class, operations, and target.  All of these are optional, but omitting them will have different consequences, which will be described in the sections below.
 
-While the Policy Machine focuses on access events, it is possible to extend the functionality of the Event Pattern to other events such as time.  The section [How to Extend the Event Pattern]() section provides a tutorial on how this is possible with the Policy Machine.
+While the Policy Machine focuses on access events, it is possible to extend the functionality of the Event Pattern to other events such as time.  The section [How to Extend the Event Pattern](#how-to-extend-the-event-pattern) section provides a tutorial on how this is possible with the Policy Machine.
 
 ### Subject
 ```yaml
@@ -253,9 +253,10 @@ target: # same as saying "pe1 or pe2"
 ```
 
 ## Functions
+### Predefined Functions
 1. current_user
 2. current_process
-3.  uattrs_with_props
+### How to add a function
 ## How to Extend the Event Pattern
 
 
