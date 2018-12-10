@@ -96,7 +96,7 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-jdbc-driver</artifactId>
-            <version>3.1.0</version>
+            <version>3.3.1</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>

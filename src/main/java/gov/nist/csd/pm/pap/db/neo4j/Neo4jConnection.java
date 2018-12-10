@@ -46,7 +46,7 @@ public class Neo4jConnection {
      */
     public Connection getConnection() throws DatabaseException {
         try {
-            return DriverManager.getConnection("jdbc:neo4j:http://" + host + ":" + port + "", username, password);
+            return DriverManager.getConnection("jdbc:neo4j:bolt://" + host + ":" + port + "", username, password);
         }
         catch (SQLException e) {
             throw new DatabaseException(ERR_DB, e.getMessage());
