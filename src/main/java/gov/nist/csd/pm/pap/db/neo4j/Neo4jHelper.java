@@ -40,7 +40,7 @@ public class Neo4jHelper {
         try {
             HashSet<Node> nodes = new HashSet<>();
             while (rs.next()) {
-                LinkedHashMap map = (LinkedHashMap) rs.getObject(1);
+                HashMap map = (HashMap) rs.getObject(1);
                 Node node = mapToNode(map);
                 nodes.add(node);
             }
@@ -62,7 +62,7 @@ public class Neo4jHelper {
         HashMap<String, String> properties = new HashMap<>();
         for (Object o : map.keySet()) {
             String key = (String)o;
-            if(!(key.equals("id") || key.equals("name") || key.equals("type"))) {
+            if(!(key.equals("id") || key.equals("name") || key.equals("type") || key.startsWith("_"))) {
                 properties.put(key, (String) map.get(o));
             }
         }
