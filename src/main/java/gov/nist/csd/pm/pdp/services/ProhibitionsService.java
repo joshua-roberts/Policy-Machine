@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.prohibitions.*;
-import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.pdp.engine.Decider;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         }
 
         //check the user can create a prohibition on the subject and the nodes
-        PolicyDecider decider = newPolicyDecider();
+        Decider decider = newPolicyDecider();
         if(subject.getSubjectType().equals(ProhibitionSubjectType.U)) {
             if(!decider.hasPermissions(getSessionUserID(), getProcessID(), subject.getSubjectID(), ANY_OPERATIONS)) {
                 throw new MissingPermissionException(subject.getSubjectID(), PROHIBIT_SUBJECT);

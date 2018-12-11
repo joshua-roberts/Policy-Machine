@@ -3,20 +3,10 @@ package gov.nist.csd.pm.pdp.services;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
-import gov.nist.csd.pm.pap.graph.MemGraph;
 import gov.nist.csd.pm.pap.sessions.SessionsDAO;
-import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
-import gov.nist.csd.pm.pdp.engine.PolicyDecider;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.util.List;
+import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
@@ -106,7 +96,7 @@ public class Service {
         return getPAP().getSessionsMem().getSessionUserID(sessionID);
     }
 
-    public PolicyDecider newPolicyDecider() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
-        return new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+    public Decider newPolicyDecider() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+        return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
     }
 }
