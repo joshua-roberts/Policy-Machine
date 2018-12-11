@@ -1,5 +1,13 @@
 # Policy Machine Web Services
-NGAC reference implementation using web services.
+The Policy Machine Web Services is an NGAC reference implementation.
+
+## Table of Contents
+1. [Deployment](#deployment)
+3. [Policy Machine Configuration](#policy-machine-configuration)
+4. [Super User](#super-user)
+5. [REST API](#rest-api)
+6. [Examples](#standalone-policy-machine-examples)
+7. [Technology Used](#technology-used)
 
 ## Deployment
 1. Make sure Tomcat is installed.
@@ -58,7 +66,10 @@ This approach gives us one answer to the questions above. When creating a Policy
 
 This idea can be expanded upon to allow objects to represent entire sub graphs. However, for now, this implementation supports just one super Object and a super User.
 
-## API Requests
+## REST API
+Documentation of the API endpoints can be found [here]()
+
+### Requests
 The exposed web services act as an administrative Policy Enforcement Point (PEP).  When a request comes in the PEP forwards the request to the PDP, which ensures the requesting user is allowed to carry out the action. This means the PEP always needs to know which user is sending a request.  This is tracked using session IDs that represent users who have authenticated successfully with the server.  Every endpoint requires this session ID to determine the user.  The only API that does not require a session ID is the Sessions API.  This API is used to authenticate users and provides the session IDs that will be used in subsequent requests to the Policy Machine.
 
 For example, to sign in as the super user:
@@ -80,7 +91,7 @@ The response from the server will look like:
 ```
 Now the user can pass this session ID to the server for any other calls to the API.
 
-## API Responses
+### Responses
 A response from the Policy Machine will always return an HTTP status code of 200, with more details provided in the body of the response.  For example:
 ```json
 {
@@ -89,6 +100,9 @@ A response from the Policy Machine will always return an HTTP status code of 200
     "entity": "return value of the API call"
 }
 ```
+
+## Standalone Policy Machine Examples
+Examples of using the provided libraries in a standalone java environment can be found [here](/src/main/java/gov/nist/csd/pm/demos/examples)
 
 ## Technology Used
 - JAVA 8
