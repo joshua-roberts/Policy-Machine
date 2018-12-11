@@ -383,12 +383,7 @@ public class Neo4jGraph implements Graph {
             HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long targetID = rs.getLong(1);
-
-                //get operations as json
-                String opsStr = rs.getString(2);
-                //convert ops json to hashset
-                HashSet<String> opsSet = Neo4jHelper.getStringSetFromJson(opsStr);
-
+                HashSet<String> opsSet = new HashSet<>((Collection) rs.getObject(2));
                 associations.put(targetID, opsSet);
             }
 
@@ -418,12 +413,7 @@ public class Neo4jGraph implements Graph {
             HashMap<Long, HashSet<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long sourceID = rs.getLong(1);
-
-                //get operations as json
-                String opsStr = rs.getString(2);
-                //convert ops json to hashset
-                HashSet<String> opsSet = Neo4jHelper.getStringSetFromJson(opsStr);
-
+                HashSet<String> opsSet = new HashSet<>((Collection) rs.getObject(2));
                 associations.put(sourceID, opsSet);
             }
 
