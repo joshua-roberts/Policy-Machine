@@ -5,8 +5,8 @@ import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
-import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
-import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
 import java.util.*;
 
@@ -25,7 +25,7 @@ public class AnalyticsService extends Service {
      * @return The set of operations the current user has on the target node.
      */
     public HashSet<String> getPermissions(long targetID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         return decider.listPermissions(getSessionUserID(), getProcessID(), targetID);
     }
 

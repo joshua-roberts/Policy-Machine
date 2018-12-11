@@ -35,7 +35,7 @@ public class Prohibition  implements Serializable {
     private boolean                   intersection;
 
     public Prohibition(){
-
+        this.nodes = new ArrayList<>();
     }
 
     public Prohibition(String name, ProhibitionSubject subject, List<ProhibitionNode> nodes, HashSet<String> operations, boolean intersection) {
@@ -44,7 +44,7 @@ public class Prohibition  implements Serializable {
         }
         this.subject = subject;
         if(nodes == null){
-            nodes = new ArrayList<>();
+            this.nodes = new ArrayList<>();
         }
         this.name = name;
         this.operations = operations;
@@ -74,10 +74,6 @@ public class Prohibition  implements Serializable {
                 return;
             }
         }
-    }
-
-    public void setResources(List<ProhibitionNode> nodes){
-        this.nodes = nodes;
     }
 
     public String getName() {

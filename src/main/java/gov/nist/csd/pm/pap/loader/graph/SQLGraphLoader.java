@@ -1,13 +1,14 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLHelper;
+import gov.nist.csd.pm.pap.search.SQLSearch;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,13 +25,16 @@ public class SQLGraphLoader implements GraphLoader {
      */
     protected SQLConnection conn;
 
+    private DatabaseContext dbCtx;
+
     /**
      * Create a new GraphLoader from Neo4j, using the provided database connection parameters.
      * @param ctx The parameters to connect to the database
      * @throws DatabaseException If a connection cannot be made to the database
      */
     public SQLGraphLoader(DatabaseContext ctx) throws DatabaseException {
-        conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
+        this.conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
+        this.dbCtx = ctx;
     }
 
     @Override
@@ -52,15 +56,16 @@ public class SQLGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Long> getNodes() throws DatabaseException {
+    public HashSet<Node> getNodes() throws DatabaseException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id from node")
         ){
-            HashSet<Long> nodes = new HashSet<>();
+            SQLSearch search = new SQLSearch(dbCtx);
+            HashSet<Node> nodes = new HashSet<>();
             while (rs.next()) {
                 long id = rs.getInt(1);
-                nodes.add(id);
+                nodes.add(search.getNode(id));
             }
             return nodes;
         }catch(SQLException e){

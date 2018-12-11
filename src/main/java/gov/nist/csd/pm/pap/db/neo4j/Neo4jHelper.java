@@ -96,9 +96,11 @@ public class Neo4jHelper {
      */
     public static HashSet<String> getStringSetFromJson(String json) {
         HashSet<String> set = new HashSet<>();
-        String[] opsArr = json.replaceAll("[\\[\\]\"]", "").split(COMMA_DELIMETER);
-        if(!opsArr[0].isEmpty()){
-            set.addAll(Arrays.asList(opsArr));
+        if(json != null) {
+            String[] opsArr = json.replaceAll("[\\[\\]\"]", "").split(COMMA_DELIMETER);
+            if (!opsArr[0].isEmpty()) {
+                set.addAll(Arrays.asList(opsArr));
+            }
         }
         return set;
     }

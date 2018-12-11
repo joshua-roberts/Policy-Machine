@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
 import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
@@ -37,22 +38,6 @@ public class Neo4jGraphLoader implements GraphLoader {
     @Override
     public HashSet<Long> getPolicies() throws DatabaseException {
         String cypher = "match(n) where n:PC return n.id";
-        return getNodeIDs(cypher);
-    }
-
-    @Override
-    public HashSet<Long> getNodes() throws DatabaseException {
-        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n.id";
-        return getNodeIDs(cypher);
-    }
-
-    /**
-     * Given a cypher query, return all the node IDs that are returned from the query.
-     * @param cypher The neo4j cypher query to execute.
-     * @return The set of all nodes' IDs
-     * @throws DatabaseException When there is an error loading the nodes from the database.
-     */
-    private HashSet<Long> getNodeIDs(String cypher) throws DatabaseException {
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
@@ -63,6 +48,20 @@ public class Neo4jGraphLoader implements GraphLoader {
                 nodeIDs.add(rs.getLong(1));
             }
             return nodeIDs;
+        } catch (SQLException e) {
+            throw new DatabaseException(ERR_DB, e.getMessage());
+        }
+    }
+
+    @Override
+    public HashSet<Node> getNodes() throws DatabaseException {
+        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            return Neo4jHelper.getNodesFromResultSet(rs);
         } catch (SQLException e) {
             throw new DatabaseException(ERR_DB, e.getMessage());
         }

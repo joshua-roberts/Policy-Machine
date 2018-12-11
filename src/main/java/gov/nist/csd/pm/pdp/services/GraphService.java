@@ -7,8 +7,8 @@ import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
-import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
-import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -66,7 +66,7 @@ public class GraphService extends Service implements Graph, Search {
         // if the node is a policy class, check that the user has permissions on super o
         // this will enforce only users with super permissions can create policy classes
         if(ctx.getType().equals(NodeType.PC)) {
-            PolicyDecider decider = newPolicyDecider();
+            Decider decider = newPolicyDecider();
             if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
                 throw new MissingPermissionException("missing permissions to create a Policy Class");
             }
@@ -155,7 +155,7 @@ public class GraphService extends Service implements Graph, Search {
     @Override
     public void deleteNode(long nodeID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //check that the user can delete the node
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if (!decider.hasPermissions(getSessionUserID(), getProcessID(), nodeID, DELETE_NODE)) {
             throw new MissingPermissionException(nodeID, DELETE_NODE);
         }
@@ -234,7 +234,7 @@ public class GraphService extends Service implements Graph, Search {
         //get the children from the db
         HashSet<Node> children = getGraphDB().getChildren(nodeID);
         //filter any nodes that the user doesn't have any permissions on
-        return new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), children, ANY_OPERATIONS);
+        return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), children, ANY_OPERATIONS);
     }
 
     /**
@@ -255,7 +255,7 @@ public class GraphService extends Service implements Graph, Search {
         //get the children from the db
         HashSet<Node> children = getGraphDB().getParents(nodeID);
         //filter any nodes that the user doesn't have any permissions on
-        return new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), children, ANY_OPERATIONS);
+        return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), children, ANY_OPERATIONS);
     }
 
     /**
@@ -288,7 +288,7 @@ public class GraphService extends Service implements Graph, Search {
         // if assigning to a pc, check that the user can assign to the super o
 
         //check the user can assign the child
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), childID, ASSIGN)) {
             throw new MissingPermissionException(childID, ASSIGN);
         }
@@ -335,7 +335,7 @@ public class GraphService extends Service implements Graph, Search {
             throw new NodeNotFoundException(parentID);
         }
 
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         //check the user can deassign the child
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), childID, DEASSIGN)) {
             throw new MissingPermissionException(childID, DEASSIGN);
@@ -388,7 +388,7 @@ public class GraphService extends Service implements Graph, Search {
         NGACAssociation.checkAssociation(sourceNode.getType(), targetNode.getType());
 
         //check the user can associate the source and target nodes
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), uaID, ASSOCIATE)) {
             throw new MissingPermissionException(uaID, ASSOCIATE);
         }
@@ -411,7 +411,7 @@ public class GraphService extends Service implements Graph, Search {
     @Override
     public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
         //check the user can associate the source and target nodes
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), uaID, DISASSOCIATE)) {
             throw new MissingPermissionException(uaID, DISASSOCIATE);
         }
@@ -438,7 +438,7 @@ public class GraphService extends Service implements Graph, Search {
         }
 
         //check the user can get the associations of the source node
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), sourceID, GET_ASSOCIATIONS)){
             throw new MissingPermissionException(sourceID, GET_ASSOCIATIONS);
         }
@@ -459,7 +459,7 @@ public class GraphService extends Service implements Graph, Search {
         }
 
         //check the user can get the associations of the source node
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), targetID, GET_ASSOCIATIONS)){
             throw new MissingPermissionException(targetID, GET_ASSOCIATIONS);
         }
@@ -487,7 +487,7 @@ public class GraphService extends Service implements Graph, Search {
         // user the PIP searcher to search for the intended nodes
         HashSet<Node> nodes = getSearch().search(name, type, properties);
         //filter out any nodes the user doesn't have any permissions on
-        return new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), nodes);
+        return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions()).filter(getSessionUserID(), getProcessID(), nodes);
     }
 
     /**
@@ -508,7 +508,7 @@ public class GraphService extends Service implements Graph, Search {
             throw new NodeNotFoundException(id);
         }
 
-        PolicyDecider decider = new MemPolicyDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), id, ANY_OPERATIONS)) {
             throw new MissingPermissionException(id, ANY_OPERATIONS);
         }
