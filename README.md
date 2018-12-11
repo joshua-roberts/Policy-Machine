@@ -102,7 +102,7 @@ A response from the Policy Machine will always return an HTTP status code of 200
 ```
 
 ## Standalone Policy Machine Examples
-Examples of using the provided libraries in a standalone java environment can be found [here](/src/main/java/gov/nist/csd/pm/demos/examples)
+Examples of using the provided libraries in a standalone java environment can be found [here](../src/main/java/gov/nist/csd/pm/demos/examples)
 
 ## Technology Used
 - JAVA 8
