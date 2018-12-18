@@ -202,6 +202,11 @@ public class PReviewDecider implements Decider {
         }
     }
 
+    /**
+     * Given a User ID, return every node the user has access to and the permissions they have on each.
+     * @param userID The ID of the User.
+     * @return A Map of nodes the user has access to and the permissions on each.
+     */
     public synchronized HashMap<Long, HashSet<String>> getAccessibleNodes(long userID) throws SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, LoadConfigException, NodeNotFoundException, MissingPermissionException, DatabaseException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
         //Node->{ops}
         HashMap<Long, HashSet<String>> results = new HashMap<>();
@@ -223,7 +228,7 @@ public class PReviewDecider implements Decider {
             visitedNodes.put(pc, pcMap);
         }
 
-        HashSet<Node> objects = getAscesndants(vNode);
+        HashSet<Node> objects = getAscendants(vNode);
 
         for(Node objectNode : objects){
             long objectID = objectNode.getID();
@@ -254,7 +259,7 @@ public class PReviewDecider implements Decider {
         return results;
     }
 
-    private HashSet<Node> getAscesndants(Long vNode) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+    private HashSet<Node> getAscendants(Long vNode) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
         HashSet<Node> ascendants = new HashSet<>();
         HashSet<Node> children = graph.getChildren(vNode);
         if(children.isEmpty()){
@@ -263,7 +268,7 @@ public class PReviewDecider implements Decider {
 
         ascendants.addAll(children);
         for(Node child : children){
-            ascendants.addAll(getAscesndants(child.getID()));
+            ascendants.addAll(getAscendants(child.getID()));
         }
 
         return ascendants;
