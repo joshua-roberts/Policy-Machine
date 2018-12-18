@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.demos.ndac.algorithms.v1;
+package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
@@ -6,12 +6,13 @@ import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.demos.ndac.algorithms.v1.model.row.CompositeRow;
-import gov.nist.csd.pm.demos.ndac.algorithms.v1.model.row.NDACRow;
-import gov.nist.csd.pm.demos.ndac.algorithms.v1.model.table.CompositeTable;
-import gov.nist.csd.pm.demos.ndac.algorithms.v1.model.table.NDACTable;
+import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row.CompositeRow;
+import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row.NDACRow;
+import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.table.CompositeTable;
+import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.table.NDACTable;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
@@ -33,14 +34,14 @@ import java.util.stream.Collectors;
 import static gov.nist.csd.pm.common.constants.Operations.READ;
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 
-public class SelectAlgorithm extends Algorithm {
+public class SelectAlgorithmV2 extends AlgorithmV2 {
     private static final String             ROW_NOT_AVAILABLE = "ROW_NOT_AVAILABLE";
     private              Select             select;
     private              List<SelectItem>   initialColumns = new ArrayList<>();
     private              CompositeTable     compositeTable;
     private              List<CompositeRow> compositeRows;
 
-    public SelectAlgorithm(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws DatabaseException {
+    public SelectAlgorithmV2(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws DatabaseException {
         super(new Context(SQLConnection.fromCtx(ctx), graph, search, prohibitions, userID, processID));
         this.select = select;
         compositeTable = new CompositeTable();
@@ -48,19 +49,23 @@ public class SelectAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, JSQLParserException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException {
+    public String run() throws SQLException, JSQLParserException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
-        System.out.println("SELECT: " + plainSelect);
 
         initialColumns = plainSelect.getSelectItems();
-        System.out.println("initial columns: " + initialColumns);
 
+        long start = System.nanoTime();
         setTargetRows(plainSelect);
+        System.out.println("setting target rows = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
 
+        start = System.nanoTime();
         Hashtable<List<Column>, List<CompositeRow>> groups = groupRows();
+        System.out.println("grouping rows = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
 
         //build permitted SQL statements
+        start = System.nanoTime();
         String select = getPermittedSelect(plainSelect, groups);
+        System.out.println("building permitted sql = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
         return select;
     }
 
@@ -72,7 +77,6 @@ public class SelectAlgorithm extends Algorithm {
         if(select.getJoins() != null && !select.getJoins().isEmpty()){
             tableNames.addAll(select.getJoins().stream().map(j -> j.getRightItem().toString()).collect(Collectors.toList()));
         }
-        System.out.println("tables referenced: " + tableNames);
 
         List<SelectItem> selectItems = select.getSelectItems();
         for(SelectItem item : selectItems) {
@@ -94,14 +98,11 @@ public class SelectAlgorithm extends Algorithm {
         //these will be the requested columns for the new select
         List<String> tableKeys = new ArrayList<>();
         for(String tableName : tableNames){
-            System.out.println("processing table " + tableName);
             NDACTable table = new NDACTable(tableName);
             table.setColumns(originalColumns.get(tableName));
-            System.out.println(tableName + " has columns " + table.getColumns());
 
 
             List<String> keys = getKeys(tableName);
-            System.out.println(tableName + " has keys: " + keys);
             tableKeys.addAll(keys);
             table.setKeys(keys);
 
@@ -116,7 +117,6 @@ public class SelectAlgorithm extends Algorithm {
         select.setSelectItems(newSelectItems);
 
         String newSql = select.toString();
-        System.out.println("criteria sql: " + newSql);
         java.sql.Statement stmt =  getConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         stmt.setFetchSize(Integer.MIN_VALUE);
         ResultSet rs = stmt.executeQuery(newSql);
@@ -127,28 +127,22 @@ public class SelectAlgorithm extends Algorithm {
         for (int i = 1; i <= numCols; i++) {
             String table = meta.getTableName(i);
             String column = meta.getColumnName(i);
-            System.out.println("found column " + table + "." + column);
             NDACTable t = compositeTable.getTable(table);
-            System.out.println("table " + table + ": " + t);
             if(!t.getColumns().contains(new Column(new Table(table), column))) {
-                System.out.println("adding column " + column + " to table " + table);
                 t.addColumn(new Column(new Table(table), column));
             }
         }
 
         //determine which rows belong to which tables
-        System.out.println("assigning rows to tables");
         while(rs.next()){
             NDACRow curRow;
             String curTable = meta.getTableName(1);
-            System.out.println("current table: " + curTable);
             CompositeRow cr = new CompositeRow();
             String curRowName = "";
             for(int i = 1; i <= numCols; i++){
                 String table = meta.getTableName(i);
                 if(!table.equals(curTable)) {
                     // start a new table
-                    System.out.println("1: " + curRowName);
                     curRow = new NDACRow(curTable, curRowName);
                     cr.addToRow(curRow);
                     compositeTable.getTable(curTable).addRow(curRow);
@@ -173,23 +167,29 @@ public class SelectAlgorithm extends Algorithm {
 
             compositeRows.add(cr);
         }
-
-        System.out.println("composite rows:\n" + compositeRows);
-        System.out.println("\n" + compositeTable.toString());
     }
 
-    private Hashtable groupRows() throws JSQLParserException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidNodeTypeException, UnexpectedNumberOfNodesException {
+    private Hashtable groupRows() throws JSQLParserException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
 
+        long start1 = System.nanoTime();
+        PReviewDecider decider = new PReviewDecider(ctx.getGraph(), ctx.getProhibitions());
+        HashMap<Long, HashSet<String>> accessibleNodes = decider.getAccessibleNodes(ctx.getUserID());
+        System.out.println("time to get accessible nodes: " + (double)(System.nanoTime() - start1) / 1000000000 + " s");
+
+        BatchProhibitionDecider proDecider = new BatchProhibitionDecider(ctx.getGraph(), ctx.getProhibitions());
+        start1 = System.nanoTime();
+        HashMap<Long, HashSet<String>> prohibitedPerms = proDecider.listProhibitedPermissions(ctx.getUserID(), accessibleNodes.keySet());
+        System.out.println("time to get prohibted ops on all targets: " + (double)(System.nanoTime() - start1) / 1000000000 + " s");
+
+        HashMap<String, Node> columnNodes = new HashMap<>();
         for (CompositeRow compositeRow : compositeRows) {
-            System.out.println("processing composite row: " + compositeRow);
+            long start = System.nanoTime();
             List<Column> okColumns = new ArrayList<>();
             HashSet<Column> whereColumns = new HashSet<>();
-
             for(NDACRow row : compositeRow.getCompositeRow()) {
-                System.out.println("processing row: " + row);
                 if(row.getRowName().equals(ROW_NOT_AVAILABLE)) {
                     continue;
                 }
@@ -200,14 +200,10 @@ public class SelectAlgorithm extends Algorithm {
                     throw new UnexpectedNumberOfNodesException();
                 }
                 Node rowNode = nodes.iterator().next();
-                System.out.println("found node for row: " + rowNode);
-
-                List<Column> columns = compositeTable.getTable(row.getTableName()).getColumns();
-                System.out.println("requested columns: " + columns);
 
                 //iterate through the requested columns and find the intersection of the current row and current column
+                List<Column> columns = compositeTable.getTable(row.getTableName()).getColumns();
                 for (Column column : columns) {
-                    System.out.println("processing column: " + column);
                     //if column is not in the initial columns than skip it
                     boolean skip = true;
                     for (SelectItem item : initialColumns) {
@@ -217,22 +213,31 @@ public class SelectAlgorithm extends Algorithm {
                         }
                     }
                     if (skip) continue;
-                    System.out.println("column " + column + " was included in the initial query");
 
-                    nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
-                    if(nodes.isEmpty()) {
-                        throw new UnexpectedNumberOfNodesException();
+                    Node columnNode = columnNodes.get(column.getColumnName());
+                    if(columnNode == null) {
+                        nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
+                        if(nodes.isEmpty()) {
+                            throw new UnexpectedNumberOfNodesException();
+                        }
+                        columnNode = nodes.iterator().next();
+                        columnNodes.put(column.getColumnName(), columnNode);
                     }
-                    Node columnNode = nodes.iterator().next();
-                    System.out.println("found node for column: " + columnNode);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause
-
-                    System.out.println("checking column " + columnNode.getName() + " for row " + rowNode.getName());
-                    if (checkColumn(columnNode.getID(), rowNode.getID(), READ)) {
-                        System.out.println("column is ok");
-                        okColumns.add(column);
+                    Node inter = getIntersection(columnNode.getID(), rowNode.getID());
+                    if(inter != null) {
+                        HashSet<String> ops = accessibleNodes.get(inter.getID());
+                        HashSet<String> perms = prohibitedPerms.get(inter.getID());
+                        if(ops != null) {
+                            if (perms != null) {
+                                ops.removeAll(perms);
+                            }
+                            if(ops.contains(READ)) {
+                                okColumns.add(column);
+                            }
+                        }
                     }
                     addToSet(getWhereColumns(plainSelect.getWhere()), whereColumns);
                 }
@@ -241,38 +246,47 @@ public class SelectAlgorithm extends Algorithm {
                 //  if whereColumn is in requested columns its already been visited
                 //  else check if its accessible
                 for (Column column : whereColumns) {
-                    System.out.println("Checking column " + column + " in where clause");
                     if(columnInList(compositeTable.getTable(row.getTableName()).getColumns(), column)){
-                        nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
-                        if(nodes.isEmpty()) {
-                            throw new UnexpectedNumberOfNodesException();
+                        Node columnNode = columnNodes.get(column.getColumnName());
+                        if(columnNode == null) {
+                            nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
+                            if(nodes.isEmpty()) {
+                                throw new UnexpectedNumberOfNodesException();
+                            }
+                            columnNode = nodes.iterator().next();
+                            columnNodes.put(column.getColumnName(), columnNode);
                         }
-                        Node columnNode = nodes.iterator().next();
 
-                        if (!checkColumn(columnNode.getID(), rowNode.getID(), READ)) {
-                            okColumns.clear();
-                            break;
+                        Node inter = getIntersection(columnNode.getID(), rowNode.getID());
+                        if(inter != null) {
+                            HashSet<String> ops = accessibleNodes.get(inter.getID());
+                            HashSet<String> perms = prohibitedPerms.get(inter.getID());
+                            if(ops != null) {
+                                if (perms != null) {
+                                    ops.removeAll(perms);
+                                }
+                                if(!ops.contains(READ)) {
+                                    okColumns.clear();
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
             }
-
             if (!okColumns.isEmpty()) {
-                System.out.println("okColumns is not empty: " + okColumns);
                 List<Column> existingColumns = results.get(compositeRow) != null ? results.get(compositeRow) : new ArrayList<>();
                 existingColumns.addAll(okColumns);
                 results.put(compositeRow, existingColumns);
             }
-
-            System.out.println("--");
+            System.out.println("time for 1 composite row = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
         }
 
-        System.out.println("forming groups...");
         //Build the groups of rows based on accessible columns
         //a row is actually a list of object attributes
         Hashtable<List<Column>, List<CompositeRow>> subsets = new Hashtable<>();
         for (CompositeRow row : results.keySet()) {
-            //row = a list of indiviual OAs that make one row
+            //row = a list of individual OAs that make one row
             List<Column> columns = results.get(row);
             List<CompositeRow> subRows = subsets.get(columns);
             if (subRows != null && !subRows.contains(row)) {
@@ -283,11 +297,6 @@ public class SelectAlgorithm extends Algorithm {
             }
             subsets.put(columns, subRows);
         }
-
-        for(List<Column> columns : subsets.keySet()) {
-            System.out.println(columns + " > " + subsets.get(columns));
-        }
-
         return subsets;
     }
 
@@ -592,13 +601,11 @@ public class SelectAlgorithm extends Algorithm {
 
         @Override
         public void visit(Column column) {
-            System.out.println("visiting " + column);
             List<Column> cols = originalColumns.get(column.getTable().getName());
             if(cols == null) {
                 cols = new ArrayList<>();
             }
             cols.add(column);
-            System.out.println("putting " + column.getTable().getName() + " -> " + cols);
             originalColumns.put(column.getTable().getName(), cols);
         }
 
@@ -693,4 +700,3 @@ public class SelectAlgorithm extends Algorithm {
         }
     }
 }
-

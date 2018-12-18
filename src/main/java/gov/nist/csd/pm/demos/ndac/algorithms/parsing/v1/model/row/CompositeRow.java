@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.demos.ndac.algorithms.v1.model.row;
+package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row;
 
 import java.util.ArrayList;
 import java.util.List;

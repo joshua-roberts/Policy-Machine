@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.demos.ndac.algorithms.v1;
+package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
@@ -7,8 +7,8 @@ import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
-import gov.nist.csd.pm.pdp.engine.MemPolicyDecider;
-import gov.nist.csd.pm.pdp.engine.PolicyDecider;
+import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
@@ -113,7 +113,7 @@ public abstract class Algorithm {
     public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
         System.out.println("checking column with ID " + columnPmId);
         System.out.println("checking row with ID " + rowPmId);
-        PolicyDecider decider = new MemPolicyDecider(ctx.getGraph(), ctx.getProhibitions());
+        Decider decider = new PReviewDecider(ctx.getGraph(), ctx.getProhibitions());
         HashSet<Node> children = decider.getChildren(ctx.getUserID(), ctx.getProcessID(), rowPmId, perm);
         System.out.println("accessible row children: " + children);
         Node intersection = getIntersection(columnPmId, rowPmId);
@@ -141,7 +141,7 @@ public abstract class Algorithm {
         }
         Node node = nodes.iterator().next();
 
-        PolicyDecider decider = new MemPolicyDecider(ctx.getGraph(), ctx.getProhibitions());
+        Decider decider = new PReviewDecider(ctx.getGraph(), ctx.getProhibitions());
         return decider.hasPermissions(ctx.getUserID(), ctx.getProcessID(), node.getID(), perms);
     }
 
@@ -154,7 +154,7 @@ public abstract class Algorithm {
         }
         Node node = nodes.iterator().next();
 
-        PolicyDecider decider = new MemPolicyDecider(ctx.getGraph(), ctx.getProhibitions());
+        Decider decider = new PReviewDecider(ctx.getGraph(), ctx.getProhibitions());
         return decider.hasPermissions(ctx.getUserID(), ctx.getProcessID(), node.getID(), perms);
     }
 

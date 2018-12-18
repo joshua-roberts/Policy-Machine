@@ -1,6 +1,6 @@
-package gov.nist.csd.pm.demos.ndac.algorithms.v1.model.table;
+package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.table;
 
-import gov.nist.csd.pm.demos.ndac.algorithms.v1.model.row.NDACRow;
+import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row.NDACRow;
 import net.sf.jsqlparser.schema.Column;
 
 import java.util.ArrayList;
