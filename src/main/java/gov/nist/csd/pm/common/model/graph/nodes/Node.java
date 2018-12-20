@@ -38,7 +38,6 @@ public class Node {
         this.name = name;
         this.type = type;
         this.properties = new HashMap<>();
-        this.id = hashID(name, type, properties.get(NAMESPACE_PROPERTY));
     }
 
     public Node(String name, NodeType type, HashMap<String, String> properties){
@@ -52,7 +51,6 @@ public class Node {
         this.name = name;
         this.type = type;
         this.properties = properties == null ? new HashMap<>() : properties;
-        this.id = hashID(name, type, this.properties.get(NAMESPACE_PROPERTY));
     }
 
     public Node(long id, String name, NodeType type) {

@@ -63,7 +63,6 @@ public class PReviewDecider implements Decider {
             return perms;
         }
 
-
         HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes = new HashMap<>();
         HashSet<Long> pcs = graph.getPolicies();
         //visit the policy class nodes to signal the end of the dfs
@@ -203,12 +202,84 @@ public class PReviewDecider implements Decider {
         }
     }
 
-    private synchronized Node createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
-        Node vNode = new Node("VNODE", NodeType.OA);
+    /**
+     * Given a User ID, return every node the user has access to and the permissions they have on each.
+     * @param userID The ID of the User.
+     * @return A Map of nodes the user has access to and the permissions on each.
+     */
+    public synchronized HashMap<Long, HashSet<String>> getAccessibleNodes(long userID) throws SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, LoadConfigException, NodeNotFoundException, MissingPermissionException, DatabaseException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
+        //Node->{ops}
+        HashMap<Long, HashSet<String>> results = new HashMap<>();
+
+        //get border nodes.  Can be OA or UA.  Return empty set if no OAs are reachable
+        HashMap<Long, HashSet<String>> borderTargets = getBorderTargets(userID);
+        if(borderTargets.isEmpty()){
+            return results;
+        }
+
+        // create a virtual node
+        // all children/grand children of the virtual node will be al the nodes accessible by the user
+        long vNode = createVNode(borderTargets);
+
+        HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes = new HashMap<>();
+        for(long pc : graph.getPolicies()){
+            HashMap<Long, HashSet<String>> pcMap = new HashMap<>();
+            pcMap.put(pc, new HashSet<>());
+            visitedNodes.put(pc, pcMap);
+        }
+
+        HashSet<Node> objects = getAscendants(vNode);
+
+        for(Node objectNode : objects){
+            long objectID = objectNode.getID();
+
+            // run dfs on the object
+            dfs(objectID, visitedNodes, borderTargets);
+
+            //for every pc the object reaches check to see if they have a common access1 right.
+            HashSet<String> finalOps = new HashSet<>();
+            HashMap<Long, HashSet<String>> pcMap = visitedNodes.get(objectID);
+            boolean addOps = true;
+            for(long pc : pcMap.keySet()){
+                if(addOps){
+                    finalOps.addAll(pcMap.get(pc));
+                    addOps = false;
+                }else{
+                    finalOps.retainAll(pcMap.get(pc));
+                }
+            }
+            if(!finalOps.isEmpty()) {
+                results.put(objectID, finalOps);
+            }
+        }
+
+        // delete the virtual node
+        graph.deleteNode(vNode);
+
+        return results;
+    }
+
+    private HashSet<Node> getAscendants(Long vNode) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+        HashSet<Node> ascendants = new HashSet<>();
+        HashSet<Node> children = graph.getChildren(vNode);
+        if(children.isEmpty()){
+            return ascendants;
+        }
+
+        ascendants.addAll(children);
+        for(Node child : children){
+            ascendants.addAll(getAscendants(child.getID()));
+        }
+
+        return ascendants;
+    }
+
+    private synchronized Long createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
+        Node vNode = new Node(new Random().nextLong(), "VNODE", NodeType.OA);
         long vNodeID = graph.createNode(vNode);
         for(long nodeID : dc.keySet()){
             graph.assign(nodeID, NodeType.OA, vNode.getID(), NodeType.OA);
         }
-        return vNode.id(vNodeID);
+        return vNodeID;
     }
 }

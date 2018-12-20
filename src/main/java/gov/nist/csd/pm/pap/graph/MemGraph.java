@@ -124,7 +124,7 @@ public class MemGraph implements Graph {
             if(rel instanceof NGACAssociation) {
                 continue;
             }
-            children.add(new Node().id(rel.getSourceID()));
+            children.add(nodes.get(rel.getSourceID()));
         }
         return children;
     }
@@ -137,7 +137,7 @@ public class MemGraph implements Graph {
             if(rel instanceof NGACAssociation) {
                 continue;
             }
-            parents.add(new Node().id(rel.getTargetID()));
+            parents.add(nodes.get(rel.getTargetID()));
         }
         return parents;
     }
