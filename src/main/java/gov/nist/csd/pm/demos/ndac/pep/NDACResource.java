@@ -1,13 +1,9 @@
 package gov.nist.csd.pm.demos.ndac.pep;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubjectType;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.Algorithm;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.SelectAlgorithm;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2.AlgorithmV2;
@@ -15,7 +11,6 @@ import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2.SelectAlgorithmV2;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.graph.MemGraph;
-import gov.nist.csd.pm.pap.graph.Neo4jGraph;
 import gov.nist.csd.pm.pap.loader.graph.DummyGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
 import gov.nist.csd.pm.pep.response.ApiResponse;
@@ -38,7 +33,7 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 @Produces(MediaType.APPLICATION_JSON)
 public class NDACResource {
 
-    public static void main(String[] args) throws PMException, JSQLParserException, ClassNotFoundException, SQLException, InvalidEntityException, IOException {
+    public static void main(String[] args) throws PMException, JSQLParserException, ClassNotFoundException, SQLException, IOException {
         MemGraph graph = new MemGraph(new DummyGraphLoader());
         //Graph graph = new Neo4jGraph(new DatabaseContext("localhost", 7687, "neo4j", "root", null));
         NGACContext ngacCtx = buildGraph(graph, 0);
@@ -72,7 +67,7 @@ public class NDACResource {
     private static final String EMPLOYEE_CONTACT = "employee_contact";
 
     @POST
-    public Response run(NDACRequest request) throws PMException, JSQLParserException, ClassNotFoundException, SQLException, InvalidEntityException, IOException {
+    public Response run(NDACRequest request) throws PMException, JSQLParserException, ClassNotFoundException, SQLException, IOException {
         MemGraph graph = new MemGraph(new DummyGraphLoader());
         NGACContext ctx = buildGraph(graph, 1000);
         NDACResponse response = new NDACResponse();
@@ -91,7 +86,7 @@ public class NDACResource {
                 .build();
     }
 
-    private NDACResponse runParsing(String version, NDACRequest request, MemGraph graph, List<Prohibition> prohibitions) throws JSQLParserException, PMException, ClassNotFoundException, SQLException, InvalidEntityException, IOException {
+    private NDACResponse runParsing(String version, NDACRequest request, MemGraph graph, List<Prohibition> prohibitions) throws JSQLParserException, PMException, ClassNotFoundException, SQLException, IOException {
         NDACResponse response = new NDACResponse();
         MemGraphSearch search = new MemGraphSearch((MemGraph) graph);
         HashSet<Node> nodes = search.search(null, NodeType.U.toString(), null);
@@ -183,7 +178,7 @@ public class NDACResource {
      * @param numEmployees the number of records to add on top of the aforementioned users
      * @return the NGAC graph with a simple policy configuration of this "database"
      */
-    public static NGACContext buildGraph(MemGraph graph, int numEmployees) throws DatabaseException, NullNameException, InvalidProhibitionSubjectTypeException, LoadConfigException, NullNodeException, NullTypeException, NoIDException, NodeNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, MissingPermissionException, InvalidNodeTypeException, InvalidAssociationException {
+    public static NGACContext buildGraph(MemGraph graph, int numEmployees) throws PMException {
         //create employees pc
         long pcID = graph.createNode(new Node(getID(), EMPLOYEES, PC, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
         long baseID = graph.createNode(new Node(getID(), EMPLOYEES, OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));

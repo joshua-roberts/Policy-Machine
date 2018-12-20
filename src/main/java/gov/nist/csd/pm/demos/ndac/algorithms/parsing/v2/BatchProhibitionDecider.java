@@ -22,7 +22,7 @@ public class BatchProhibitionDecider {
         this.prohibitions = prohibitions;
     }
 
-    public HashMap<Long, HashSet<String>> listProhibitedPermissions(long subjectID, Set<Long> targets) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public HashMap<Long, HashSet<String>> listProhibitedPermissions(long subjectID, Set<Long> targets) throws PMException {
         HashMap<Long, HashSet<String>> prohibitedOps = new HashMap<>();
 
         //if the subject ID or target ID are 0, return an empty set
@@ -86,7 +86,7 @@ public class BatchProhibitionDecider {
         return prohibitedOps;
     }
 
-    private HashSet<Long> getSubGraph(long id) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    private HashSet<Long> getSubGraph(long id) throws PMException {
         HashSet<Long> nodes = new HashSet<>();
         HashSet<Node> children = graph.getChildren(id);
         if(children.isEmpty()){

@@ -41,7 +41,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
     private              CompositeTable     compositeTable;
     private              List<CompositeRow> compositeRows;
 
-    public SelectAlgorithmV2(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws DatabaseException {
+    public SelectAlgorithmV2(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws PMException {
         super(new Context(SQLConnection.fromCtx(ctx), graph, search, prohibitions, userID, processID));
         this.select = select;
         compositeTable = new CompositeTable();
@@ -49,7 +49,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
     }
 
     @Override
-    public String run() throws SQLException, JSQLParserException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
+    public String run() throws SQLException, JSQLParserException, PMException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         initialColumns = plainSelect.getSelectItems();
@@ -70,7 +70,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
     }
 
     private HashMap<String, List<Column>> originalColumns = new HashMap<>();
-    private void setTargetRows(PlainSelect select) throws SQLException, InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException, LoadConfigException, DatabaseException {
+    private void setTargetRows(PlainSelect select) throws SQLException, PMException {
         //get all tables referenced in the select
         List<String> tableNames = new ArrayList<>();
         tableNames.add(select.getFromItem().toString());
@@ -169,7 +169,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
         }
     }
 
-    private Hashtable groupRows() throws JSQLParserException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidNodeTypeException, UnexpectedNumberOfNodesException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
+    private Hashtable groupRows() throws JSQLParserException, PMException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
@@ -197,7 +197,8 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 props.put(NAMESPACE_PROPERTY, row.getTableName());
                 HashSet<Node> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
                 if(nodes.isEmpty()) {
-                    throw new UnexpectedNumberOfNodesException();
+                    throw new PMException(Errors.ERR_UNEXPECTED_NUMBER_OF_NODES,
+                            String.format("unexpected number of nodes with name %s and properties %s", row.getRowName(), props.toString()));
                 }
                 Node rowNode = nodes.iterator().next();
 
@@ -218,7 +219,8 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                     if(columnNode == null) {
                         nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                         if(nodes.isEmpty()) {
-                            throw new UnexpectedNumberOfNodesException();
+                            throw new PMException(Errors.ERR_UNEXPECTED_NUMBER_OF_NODES,
+                                    String.format("unexpected number of nodes with name %s and properties %s", column.getColumnName(), props.toString()));
                         }
                         columnNode = nodes.iterator().next();
                         columnNodes.put(column.getColumnName(), columnNode);
@@ -251,7 +253,8 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                         if(columnNode == null) {
                             nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                             if(nodes.isEmpty()) {
-                                throw new UnexpectedNumberOfNodesException();
+                                throw new PMException(Errors.ERR_UNEXPECTED_NUMBER_OF_NODES,
+                                        String.format("unexpected number of nodes with name %s and properties %s", column.getColumnName(), props.toString()));
                             }
                             columnNode = nodes.iterator().next();
                             columnNodes.put(column.getColumnName(), columnNode);

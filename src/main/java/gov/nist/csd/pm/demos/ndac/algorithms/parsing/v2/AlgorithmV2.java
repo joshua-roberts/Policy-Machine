@@ -35,9 +35,9 @@ public abstract class AlgorithmV2 {
         cachedChildren = new HashMap<>();
     }
 
-    public abstract String run() throws SQLException, IOException, PMException, JSQLParserException, InvalidEntityException, ClassNotFoundException;
+    public abstract String run() throws SQLException, IOException, PMException, JSQLParserException, ClassNotFoundException;
 
-    protected List<String> getKeys(String tableName) throws InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException, LoadConfigException, DatabaseException {
+    protected List<String> getKeys(String tableName) throws PMException {
         HashMap<String, String> props = new HashMap<>();
         props.put(NAMESPACE_PROPERTY, tableName);
         props.put("pk", "true");
@@ -111,7 +111,7 @@ public abstract class AlgorithmV2 {
     }
 
 
-    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws PMException {
         //check if the row has already been checked
         HashSet<Node> children = cachedChildren.get(rowPmId);
         if(children == null) {
@@ -123,7 +123,7 @@ public abstract class AlgorithmV2 {
         return children.contains(intersection);
     }
 
-    public Node getIntersection(long columnPmId, long rowPmId) throws NodeNotFoundException, DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public Node getIntersection(long columnPmId, long rowPmId) throws PMException {
         HashSet<Node> columnChildren = ctx.getGraph().getChildren(columnPmId);
         HashSet<Node> rowChildren = ctx.getGraph().getChildren(rowPmId);
         columnChildren.retainAll(rowChildren);
@@ -134,12 +134,12 @@ public abstract class AlgorithmV2 {
         }
     }
 
-    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException {
+    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PMException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         HashSet<Node> nodes = ctx.getSearch().search(columnName, NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
-            throw new NodeNotFoundException("Could not find column object attribute for " + tableName);
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, "Could not find column object attribute for " + tableName);
         }
         Node node = nodes.iterator().next();
 
@@ -147,12 +147,12 @@ public abstract class AlgorithmV2 {
         return decider.hasPermissions(ctx.getUserID(), ctx.getProcessID(), node.getID(), perms);
     }
 
-    public boolean checkRowAccess(String tableName, String ... perms) throws InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException {
+    public boolean checkRowAccess(String tableName, String ... perms) throws PMException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         HashSet<Node> nodes = ctx.getSearch().search("Rows", NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
-            throw new NodeNotFoundException("Could not find row object attribute for " + tableName);
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, "Could not find row object attribute for " + tableName);
         }
         Node node = nodes.iterator().next();
 

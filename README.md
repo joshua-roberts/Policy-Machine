@@ -50,12 +50,12 @@ The Policy Machine Web Services is an NGAC reference implementation.
 Once the server is running, navigate to `../pm/config.jsp` to configure the PM. There are two parts of the PM that can be configured. There is the connection to the database, either neo4j or mysql, and there is the current configuration of the policy data.  
 ### Connecting to a Database
 There are two databases currently supported by the Policy Machine, Neo4j and MySQL.  Below are importat notes on using both.
-- Neo4j: The Policy Machine uses the [Neo4j bolt jdbc driver](https://github.com/neo4j-contrib/neo4j-jdbc), therefore the database connection port should be `7687`.
-- MySQL: The MySQL schema script can be found [here](../sql/pmsql.sql).
+* Neo4j: The Policy Machine uses the [Neo4j bolt jdbc driver](https://github.com/neo4j-contrib/neo4j-jdbc), therefore the database connection port should be `7687`.
+* MySQL: The MySQL schema script can be found [here](../sql/pmsql.sql).
 ### Configurations
 1.  **Reset:** Delete all policy data from the Policy Machine database. 
 2.	**Load a Configuration:**  Configuration files are in JSON format and have the extension .pm.  Usually, the .pm file will be generated from the save function.
-2.	**Save a Configuration:** Save the current state of the Policy Machine data.  This can then be loaded using the load function.
+3.	**Save a Configuration:** Save the current state of the Policy Machine data.  This can then be loaded using the load function.
 
 ## Super User
 When developing this reference implementation, two questions arose: Who can create Policy Classes? And who can assign to Policy Classes? Since these questions are not addressed in the NGAC standard, we decided to implement a super user who by default has the ability to carry out these actions.  Our approach, explained below, is specific to this implementation, and is not required.

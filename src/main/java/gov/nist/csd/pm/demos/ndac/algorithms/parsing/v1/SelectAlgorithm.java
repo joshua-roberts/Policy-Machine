@@ -40,7 +40,7 @@ public class SelectAlgorithm extends Algorithm {
     private              CompositeTable     compositeTable;
     private              List<CompositeRow> compositeRows;
 
-    public SelectAlgorithm(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws DatabaseException {
+    public SelectAlgorithm(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws PMException {
         super(new Context(SQLConnection.fromCtx(ctx), graph, search, prohibitions, userID, processID));
         this.select = select;
         compositeTable = new CompositeTable();
@@ -48,7 +48,7 @@ public class SelectAlgorithm extends Algorithm {
     }
 
     @Override
-    public String run() throws SQLException, JSQLParserException, IOException, InvalidNodeTypeException, InvalidPropertyException, NameInNamespaceNotFoundException, NodeNotFoundException, NoUserParameterException, NoSubjectParameterException, InvalidProhibitionSubjectTypeException, ConfigurationException, DatabaseException, ClassNotFoundException, UnexpectedNumberOfNodesException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException {
+    public String run() throws SQLException, JSQLParserException, PMException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
         System.out.println("SELECT: " + plainSelect);
 
@@ -65,7 +65,7 @@ public class SelectAlgorithm extends Algorithm {
     }
 
     private HashMap<String, List<Column>> originalColumns = new HashMap<>();
-    private void setTargetRows(PlainSelect select) throws SQLException, InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException, LoadConfigException, DatabaseException {
+    private void setTargetRows(PlainSelect select) throws SQLException, PMException {
         //get all tables referenced in the select
         List<String> tableNames = new ArrayList<>();
         tableNames.add(select.getFromItem().toString());
@@ -178,7 +178,7 @@ public class SelectAlgorithm extends Algorithm {
         System.out.println("\n" + compositeTable.toString());
     }
 
-    private Hashtable groupRows() throws JSQLParserException, NodeNotFoundException, InvalidProhibitionSubjectTypeException, DatabaseException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidNodeTypeException, UnexpectedNumberOfNodesException {
+    private Hashtable groupRows() throws JSQLParserException, PMException {
         PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
@@ -197,7 +197,8 @@ public class SelectAlgorithm extends Algorithm {
                 props.put(NAMESPACE_PROPERTY, row.getTableName());
                 HashSet<Node> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
                 if(nodes.isEmpty()) {
-                    throw new UnexpectedNumberOfNodesException();
+                    throw new PMException(Errors.ERR_NODE_NOT_FOUND,
+                            String.format("could not find node with name %s and properties %s", row.getRowName(), props.toString()));
                 }
                 Node rowNode = nodes.iterator().next();
                 System.out.println("found node for row: " + rowNode);
@@ -221,7 +222,8 @@ public class SelectAlgorithm extends Algorithm {
 
                     nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                     if(nodes.isEmpty()) {
-                        throw new UnexpectedNumberOfNodesException();
+                        throw new PMException(Errors.ERR_NODE_NOT_FOUND,
+                                String.format("could not find node with name %s and properties %s", column.getColumnName(), props.toString()));
                     }
                     Node columnNode = nodes.iterator().next();
                     System.out.println("found node for column: " + columnNode);
@@ -245,7 +247,7 @@ public class SelectAlgorithm extends Algorithm {
                     if(columnInList(compositeTable.getTable(row.getTableName()).getColumns(), column)){
                         nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                         if(nodes.isEmpty()) {
-                            throw new UnexpectedNumberOfNodesException();
+                            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("could not find node with name %s and properties %s", column.getColumnName(), props.toString()));
                         }
                         Node columnNode = nodes.iterator().next();
 
