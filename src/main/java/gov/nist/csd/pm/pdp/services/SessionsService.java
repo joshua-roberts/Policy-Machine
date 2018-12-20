@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
@@ -19,9 +20,7 @@ public class SessionsService extends Service {
      * Service constructor throws an exception for a null or empty session ID, pass a dummy session ID to avoid the exception
      * being thrown.
      */
-    public SessionsService() {
-        super("dummy_session_id", 0);
-    }
+    public SessionsService() throws PMException {}
 
     /**
      * Given a username and password, check that the user exists and the password matches the one stored for the user.
@@ -30,11 +29,11 @@ public class SessionsService extends Service {
      * @param password  The password the user provided, to be checked against the password stored for the user.
      * @return The ID of the new session.
      */
-    public String createSession(String username, String password) throws NodeNotFoundException, DatabaseException, SessionDoesNotExistException, LoadConfigException, HashingUserPasswordException, PMAuthenticationException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
+    public String createSession(String username, String password) throws PMException {
         //get the user node
         HashSet<Node> nodes = getSearch().search(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
-            throw new NodeNotFoundException(username);
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with name %s could not be found", username));
         }
 
         Node userNode = nodes.iterator().next();
@@ -44,11 +43,11 @@ public class SessionsService extends Service {
         String storedPass = userNode.getProperties().get(PASSWORD_PROPERTY);
         try {
             if (!checkPasswordHash(storedPass, password)) {
-                throw new PMAuthenticationException();
+                throw new PMException(Errors.ERR_INVALID_CREDENTIALS, "username or password did not match");
             }
         }
         catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new HashingUserPasswordException();
+            throw new PMException(Errors.ERR_HASHING_USER_PSWD, e.getMessage());
         }
 
         //create session id
@@ -65,7 +64,7 @@ public class SessionsService extends Service {
      * Delete the session with the given ID.
      * @param sessionID The ID of the session to delete.
      */
-    public void deleteSession(String sessionID) throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+    public void deleteSession(String sessionID) throws PMException {
         getSessionsDB().deleteSession(sessionID);
         getSessionsMem().deleteSession(sessionID);
     }

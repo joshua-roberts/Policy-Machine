@@ -71,8 +71,9 @@ public class ApiResponse {
          * @return A Builder with an error response code and default message.
          */
         public static Builder error(PMException e) {
-            Builder res = new Builder(e.getErrorCode());
-            res.message = e.getMessage();
+            Builder res = new Builder(e.getError().getCode());
+            res.message = e.getError().getMessage();
+            res.entity = e.getDetailedMessage();
             return res;
         }
 

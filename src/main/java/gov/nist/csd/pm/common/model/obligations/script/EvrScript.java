@@ -1,6 +1,5 @@
 package gov.nist.csd.pm.common.model.obligations.script;
 
-import gov.nist.csd.pm.common.exceptions.EvrRuleDoesNotExist;
 import gov.nist.csd.pm.common.model.obligations.EvrRule;
 
 import java.util.ArrayList;
@@ -42,14 +41,14 @@ public class EvrScript {
         this.rules.add(rule);
     }
 
-    public EvrRule getRule(String ruleLabel) throws EvrRuleDoesNotExist {
+    public EvrRule getRule(String ruleLabel) {
         for(EvrRule rule : rules) {
             if(rule.getLabel().equals(ruleLabel)) {
                 return rule;
             }
         }
 
-        throw new EvrRuleDoesNotExist(ruleLabel);
+        return null;
     }
 
     public boolean isEnabled() {

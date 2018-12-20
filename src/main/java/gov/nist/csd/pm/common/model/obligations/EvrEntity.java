@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.common.model.obligations;
 
-import gov.nist.csd.pm.common.exceptions.InvalidEntityException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 
 import java.util.ArrayList;
@@ -34,10 +34,7 @@ public class EvrEntity {
         this.node = node;
     }
 
-    public Node getNode() throws InvalidEntityException {
-        if(node == null) {
-            throw new InvalidEntityException("This entity is not a Node");
-        }
+    public Node getNode() throws PMException {
         return node;
     }
 
@@ -50,10 +47,7 @@ public class EvrEntity {
         this.function = function;
     }
 
-    public EvrFunction getFunction() throws InvalidEntityException {
-        if(function == null) {
-            throw new InvalidEntityException("This entity is not a function");
-        }
+    public EvrFunction getFunction() {
         return this.function;
     }
 
@@ -190,10 +184,9 @@ public class EvrEntity {
 
         //check function
         if(this.isFunction()) {
-            try {
+            if(entity.isFunction()) {
                 return this.getFunction().equals(entity.getFunction());
-            }
-            catch (InvalidEntityException e) {
+            } else {
                 return false;
             }
         }

@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.loader.sessions.SessionsLoader;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class MemSessionsDAO implements SessionsDAO {
      */
     protected HashMap<String, Long> sessions;
 
-    public MemSessionsDAO(SessionsLoader loader) throws DatabaseException {
+    public MemSessionsDAO(SessionsLoader loader) throws PMException {
         sessions = loader.loadSessions();
     }
 

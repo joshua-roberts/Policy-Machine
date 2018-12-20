@@ -20,47 +20,23 @@ public class Node {
     private NodeType                type;
     private HashMap<String, String> properties;
 
-    private static final String NULL_NAME_ERR = "The name of a node cannot be null";
-    private static final String NULL_TYPE_ERR = "The type of a node cannot be null";
-
     public Node() {
         this.properties = new HashMap<>();
     }
 
     public Node(String name, NodeType type){
-        if(name == null){
-            throw new IllegalArgumentException(NULL_NAME_ERR);
-        }
-        if(type == null){
-            throw new IllegalArgumentException(NULL_TYPE_ERR);
-        }
-
         this.name = name;
         this.type = type;
         this.properties = new HashMap<>();
     }
 
     public Node(String name, NodeType type, HashMap<String, String> properties){
-        if(name == null){
-            throw new IllegalArgumentException(NULL_NAME_ERR);
-        }
-        if(type == null){
-            throw new IllegalArgumentException(NULL_TYPE_ERR);
-        }
-
         this.name = name;
         this.type = type;
         this.properties = properties == null ? new HashMap<>() : properties;
     }
 
     public Node(long id, String name, NodeType type) {
-        if(name == null){
-            throw new IllegalArgumentException(NULL_NAME_ERR);
-        }
-        if(type == null){
-            throw new IllegalArgumentException(NULL_TYPE_ERR);
-        }
-
         this.id = id;
         this.name = name;
         this.type = type;
@@ -68,13 +44,6 @@ public class Node {
     }
 
     public Node(long id, String name, NodeType type, HashMap<String, String> properties) {
-        if(name == null){
-            throw new IllegalArgumentException(NULL_NAME_ERR);
-        }
-        if(type == null){
-            throw new IllegalArgumentException(NULL_TYPE_ERR);
-        }
-
         this.id = id;
         this.name = name;
         this.type = type;
@@ -82,10 +51,6 @@ public class Node {
     }
 
     public Node(long id, NodeType type) {
-        if(type == null){
-            throw new IllegalArgumentException(NULL_TYPE_ERR);
-        }
-
         this.id = id;
         this.type = type;
         this.properties = properties == null ? new HashMap<>() : properties;

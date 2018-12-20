@@ -1,18 +1,16 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.InvalidNodeTypeException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 
-import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Neo4j helper methods
@@ -36,7 +34,7 @@ public class Neo4jHelper {
     /**
      * Given a ResultSet, extract a list of nodes. Each element in the ResultSet is a json representation of a Node
      */
-    public static HashSet<Node> getNodesFromResultSet(ResultSet rs) throws DatabaseException {
+    public static HashSet<Node> getNodesFromResultSet(ResultSet rs) throws PMException {
         try {
             HashSet<Node> nodes = new HashSet<>();
             while (rs.next()) {
@@ -46,15 +44,15 @@ public class Neo4jHelper {
             }
             return nodes;
         }
-        catch (SQLException | InvalidNodeTypeException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+        catch (SQLException e) {
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     /**
      * Given a map of properties representing a Node, return a Node object.
      */
-    public static Node mapToNode(Map map) throws InvalidNodeTypeException {
+    public static Node mapToNode(Map map) throws PMException {
         // first, convert the json to a map
         long id = (long) map.get("id");
         String name = (String)map.get("name");

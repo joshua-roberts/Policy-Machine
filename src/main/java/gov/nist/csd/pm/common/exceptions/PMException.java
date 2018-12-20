@@ -6,19 +6,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class PMException extends Exception {
     private static final long serialVersionUID           = 1L;
 
-    private int code;
+    private Errors error;
+    private String detailedMessage;
 
-    public PMException(int code, String msg) {
+    public PMException(Errors error, String msg) {
         super(msg);
-        this.code = code;
+        this.error = error;
+        this.detailedMessage = msg;
     }
 
-    public PMException(int code) {
-        super();
-        this.code = code;
+    public Errors getError() {
+        return error;
     }
 
-    public int getErrorCode() {
-        return code;
+    public String getDetailedMessage() {
+        return detailedMessage;
     }
 }

@@ -56,10 +56,7 @@ public class StandaloneExample {
             // get a list of permissions that u1 has on o1
             return decider.listPermissions(u1, 0, o1);
         }
-        catch (DatabaseException | NullNameException | InvalidProhibitionSubjectTypeException |
-                NoIDException | LoadConfigException | NullNodeException | NullTypeException |
-                SessionDoesNotExistException | MissingPermissionException | NodeNotFoundException |
-                InvalidAssociationException | InvalidAssignmentException | InvalidNodeTypeException e) {
+        catch (PMException e) {
             e.printStackTrace();
             return null;
         }
@@ -69,6 +66,7 @@ public class StandaloneExample {
         try {
             // run the example with an in memory graph
             Graph graph = new MemGraph(new DummyGraphLoader());
+
             HashSet<String> operations = runExample(graph);
             System.out.println(operations);
 
@@ -77,7 +75,7 @@ public class StandaloneExample {
             operations = runExample(graph);
             System.out.println(operations);
         }
-        catch (DatabaseException e) {
+        catch (PMException e) {
             e.printStackTrace();
         }
     }

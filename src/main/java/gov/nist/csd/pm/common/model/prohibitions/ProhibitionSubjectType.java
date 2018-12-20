@@ -1,7 +1,8 @@
 package gov.nist.csd.pm.common.model.prohibitions;
 
 
-import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 
 import java.io.Serializable;
 
@@ -29,11 +30,10 @@ public enum ProhibitionSubjectType  implements Serializable {
      * Convert a string to a ProhibitionSubjectType.
      * @param subjectType The string to convert.
      * @return The ProhibitionSubjectType that is equivalent to the provided String.
-     * @throws InvalidProhibitionSubjectTypeException When the provided String is not a valid type ir is null.
      */
-    public static ProhibitionSubjectType toType(String subjectType) throws InvalidProhibitionSubjectTypeException {
+    public static ProhibitionSubjectType toType(String subjectType) throws PMException {
         if(subjectType == null){
-            throw new InvalidProhibitionSubjectTypeException(null);
+            throw new PMException(Errors.ERR_INVALID_PROHIBITION_SUBJECT_TYPE, "null is an invalid Prohibition subject type");
         }
         switch (subjectType.toUpperCase()){
             case "UA":
@@ -43,7 +43,7 @@ public enum ProhibitionSubjectType  implements Serializable {
             case "P":
                 return ProhibitionSubjectType.P;
             default:
-                throw new InvalidProhibitionSubjectTypeException(subjectType);
+                throw new PMException(Errors.ERR_INVALID_PROHIBITION_SUBJECT_TYPE, String.format("%s is an invalid Prohibition subject type", subjectType));
         }
     }
 }

@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 
 import java.util.HashMap;
 
@@ -13,5 +13,5 @@ public interface SessionsLoader {
      * Load any sessions from the database into a map.  The map keys are the session IDs and the values are the User IDs
      * @return The map containing session and User IDs.
      */
-    HashMap<String, Long> loadSessions() throws DatabaseException;
+    HashMap<String, Long> loadSessions() throws PMException;
 }

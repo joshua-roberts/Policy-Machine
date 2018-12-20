@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Neo4j implementation of the ProhibitionsLoader interface. Load prohibitions from a Neo4j instance into memory.
@@ -33,20 +32,19 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
     /**
      * Create a new ProhibitionsLoader from Neo4j, using the provided database connection parameters.
      * @param ctx The parameters to connect to the database
-     * @throws DatabaseException If a connection cannot be made to the database
+     * @throws PMException If a connection cannot be made to the database
      */
-    public Neo4jProhibitionsLoader(DatabaseContext ctx) throws DatabaseException {
+    public Neo4jProhibitionsLoader(DatabaseContext ctx) throws PMException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     /**
      * Load all of the  prohibitions in the database into a memory structure.
      * @return The list of all prohibitions.
-     * @throws DatabaseException If there is an error getting a prohibition form the database.
-     * @throws InvalidProhibitionSubjectTypeException If a prohibition in the database has an invalid subject type.
+     * @throws PMException If there is an error getting a prohibition form the database.
      */
     @Override
-    public List<Prohibition> loadProhibitions() throws DatabaseException, InvalidProhibitionSubjectTypeException {
+    public List<Prohibition> loadProhibitions() throws PMException {
         List<Prohibition> prohibitions = new ArrayList<>();
 
         String cypher = "match(p:prohibition) return p.name, p.operations, p.intersection";
@@ -94,7 +92,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
             }
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
 
         return prohibitions;

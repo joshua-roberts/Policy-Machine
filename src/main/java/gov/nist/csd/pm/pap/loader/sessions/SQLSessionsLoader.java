@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * MySQL implementation of te SessionsLoader interface
@@ -21,7 +21,7 @@ public class SQLSessionsLoader implements SessionsLoader {
      */
     private SQLConnection conn;
 
-    public SQLSessionsLoader(DatabaseContext ctx) throws DatabaseException {
+    public SQLSessionsLoader(DatabaseContext ctx) throws PMException {
         conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
@@ -29,10 +29,10 @@ public class SQLSessionsLoader implements SessionsLoader {
      * Load the sessions in the database into a HashMap.  The map stores sessionIDs that point to the ID of the corresponding
      * User.
      * @return A map of sessionIDs to User IDs.
-     * @throws DatabaseException If there is an error loading the sessions into memory from the database.
+     * @throws PMException If there is an error loading the sessions into memory from the database.
      */
     @Override
-    public HashMap<String, Long> loadSessions() throws DatabaseException {
+    public HashMap<String, Long> loadSessions() throws PMException {
         HashMap<String, Long> sessions = new HashMap<>();
         String sql = "select session_id, user_node_id from sessions";
         try(Statement stmt = conn.getConnection().createStatement();
@@ -44,7 +44,7 @@ public class SQLSessionsLoader implements SessionsLoader {
             return sessions;
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 }

@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.InvalidNodeTypeException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
@@ -16,7 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Implementation of the Search interface using SQL
@@ -31,17 +30,17 @@ public class SQLSearch implements Search {
     /**
      * Create a new Search with the given SQL connection context.
      */
-    public SQLSearch(DatabaseContext ctx) throws DatabaseException {
+    public SQLSearch(DatabaseContext ctx) throws PMException {
         this.conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException {
+    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException {
         return null;
     }
 
     @Override
-    public Node getNode(long id) throws DatabaseException {
+    public Node getNode(long id) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
@@ -54,11 +53,11 @@ public class SQLSearch implements Search {
             return new Node(id, name, type, properties);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
-    private HashMap<String, String> getNodeProps(long nodeID) throws DatabaseException {
+    private HashMap<String, String> getNodeProps(long nodeID) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet propRs = stmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + nodeID);
@@ -72,7 +71,7 @@ public class SQLSearch implements Search {
             return props;
 
         } catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 }

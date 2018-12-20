@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.InvalidProhibitionSubjectTypeException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.loader.prohibitions.ProhibitionsLoader;
@@ -21,10 +20,9 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
     /**
      * Create a new in-memory prohibitions DAO.  The provided loader will load ny prohibitions from a database.
      * @param loader The ProhibitionsLoader to load any existing prohibitions form a database into memory.
-     * @throws DatabaseException If there is an error loading the Prohibitions into memory.
-     * @throws InvalidProhibitionSubjectTypeException If any of the prohibitions in the database have invalid subject types.
+     * @throws PMException If there is an error loading the Prohibitions into memory.
      */
-    public MemProhibitionsDAO(ProhibitionsLoader loader) throws DatabaseException, InvalidProhibitionSubjectTypeException {
+    public MemProhibitionsDAO(ProhibitionsLoader loader) throws PMException {
         prohibitions = loader.loadProhibitions();
     }
 

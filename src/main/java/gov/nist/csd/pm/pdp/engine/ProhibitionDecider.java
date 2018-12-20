@@ -12,5 +12,5 @@ public interface ProhibitionDecider {
      * @param targetID The ID of the target to get the prohibited permissions on.
      * @return The set of permissions that are denied for the subject on the target.
      */
-    HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException;
+    HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws PMException;
 }
