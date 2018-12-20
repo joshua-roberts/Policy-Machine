@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pap.graph;
 
-import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
@@ -11,21 +12,21 @@ import gov.nist.csd.pm.pap.db.sql.SQLHelper;
 import java.sql.*;
 import java.util.*;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 public class SQLGraph implements Graph {
 
     private SQLConnection conn;
 
-    public SQLGraph(DatabaseContext ctx) throws DatabaseException {
+    public SQLGraph(DatabaseContext ctx) throws PMException {
         conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 
 
     @Override
-    public long createNode(Node node) throws NullNodeException, DatabaseException {
+    public long createNode(Node node) throws PMException {
         if (node == null) {
-            throw new NullNodeException();
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when updating a node in mysql");
         }
 
         //get the ID of the node context, can be 0
@@ -44,7 +45,7 @@ public class SQLGraph implements Graph {
                 id = cs.getInt(1);
             }
         }catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
 
         //add properties to the node
@@ -57,7 +58,7 @@ public class SQLGraph implements Graph {
                 stmt.executeUpdate(sql);
             }
             catch (SQLException e) {
-                throw new DatabaseException(ERR_DB, e.getMessage());
+                throw new PMException(ERR_DB, e.getMessage());
             }
         }
 
@@ -66,12 +67,12 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void updateNode(Node node) throws NullNodeException, NoIDException, DatabaseException {
+    public void updateNode(Node node) throws PMException {
         if(node == null) {
-            throw new NullNodeException();
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when updating a node in neo4j");
         } else if(node.getID() == 0) {
             //throw an exception if the provided context does not have an ID
-            throw new NoIDException();
+            throw new PMException(Errors.ERR_NO_ID, "no ID was provided when updating a node in mysql");
         }
         try {
             if(node.getName() != null && !node.getName().isEmpty()) {
@@ -87,7 +88,7 @@ public class SQLGraph implements Graph {
                     stmt.executeUpdate(sql);
                 }
                 catch (SQLException e) {
-                    throw new DatabaseException(ERR_DB, e.getMessage());
+                    throw new PMException(ERR_DB, e.getMessage());
                 }
 
                 //insert new properties
@@ -99,27 +100,27 @@ public class SQLGraph implements Graph {
                     stmt.executeUpdate(sql);
                 }
                 catch (SQLException e) {
-                    throw new DatabaseException(ERR_DB, e.getMessage());
+                    throw new PMException(ERR_DB, e.getMessage());
                 }
             }
         }catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public void deleteNode(long nodeID) throws DatabaseException {
+    public void deleteNode(long nodeID) throws PMException {
         try(Statement stmt = conn.getConnection().createStatement()) {
             String sql = String.format("delete from node where node_id=%d", nodeID);
             stmt.executeUpdate(sql);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public boolean exists(long nodeID) throws DatabaseException {
+    public boolean exists(long nodeID) throws PMException {
         String sql = String.format("select count(*) from node where node_id=%d", nodeID);
         try(Statement stmt = conn.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
@@ -128,12 +129,12 @@ public class SQLGraph implements Graph {
             return rs.getInt(1) == 1;
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Node> getNodes() throws DatabaseException {
+    public HashSet<Node> getNodes() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id from node")
@@ -144,12 +145,12 @@ public class SQLGraph implements Graph {
                 nodes.add(getNode(id));
             }
             return nodes;
-        }catch(SQLException | InvalidNodeTypeException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+        }catch(SQLException e){
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
-    private Node getNode(long id) throws InvalidNodeTypeException, DatabaseException {
+    private Node getNode(long id) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
@@ -162,11 +163,11 @@ public class SQLGraph implements Graph {
             return new Node(id, name, type, properties);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
-    private HashMap<String, String> getNodeProps(long nodeID) throws DatabaseException {
+    private HashMap<String, String> getNodeProps(long nodeID) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet propRs = stmt.executeQuery("SELECT property_key, NODE_PROPERTY.property_value FROM NODE_PROPERTY WHERE PROPERTY_NODE_ID = " + nodeID);
@@ -180,12 +181,12 @@ public class SQLGraph implements Graph {
             return props;
 
         } catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Long> getPolicies() throws DatabaseException {
+    public HashSet<Long> getPolicies() throws PMException {
         String sql = String.format("select node_id from nodes where node_type_id=%d", SQLHelper.PC_ID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
@@ -198,12 +199,12 @@ public class SQLGraph implements Graph {
             return pcs;
 
         } catch(SQLException e){
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Node> getChildren(long nodeID) throws DatabaseException {
+    public HashSet<Node> getChildren(long nodeID) throws PMException {
         String sql = String.format("select end_node_id from assignments where start_node_id=%d and depth=1", nodeID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
@@ -215,13 +216,13 @@ public class SQLGraph implements Graph {
                 nodes.add(getNode(id));
             }
             return nodes;
-        }catch(SQLException | InvalidNodeTypeException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+        }catch(SQLException e){
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Node> getParents(long nodeID) throws DatabaseException {
+    public HashSet<Node> getParents(long nodeID) throws PMException {
         String sql = String.format("select start_node_id from assignments where end_node_id=%d and depth=1", nodeID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
@@ -233,13 +234,13 @@ public class SQLGraph implements Graph {
                 nodes.add(getNode(id));
             }
             return nodes;
-        }catch(SQLException | InvalidNodeTypeException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+        }catch(SQLException e){
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public void assign(long childID, NodeType childType, long parentID, NodeType parentType) throws DatabaseException {
+    public void assign(long childID, NodeType childType, long parentID, NodeType parentType) throws PMException {
         try (CallableStatement stmt = conn.getConnection().prepareCall("{call create_assignment(?,?,?)}")) {
             stmt.setLong(1, childID);
             stmt.setLong(2, parentID);
@@ -247,16 +248,16 @@ public class SQLGraph implements Graph {
             stmt.execute();
             String errorMsg = stmt.getString(3);
             if (errorMsg!= null && errorMsg.length() > 0) {
-                throw new DatabaseException(ERR_DB, errorMsg);
+                throw new PMException(ERR_DB, errorMsg);
             }
         }
         catch (SQLException e) {
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public void deassign(long childID, NodeType childType, long parentID, NodeType parentType) throws DatabaseException {
+    public void deassign(long childID, NodeType childType, long parentID, NodeType parentType) throws PMException {
         try {
             CallableStatement stmt = conn.getConnection().prepareCall("{call delete_assignment(?,?,?)}");
 
@@ -266,16 +267,16 @@ public class SQLGraph implements Graph {
             stmt.execute();
             String errorMsg = stmt.getString(3);
             if (errorMsg!= null && errorMsg.length() > 0) {
-                throw new DatabaseException(ERR_DB, errorMsg);
+                throw new PMException(ERR_DB, errorMsg);
             }
         }
         catch (SQLException e) {
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws DatabaseException {
+    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws PMException {
         String ops = "";
         for (String op : operations) {
             ops += op + ",";
@@ -293,7 +294,7 @@ public class SQLGraph implements Graph {
             associated = rs.getInt(1) == 1;
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
 
         if(associated) {
@@ -307,11 +308,11 @@ public class SQLGraph implements Graph {
                 stmt.execute();
                 String errorMsg = stmt.getString(4);
                 if (errorMsg != null && errorMsg.length() > 0) {
-                    throw new DatabaseException(ERR_DB, errorMsg);
+                    throw new PMException(ERR_DB, errorMsg);
                 }
             }
             catch (SQLException e) {
-                throw new DatabaseException(e.getErrorCode(), e.getMessage());
+                throw new PMException(ERR_DB, e.getMessage());
             }
         } else {
             try {
@@ -323,13 +324,13 @@ public class SQLGraph implements Graph {
                 stmt.execute();
             }
             catch (SQLException e) {
-                throw new DatabaseException(e.getErrorCode(), e.getMessage());
+                throw new PMException(ERR_DB, e.getMessage());
             }
         }
     }
 
     @Override
-    public void dissociate(long uaID, long targetID, NodeType targetType) throws DatabaseException {
+    public void dissociate(long uaID, long targetID, NodeType targetType) throws PMException {
         try (
                 CallableStatement stmt = conn.getConnection().prepareCall("{call delete_association(?,?,?)}")
         ) {
@@ -339,11 +340,11 @@ public class SQLGraph implements Graph {
             stmt.execute();
             String errorMsg = stmt.getString(3);
             if (errorMsg!= null && errorMsg.length() > 0) {
-                throw new DatabaseException(ERR_DB, errorMsg);
+                throw new PMException(ERR_DB, errorMsg);
             }
         }
         catch (SQLException e) {
-            throw new DatabaseException(e.getErrorCode(), e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 

@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class AnalyticsService extends Service {
 
-    public AnalyticsService(String sessionID, long processID) {
+    public AnalyticsService(String sessionID, long processID) throws PMException {
         super(sessionID, processID);
     }
 
@@ -24,7 +24,7 @@ public class AnalyticsService extends Service {
      * @param targetID The ID of the target node.
      * @return The set of operations the current user has on the target node.
      */
-    public HashSet<String> getPermissions(long targetID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    public HashSet<String> getPermissions(long targetID) throws PMException {
         Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         return decider.listPermissions(getSessionUserID(), getProcessID(), targetID);
     }
@@ -34,14 +34,8 @@ public class AnalyticsService extends Service {
      * Get the Personal Object System for the user of the current session.  This method returns the first level of nodes
      * the user has direct access to.
      * @return The set of nodes that the user has direct access.
-     * @throws SessionDoesNotExistException
-     * @throws DatabaseException
-     * @throws LoadConfigException
-     * @throws LoaderException
-     * @throws NodeNotFoundException
-     * @throws MissingPermissionException
      */
-    public HashSet<Node> getPos() throws SessionDoesNotExistException, DatabaseException, LoadConfigException, NodeNotFoundException, MissingPermissionException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getPos() throws PMException {
         // Prepare the hashset to return.
         HashSet<Long> hsOa = new HashSet<>();
 
@@ -83,7 +77,7 @@ public class AnalyticsService extends Service {
         return nodes;
     }
 
-    private Hashtable findBorderOaPrivRestrictedInternal() throws SessionDoesNotExistException, LoadConfigException, DatabaseException, NodeNotFoundException, MissingPermissionException, InvalidProhibitionSubjectTypeException {
+    private Hashtable findBorderOaPrivRestrictedInternal() throws PMException {
         long userID = getSessionUserID();
 
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
@@ -201,7 +195,7 @@ public class AnalyticsService extends Service {
         return htReachableOas;
     }
 
-    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws PMException {
         HashSet<Long> reachable = new HashSet<>();
 
         // Init the queue, visited
@@ -240,7 +234,7 @@ public class AnalyticsService extends Service {
         return reachable;
     }
 
-    private boolean inMemUattrHasOpsets(Node uaNode) throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    private boolean inMemUattrHasOpsets(Node uaNode) throws PMException {
         return !getGraphMem().getSourceAssociations(uaNode.getID()).isEmpty();
     }
 }

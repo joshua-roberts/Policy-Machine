@@ -30,14 +30,13 @@ public enum NodeType implements Serializable {
 
     /**
      * Given a string, return the matching NodeType. If the type is null or not one of the types listed above,
-     * an InvalidNodeTypeExceptino will be thrown.
+     * null will be returned
      * @param type The String type to convert to a NodeType.
-     * @return The equivalent NodeType of the given String.
-     * @throws IllegalArgumentException When an invalid or null type is provided.
+     * @return The equivalent NodeType of the given String, or null if an invalid type or null is passed.
      */
     public static NodeType toNodeType(String type) {
         if(type == null){
-            throw new IllegalArgumentException("null is not a valid NGAC NodeType");
+            return null;
         }
         switch (type.toUpperCase()){
             case "OA":
@@ -53,7 +52,7 @@ public enum NodeType implements Serializable {
             case "OS":
                 return NodeType.OS;
             default:
-                throw new IllegalArgumentException(type + " is not a valid NGAC NodeType");
+                return null;
         }
     }
 }

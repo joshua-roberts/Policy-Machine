@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 
@@ -10,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Neo4j implementation of the SessionsLoader interface
@@ -25,9 +25,9 @@ public class Neo4jSessionsLoader implements SessionsLoader {
     /**
      * Create a new SessionsLoader from Neo4j, using the provided database connection parameters.
      * @param ctx The parameters to connect to the database
-     * @throws DatabaseException If a connection cannot be made to the database
+     * @throws PMException If a connection cannot be made to the database
      */
-    public Neo4jSessionsLoader(DatabaseContext ctx) throws DatabaseException {
+    public Neo4jSessionsLoader(DatabaseContext ctx) throws PMException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
@@ -35,10 +35,10 @@ public class Neo4jSessionsLoader implements SessionsLoader {
      * Load any session in the database into a HashMap.  This map will contain the session IDs as keys, and the User ID
      * that belongs to each session as the values.
      * @return The map of sessionIDs to User IDs.
-     * @throws DatabaseException If there is an exception loading sessions from the database.
+     * @throws PMException If there is an exception loading sessions from the database.
      */
     @Override
-    public HashMap<String, Long> loadSessions() throws DatabaseException {
+    public HashMap<String, Long> loadSessions() throws PMException {
         HashMap<String, Long> sessions = new HashMap<>();
         String cypher = "match(n:session) return n.user_id, n.session_id";
         try(
@@ -56,7 +56,7 @@ public class Neo4jSessionsLoader implements SessionsLoader {
             return sessions;
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 }

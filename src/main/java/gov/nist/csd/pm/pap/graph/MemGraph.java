@@ -13,7 +13,6 @@ import org.jgrapht.graph.DirectedMultigraph;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -26,7 +25,7 @@ public class MemGraph implements Graph {
     private HashSet<Long>                         pcs;
     private HashMap<Long, Node>                   nodes;
     
-    public MemGraph(GraphLoader graphLoader) throws DatabaseException {
+    public MemGraph(GraphLoader graphLoader) throws PMException {
         graph = new DirectedMultigraph<>(NGACRelationship.class);
         nodes = new HashMap<>();
 
@@ -63,12 +62,12 @@ public class MemGraph implements Graph {
     }
 
     @Override
-    public long createNode(Node node) throws NoIDException, NullNodeException {
+    public long createNode(Node node) throws PMException {
         //check for null values
         if(node == null) {
-            throw new NullNodeException();
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when creating a node in-memory");
         } else if(node.getID() == 0) {
-            throw new NoIDException();
+            throw new PMException(Errors.ERR_NO_ID, "no ID was provided when creating a node in the in-memory graph");
         }
 
         //if the node being created is a PC, add it to the graph and list of policies

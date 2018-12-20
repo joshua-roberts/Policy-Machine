@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pap;
 
-import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
@@ -37,7 +38,8 @@ import java.util.Properties;
 import static gov.nist.csd.pm.common.constants.Operations.ALL_OPERATIONS;
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_HASHING_USER_PSWD;
 import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
 
 /**
@@ -65,7 +67,7 @@ public class PAP {
     private Node superOA;
     private Node superO;
 
-    private PAP() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+    private PAP() throws PMException {
         // deserialize the configuration properties
         FileInputStream fis;
         Properties props;
@@ -76,7 +78,7 @@ public class PAP {
             }
         }
         catch (IOException | ClassNotFoundException e) {
-            throw new LoadConfigException();
+            throw new PMException(Errors.ERR_LOADING_DB_CONFIG_PROPS, e.getMessage());
         }
 
         // extract the properties
@@ -94,7 +96,7 @@ public class PAP {
         setup(database, host, port, schema, username, password);
     }
 
-    private PAP(String database, String host, int port, String username, String password, String schema, int interval) throws DatabaseException, InvalidProhibitionSubjectTypeException {
+    private PAP(String database, String host, int port, String username, String password, String schema, int interval) throws PMException {
         if(interval > 0) {
             this.interval = interval;
         }
@@ -114,7 +116,7 @@ public class PAP {
      * @param username The username of the database user.
      * @param password The password of the database user
      */
-    private void setup(String database, String host, int port, String schema, String username, String password) throws DatabaseException, InvalidProhibitionSubjectTypeException {
+    private void setup(String database, String host, int port, String schema, String username, String password) throws PMException {
         DatabaseContext ctx = new DatabaseContext(host, port, username, password, schema);
 
         //instantiate PAP fields according to the selected database
@@ -140,98 +142,94 @@ public class PAP {
         checkMetadata();
     }
 
-    private void checkMetadata() throws DatabaseException, InvalidProhibitionSubjectTypeException {
-        try {
-            HashMap<String, String> props = new HashMap<>();
-            props.put(NAMESPACE_PROPERTY, "super");
+    private void checkMetadata() throws PMException {
+        HashMap<String, String> props = new HashMap<>();
+        props.put(NAMESPACE_PROPERTY, "super");
 
-            HashSet<Node> nodes = search.search("super", NodeType.PC.toString(), props);
-            if(nodes.isEmpty()) {
-                long pcID = graphDB.createNode(new Node("super", NodeType.PC, props));
-                superPC = search.getNode(pcID);
-            } else {
-                superPC = nodes.iterator().next();
-            }
-            nodes = search.search("super_ua1", NodeType.UA.toString(), props);
-            if(nodes.isEmpty()) {
-                long uaID = graphDB.createNode(new Node("super_ua1", NodeType.UA, props));
-                superUA1 = search.getNode(uaID);
-            } else {
-                superUA1 = nodes.iterator().next();
-            }
-            nodes = search.search("super_ua2", NodeType.UA.toString(), props);
-            if(nodes.isEmpty()) {
-                long uaID = graphDB.createNode(new Node("super_ua2", NodeType.UA, props));
-                superUA2 = search.getNode(uaID);
-            } else {
-                superUA2 = nodes.iterator().next();
-            }
-            nodes = search.search("super", NodeType.U.toString(), props);
-            if(nodes.isEmpty()) {
+        HashSet<Node> nodes = search.search("super", NodeType.PC.toString(), props);
+        if(nodes.isEmpty()) {
+            long pcID = graphDB.createNode(new Node("super", NodeType.PC, props));
+            superPC = search.getNode(pcID);
+        } else {
+            superPC = nodes.iterator().next();
+        }
+        nodes = search.search("super_ua1", NodeType.UA.toString(), props);
+        if(nodes.isEmpty()) {
+            long uaID = graphDB.createNode(new Node("super_ua1", NodeType.UA, props));
+            superUA1 = search.getNode(uaID);
+        } else {
+            superUA1 = nodes.iterator().next();
+        }
+        nodes = search.search("super_ua2", NodeType.UA.toString(), props);
+        if(nodes.isEmpty()) {
+            long uaID = graphDB.createNode(new Node("super_ua2", NodeType.UA, props));
+            superUA2 = search.getNode(uaID);
+        } else {
+            superUA2 = nodes.iterator().next();
+        }
+        nodes = search.search("super", NodeType.U.toString(), props);
+        if(nodes.isEmpty()) {
+            try {
                 props.put(PASSWORD_PROPERTY, generatePasswordHash("super"));
-                long uID = graphDB.createNode(new Node("super", NodeType.U, props));
-                superU = search.getNode(uID);
-            } else {
-                superU = nodes.iterator().next();
             }
-            nodes = search.search("super", NodeType.OA.toString(), props);
-            if(nodes.isEmpty()) {
-                long oaID = graphDB.createNode(new Node("super", NodeType.OA, props));
-                superOA = search.getNode(oaID);
-            } else {
-                superOA = nodes.iterator().next();
+            catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                throw new PMException(ERR_HASHING_USER_PSWD, e.getMessage());
             }
-            nodes = search.search("super", NodeType.O.toString(), props);
-            if(nodes.isEmpty()) {
-                long oID = graphDB.createNode(new Node("super", NodeType.O, props));
-                superO = search.getNode(oID);
-            } else {
-                superO = nodes.iterator().next();
-            }
-
-            // check super ua1 is assigned to super pc
-            HashSet<Node> children = graphDB.getChildren(superPC.getID());
-            if(!children.contains(superUA1)) {
-                graphDB.assign(superUA1.getID(), superUA1.getType(), superPC.getID(), superPC.getType());
-            }
-            // check super ua2 is assigned to super pc
-            children = graphDB.getChildren(superPC.getID());
-            if(!children.contains(superUA2)) {
-                graphDB.assign(superUA2.getID(), superUA2.getType(), superPC.getID(), superPC.getType());
-            }
-            // check super user is assigned to super ua1
-            children = graphDB.getChildren(superUA1.getID());
-            if(!children.contains(superU)) {
-                graphDB.assign(superU.getID(), superU.getType(), superUA1.getID(), superUA1.getType());
-            }
-            // check super user is assigned to super ua2
-            children = graphDB.getChildren(superUA2.getID());
-            if(!children.contains(superU)) {
-                graphDB.assign(superU.getID(), superU.getType(), superUA2.getID(), superUA2.getType());
-            }
-            // check super oa is assigned to super pc
-            children = graphDB.getChildren(superPC.getID());
-            if(!children.contains(superOA)) {
-                graphDB.assign(superOA.getID(), superOA.getType(), superPC.getID(), superPC.getType());
-            }
-            // check super o is assigned to super oa
-            children = graphDB.getChildren(superOA.getID());
-            if(!children.contains(superO)) {
-                graphDB.assign(superO.getID(), superO.getType(), superOA.getID(), superOA.getType());
-            }
-
-            // associate super ua to super oa
-            graphDB.associate(superUA1.getID(), superOA.getID(), superOA.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
-            graphDB.associate(superUA1.getID(), superUA2.getID(), superUA2.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
+            long uID = graphDB.createNode(new Node("super", NodeType.U, props));
+            superU = search.getNode(uID);
+        } else {
+            superU = nodes.iterator().next();
         }
-        catch (LoadConfigException | SessionDoesNotExistException | NoIDException |
-                NullNameException | NodeNotFoundException | NullNodeException |
-                NullTypeException | InvalidNodeTypeException | MissingPermissionException |
-                InvalidKeySpecException | NoSuchAlgorithmException | InvalidAssignmentException |
-                InvalidAssociationException e) {
-            throw new DatabaseException(ERR_DB, "There was an error making sure that the super user is in the graph. " +
-                    e.getClass() + ": " + e.getMessage());
+        nodes = search.search("super", NodeType.OA.toString(), props);
+        if(nodes.isEmpty()) {
+            long oaID = graphDB.createNode(new Node("super", NodeType.OA, props));
+            superOA = search.getNode(oaID);
+        } else {
+            superOA = nodes.iterator().next();
         }
+        nodes = search.search("super", NodeType.O.toString(), props);
+        if(nodes.isEmpty()) {
+            long oID = graphDB.createNode(new Node("super", NodeType.O, props));
+            superO = search.getNode(oID);
+        } else {
+            superO = nodes.iterator().next();
+        }
+
+        // check super ua1 is assigned to super pc
+        HashSet<Node> children = graphDB.getChildren(superPC.getID());
+        if(!children.contains(superUA1)) {
+            graphDB.assign(superUA1.getID(), superUA1.getType(), superPC.getID(), superPC.getType());
+        }
+        // check super ua2 is assigned to super pc
+        children = graphDB.getChildren(superPC.getID());
+        if(!children.contains(superUA2)) {
+            graphDB.assign(superUA2.getID(), superUA2.getType(), superPC.getID(), superPC.getType());
+        }
+        // check super user is assigned to super ua1
+        children = graphDB.getChildren(superUA1.getID());
+        if(!children.contains(superU)) {
+            graphDB.assign(superU.getID(), superU.getType(), superUA1.getID(), superUA1.getType());
+        }
+        // check super user is assigned to super ua2
+        children = graphDB.getChildren(superUA2.getID());
+        if(!children.contains(superU)) {
+            graphDB.assign(superU.getID(), superU.getType(), superUA2.getID(), superUA2.getType());
+        }
+        // check super oa is assigned to super pc
+        children = graphDB.getChildren(superPC.getID());
+        if(!children.contains(superOA)) {
+            graphDB.assign(superOA.getID(), superOA.getType(), superPC.getID(), superPC.getType());
+        }
+        // check super o is assigned to super oa
+        children = graphDB.getChildren(superOA.getID());
+        if(!children.contains(superO)) {
+            graphDB.assign(superO.getID(), superO.getType(), superOA.getID(), superOA.getType());
+        }
+
+        // associate super ua to super oa
+        graphDB.associate(superUA1.getID(), superOA.getID(), superOA.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
+        graphDB.associate(superUA1.getID(), superUA2.getID(), superUA2.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
+
     }
 
     public Graph getGraphDB() {
@@ -291,7 +289,7 @@ public class PAP {
      * a configuration makes changes to the database but not the in memory graph.  So, the in-memory graph needs to get
      * the updated graph from the database.
      */
-    public void reinitialize() throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+    public void reinitialize() throws PMException {
         PAP = new PAP();
     }
 
@@ -299,7 +297,7 @@ public class PAP {
      * A static instance of the PAP to be used by the PDP.
      */
     private static PAP PAP;
-    public static synchronized PAP getPAP() throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+    public static synchronized PAP getPAP() throws PMException {
         if(PAP == null) {
             PAP = new PAP();
         }
@@ -309,9 +307,9 @@ public class PAP {
     /**
      * Initialize the PAP with the given properties
      * @param props
-     * @throws DatabaseException
+     * @throws PMException
      */
-    public static void init(Properties props) throws DatabaseException, InvalidProhibitionSubjectTypeException {
+    public static void init(Properties props) throws PMException {
         //get properties
         String database = props.getProperty("database");
         String host = props.getProperty("host");

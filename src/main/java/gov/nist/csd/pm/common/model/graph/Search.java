@@ -21,12 +21,11 @@ public interface Search {
      * @param properties The properties of the nodes to search for.
      * @return A set of nodes that match the given search criteria.
      */
-    HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException, SessionDoesNotExistException, InvalidNodeTypeException;
-
+    HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException;
     /**
      * Retrieve the node with the given ID.
      * @param id the ID of the node to get.
      * @return The Node with the given ID.
      */
-    Node getNode(long id) throws NodeNotFoundException, DatabaseException, InvalidNodeTypeException, SessionDoesNotExistException, LoadConfigException, MissingPermissionException, InvalidProhibitionSubjectTypeException;
+    Node getNode(long id) throws PMException;
 }

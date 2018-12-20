@@ -1,13 +1,13 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Object that stores a connection to a neo4j database.
@@ -25,9 +25,9 @@ public class Neo4jConnection {
      * @param port The port the Neo4j instance is running on.
      * @param username The name of the Neo4j user.
      * @param password The password of the Neo4j user.
-     * @throws DatabaseException When there's ann error connecting to the Neo4j instance.
+     * @throws PMException When there's ann error connecting to the Neo4j instance.
      */
-    public Neo4jConnection(String host, int port, String username, String password) throws DatabaseException {
+    public Neo4jConnection(String host, int port, String username, String password) throws PMException {
         this.host = host;
         this.port = port;
         this.username = username;
@@ -37,19 +37,19 @@ public class Neo4jConnection {
             Driver driver = new org.neo4j.jdbc.Driver();
             DriverManager.registerDriver(driver);
         } catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     /**
      * @return The connection to the Neo4j instance.
      */
-    public Connection getConnection() throws DatabaseException {
+    public Connection getConnection() throws PMException {
         try {
             return DriverManager.getConnection("jdbc:neo4j:bolt://" + host + ":" + port + "", username, password);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 }

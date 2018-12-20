@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pap.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.SessionDoesNotExistException;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.loader.sessions.SQLSessionsLoader;
 import gov.nist.csd.pm.pap.loader.sessions.SessionsLoader;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 public class SQLSessionsDAO implements SessionsDAO {
 
@@ -25,7 +25,7 @@ public class SQLSessionsDAO implements SessionsDAO {
      */
     private   SQLConnection         conn;
 
-    public SQLSessionsDAO(DatabaseContext ctx) throws DatabaseException {
+    public SQLSessionsDAO(DatabaseContext ctx) throws PMException {
         conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
 
         //load any sessions already in the database into memory
@@ -35,34 +35,34 @@ public class SQLSessionsDAO implements SessionsDAO {
 
 
     @Override
-    public void createSession(String sessionID, long userID) throws DatabaseException {
+    public void createSession(String sessionID, long userID) throws PMException {
         try(Statement stmt = conn.getConnection().createStatement()) {
             String sql = "INSERT INTO session(session_id,user_node_id) VALUES ('" + sessionID + "'," + userID +")";
             stmt.execute(sql);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
         sessions.put(sessionID, userID);
     }
 
     @Override
-    public void deleteSession(String sessionID) throws DatabaseException {
+    public void deleteSession(String sessionID) throws PMException {
         try(Statement stmt = conn.getConnection().createStatement()) {
             String sql = "DELETE FROM session WHERE session_id = " + sessionID;
             stmt.executeUpdate(sql);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
         sessions.remove(sessionID);
     }
 
     @Override
-    public long getSessionUserID(String sessionID) throws SessionDoesNotExistException {
+    public long getSessionUserID(String sessionID) throws PMException {
         long userID = sessions.get(sessionID);
         if(userID == 0) {
-            throw new SessionDoesNotExistException(sessionID);
+            throw new PMException(Errors.ERR_SESSION_DOES_NOT_EXIST, String.format("session with ID %s does not exist", sessionID));
         }
         return userID;
     }

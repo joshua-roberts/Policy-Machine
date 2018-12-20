@@ -17,7 +17,7 @@ public class AnalyticsResource {
     @Path("/pos")
     @GET
     public Response getPos(@QueryParam("session") String session,
-                           @QueryParam("process") long process) throws SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, MissingPermissionException, DatabaseException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
+                           @QueryParam("process") long process) throws PMException {
         AnalyticsService analyticsService = new AnalyticsService(session, process);
         return ApiResponse.Builder
                 .success()
@@ -29,7 +29,7 @@ public class AnalyticsResource {
     @GET
     public Response getPermissions(@PathParam("targetID") long targetID,
                                    @QueryParam("session") String session,
-                                   @QueryParam("process") long process) throws SessionDoesNotExistException, LoadConfigException, NodeNotFoundException, MissingPermissionException, DatabaseException, InvalidProhibitionSubjectTypeException {
+                                   @QueryParam("process") long process) throws PMException {
         AnalyticsService analyticsService = new AnalyticsService(session, process);
         HashSet<String> permissions = analyticsService.getPermissions(targetID);
         return ApiResponse.Builder

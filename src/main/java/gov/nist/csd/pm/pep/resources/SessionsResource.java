@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 public class SessionsResource {
 
     @POST
-    public Response createSession(CreateSessionRequest request) throws DatabaseException, HashingUserPasswordException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, PMAuthenticationException, MissingPermissionException, InvalidProhibitionSubjectTypeException, InvalidNodeTypeException {
+    public Response createSession(CreateSessionRequest request) throws PMException {
         String username = request.getUsername();
         String password = request.getPassword();
 
@@ -31,7 +31,7 @@ public class SessionsResource {
 
     @Path("/{session}")
     @DELETE
-    public Response deleteSession(@PathParam("session") String session) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+    public Response deleteSession(@PathParam("session") String session) throws PMException {
         SessionsService sessionsService = new SessionsService();
         sessionsService.deleteSession(session);
         return ApiResponse.Builder
@@ -42,7 +42,7 @@ public class SessionsResource {
 
     @Path("/{session}")
     @GET
-    public Response getSessionUser(@PathParam("session") String session) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+    public Response getSessionUser(@PathParam("session") String session) throws PMException {
         SessionsService sessionsService = new SessionsService();
         long userID = sessionsService.getSessionUserID();
         return ApiResponse.Builder

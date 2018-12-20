@@ -19,7 +19,7 @@ public class ProhibitionsResource {
     @POST
     public Response createProhibition(CreateProhibitionRequest request,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process) throws ProhibitionNameExistsException, DatabaseException, NullNameException, LoadConfigException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+                                      @QueryParam("process") long process) throws PMException {
         ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
         Prohibition prohibition = new Prohibition(request.getName(), request.getSubject(), request.getNodes(), request.getOperations(), request.isIntersection());
         prohibitionsService.createProhibition(prohibition);
@@ -28,7 +28,7 @@ public class ProhibitionsResource {
 
     @GET
     public Response getProhibitions(@QueryParam("session") String session,
-                                    @QueryParam("process") long process) throws DatabaseException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+                                    @QueryParam("process") long process) throws PMException {
         ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
         List<Prohibition> prohibitions = prohibitionsService.getProhibitions();
         return ApiResponse.Builder.success().entity(prohibitions).build();
@@ -38,7 +38,7 @@ public class ProhibitionsResource {
     @GET
     public Response getProhibition(@PathParam("prohibitionName") String prohibitionName,
                                    @QueryParam("session") String session,
-                                   @QueryParam("process") long process) throws ProhibitionDoesNotExistException, LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+                                   @QueryParam("process") long process) throws PMException {
         ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
         return ApiResponse.Builder.success().entity(prohibitionsService.getProhibition(prohibitionName)).build();
     }
@@ -48,8 +48,7 @@ public class ProhibitionsResource {
     public Response updateProhibition(@PathParam("prohibitionName") String prohibitionName,
                                       CreateProhibitionRequest request,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process)
-            throws DatabaseException, InvalidProhibitionSubjectTypeException, LoadConfigException {
+                                      @QueryParam("process") long process) throws PMException {
         ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
         Prohibition prohibition = new Prohibition(request.getName(), request.getSubject(), request.getNodes(), request.getOperations(), request.isIntersection());
         prohibitionsService.updateProhibition(prohibition);
@@ -60,8 +59,7 @@ public class ProhibitionsResource {
     @DELETE
     public Response deleteProhibition(@PathParam("prohibitionName") String prohibitionName,
                                       @QueryParam("session") String session,
-                                      @QueryParam("process") long process)
-            throws DatabaseException, ProhibitionDoesNotExistException, LoadConfigException, InvalidProhibitionSubjectTypeException {
+                                      @QueryParam("process") long process) throws PMException {
         ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
         prohibitionsService.deleteProhibition(prohibitionName) ;
         return ApiResponse.Builder.success().message(ApiResponse.DELETE_PROHIBITION_SUCCESS).build();

@@ -1,8 +1,6 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
-import gov.nist.csd.pm.common.exceptions.InvalidNodeTypeException;
-import gov.nist.csd.pm.common.exceptions.NodeNotFoundException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
@@ -15,10 +13,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_NODE_NOT_FOUND;
 
 /**
  * Neo4j extension of the Search class.
@@ -33,7 +31,7 @@ public class Neo4jSearch implements Search {
     /**
      * Create a new Search with the given Neo4j connection context.
      */
-    public Neo4jSearch(DatabaseContext ctx) throws DatabaseException {
+    public Neo4jSearch(DatabaseContext ctx) throws PMException {
         this.neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
@@ -45,7 +43,7 @@ public class Neo4jSearch implements Search {
     }
 
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws DatabaseException {
+    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException {
         // get the cypher query
         String cypher = getSearchCypher(name, type, properties);
         // query neo4j for the nodes
@@ -57,12 +55,12 @@ public class Neo4jSearch implements Search {
             return Neo4jHelper.getNodesFromResultSet(rs);
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public Node getNode(long id) throws NodeNotFoundException, DatabaseException, InvalidNodeTypeException {
+    public Node getNode(long id) throws PMException {
         // get the cypher query
         String cypher = String.format("match(n{id:%d}) return n", id);
         // query neo4j for the nodes
@@ -76,10 +74,10 @@ public class Neo4jSearch implements Search {
                 return Neo4jHelper.mapToNode(map);
             }
 
-            throw new NodeNotFoundException(id);
+            throw new PMException(ERR_NODE_NOT_FOUND, String.format("node with ID %d does not exist", id));
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 

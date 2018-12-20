@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
@@ -17,9 +17,9 @@ public class SQLProhibitionsLoader implements ProhibitionsLoader {
     /**
      * Create a new ProhibitionsLoader from SQL, using the provided database connection parameters.
      * @param ctx The parameters to connect to the database
-     * @throws DatabaseException If a connection cannot be made to the database
+     * @throws PMException If a connection cannot be made to the database
      */
-    public SQLProhibitionsLoader(DatabaseContext ctx) throws DatabaseException {
+    public SQLProhibitionsLoader(DatabaseContext ctx) throws PMException {
         sql = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
     }
 

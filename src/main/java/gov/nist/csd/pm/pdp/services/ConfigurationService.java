@@ -19,15 +19,9 @@ import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
 
-    public ConfigurationService(String sessionID, long processID) {
-        super(sessionID, processID);
-    }
+    public ConfigurationService() {}
 
-    public ConfigurationService() {
-        super("CONFIG_SESSION_ID", 0);
-    }
-
-    public String save() throws LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidNodeTypeException, InvalidProhibitionSubjectTypeException {
+    public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         HashSet<Node> nodes = getGraphDB().getNodes();
@@ -52,7 +46,7 @@ public class ConfigurationService extends Service {
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
-    public void load(String config) throws HashingUserPasswordException, LoadConfigException, DatabaseException, NullNodeException, NoIDException, NullTypeException, NullNameException, NodeNotFoundException, SessionDoesNotExistException, InvalidAssignmentException, MissingPermissionException, InvalidNodeTypeException, InvalidAssociationException, InvalidProhibitionSubjectTypeException {
+    public void load(String config) throws PMException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<Node> nodes = graph.getNodes();
@@ -69,7 +63,7 @@ public class ConfigurationService extends Service {
                     properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
                 }
                 catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                    throw new HashingUserPasswordException();
+                    throw new PMException(Errors.ERR_HASHING_USER_PSWD, e.getMessage());
                 }
             }
 
@@ -98,7 +92,7 @@ public class ConfigurationService extends Service {
         }
     }
 
-    public void reset() throws DatabaseException, LoadConfigException, MissingPermissionException, NodeNotFoundException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    public void reset() throws PMException {
         HashSet<Node> nodes = getGraphMem().getNodes();
         for(Node node : nodes) {
             getGraphDB().deleteNode(node.getID());

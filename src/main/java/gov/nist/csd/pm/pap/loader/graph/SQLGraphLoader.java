@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
@@ -16,7 +15,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 public class SQLGraphLoader implements GraphLoader {
 
@@ -30,15 +29,15 @@ public class SQLGraphLoader implements GraphLoader {
     /**
      * Create a new GraphLoader from Neo4j, using the provided database connection parameters.
      * @param ctx The parameters to connect to the database
-     * @throws DatabaseException If a connection cannot be made to the database
+     * @throws PMException If a connection cannot be made to the database
      */
-    public SQLGraphLoader(DatabaseContext ctx) throws DatabaseException {
+    public SQLGraphLoader(DatabaseContext ctx) throws PMException {
         this.conn = new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());
         this.dbCtx = ctx;
     }
 
     @Override
-    public HashSet<Long> getPolicies() throws DatabaseException {
+    public HashSet<Long> getPolicies() throws PMException {
         String sql = String.format("select node_id from nodes where node_type_id=%d", SQLHelper.PC_ID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
@@ -51,12 +50,12 @@ public class SQLGraphLoader implements GraphLoader {
             return pcs;
 
         } catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Node> getNodes() throws DatabaseException {
+    public HashSet<Node> getNodes() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id from node")
@@ -69,12 +68,12 @@ public class SQLGraphLoader implements GraphLoader {
             }
             return nodes;
         }catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<NGACAssignment> getAssignments() throws DatabaseException {
+    public HashSet<NGACAssignment> getAssignments() throws PMException {
         String sql = String.format("SELECT start_node_id,end_node_id FROM assignment " +
                 "join node a on start_node_id = a.node_id and a.node_type_id <> %d " +
                 "join node b on end_node_id=b.node_id and b.node_type_id <> %d where assignment.depth=1;", SQLHelper.OS_ID, SQLHelper.OS_ID);
@@ -90,12 +89,12 @@ public class SQLGraphLoader implements GraphLoader {
             }
             return assignments;
         } catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 
     @Override
-    public HashSet<NGACAssociation> getAssociations() throws DatabaseException {
+    public HashSet<NGACAssociation> getAssociations() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT ua_id, get_operations(opset_id),target_id FROM association join node a on ua_id = a.node_id join node b on target_id=b.node_id");
@@ -110,7 +109,7 @@ public class SQLGraphLoader implements GraphLoader {
             }
             return associations;
         } catch(SQLException e){
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
     }
 }

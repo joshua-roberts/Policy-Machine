@@ -31,14 +31,16 @@ public class Service {
      * @param processID The ID of the current process. This can be 0.
      * @throws IllegalArgumentException If the session ID provided by the request context is null or empty
      */
-    public Service(String sessionID, long processID) {
+    public Service(String sessionID, long processID) throws PMException {
         if(sessionID == null || sessionID.isEmpty()) {
-            throw new IllegalArgumentException("The session ID cannot be null or empty");
+            throw new PMException(Errors.ERR_NULL_SESSION, "The session ID cannot be null or empty");
         }
 
         this.sessionID = sessionID;
         this.processID = processID;
     }
+
+    protected Service() {}
 
     /**
      * Get the ID of the current session.
@@ -60,31 +62,31 @@ public class Service {
 
     // The following methods are getter methods for the PAP.
 
-    Graph getGraphDB() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    Graph getGraphDB() throws PMException {
         return getPAP().getGraphDB();
     }
 
-    Graph getGraphMem() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    Graph getGraphMem() throws PMException {
         return getPAP().getGraphMem();
     }
 
-    Search getSearch() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    Search getSearch() throws PMException {
         return getPAP().getSearch();
     }
 
-    ProhibitionsDAO getProhibitionsDB() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    ProhibitionsDAO getProhibitionsDB() throws PMException {
         return getPAP().getProhibitionsDB();
     }
 
-    ProhibitionsDAO getProhibitionsMem() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    ProhibitionsDAO getProhibitionsMem() throws PMException {
         return getPAP().getProhibitionsMem();
     }
 
-    SessionsDAO getSessionsDB() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    SessionsDAO getSessionsDB() throws PMException {
         return getPAP().getSessionsDB();
     }
 
-    SessionsDAO getSessionsMem() throws InvalidProhibitionSubjectTypeException, LoadConfigException, DatabaseException {
+    SessionsDAO getSessionsMem() throws PMException {
         return getPAP().getSessionsMem();
     }
 
@@ -92,11 +94,11 @@ public class Service {
      * Get the ID of the User that is associated with the current session ID.
      * @return The ID of the user node.
      */
-    public long getSessionUserID() throws DatabaseException, LoadConfigException, SessionDoesNotExistException, InvalidProhibitionSubjectTypeException {
+    public long getSessionUserID() throws PMException {
         return getPAP().getSessionsMem().getSessionUserID(sessionID);
     }
 
-    public Decider newPolicyDecider() throws LoadConfigException, DatabaseException, InvalidProhibitionSubjectTypeException {
+    public Decider newPolicyDecider() throws PMException {
         return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
     }
 }

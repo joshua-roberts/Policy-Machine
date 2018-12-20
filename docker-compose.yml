@@ -13,8 +13,8 @@ services:
   pm:
     image: tomcat:8-jre8
     volumes:
-      - ./target/pm.war:/usr/local/tomcat/webapps/pm.war
+      - //target/pm.war:/usr/local/tomcat/webapps/pm.war
     ports:
       - 8080:8080
-    depends_on:
+    links:
       - neo4j

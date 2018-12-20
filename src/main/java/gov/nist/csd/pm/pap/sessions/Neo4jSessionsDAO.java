@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.pap.sessions;
 
-import gov.nist.csd.pm.common.exceptions.DatabaseException;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 
@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static gov.nist.csd.pm.common.exceptions.ErrorCodes.ERR_DB;
+import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 public class Neo4jSessionsDAO implements SessionsDAO {
 
@@ -18,12 +18,12 @@ public class Neo4jSessionsDAO implements SessionsDAO {
      */
     private Neo4jConnection       neo4j;
 
-    public Neo4jSessionsDAO(DatabaseContext ctx) throws DatabaseException {
+    public Neo4jSessionsDAO(DatabaseContext ctx) throws PMException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override
-    public void createSession(String sessionId, long userId) throws DatabaseException {
+    public void createSession(String sessionId, long userId) throws PMException {
         String cypher = "merge(n:sessions) create (n)<-[:session{}]-(m:session{sessionID:'" + sessionId + "', userID: " + userId + "})";
         try(
                 Connection conn = neo4j.getConnection();
@@ -32,12 +32,12 @@ public class Neo4jSessionsDAO implements SessionsDAO {
             stmt.executeQuery();
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
         }
 
     @Override
-    public void deleteSession(String sessionID) throws DatabaseException {
+    public void deleteSession(String sessionID) throws PMException {
         String cypher = "match(n:session{sessionID:'" + sessionID + "'}) detach delete n";
         try(
                 Connection conn = neo4j.getConnection();
@@ -46,12 +46,12 @@ public class Neo4jSessionsDAO implements SessionsDAO {
             stmt.executeQuery();
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
         }
 
     @Override
-    public long getSessionUserID(String sessionID) throws DatabaseException {
+    public long getSessionUserID(String sessionID) throws PMException {
         String cypher = "match(n:session{sessionID:'" + sessionID + "'}) return n.userID";
         try(
                 Connection conn = neo4j.getConnection();
@@ -63,7 +63,7 @@ public class Neo4jSessionsDAO implements SessionsDAO {
             }
         }
         catch (SQLException e) {
-            throw new DatabaseException(ERR_DB, e.getMessage());
+            throw new PMException(ERR_DB, e.getMessage());
         }
 
         return 0;

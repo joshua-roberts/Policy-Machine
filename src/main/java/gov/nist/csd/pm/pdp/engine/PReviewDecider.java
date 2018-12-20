@@ -36,7 +36,7 @@ public class PReviewDecider implements Decider {
     }
 
     @Override
-    public boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws SessionDoesNotExistException, LoadConfigException, MissingPermissionException, DatabaseException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public boolean hasPermissions(long userID, long processID, long targetID, String... perms) throws PMException {
         List<String> permsToCheck = Arrays.asList(perms);
         HashSet<String> permissions = listPermissions(userID, processID, targetID);
 
@@ -54,7 +54,7 @@ public class PReviewDecider implements Decider {
     }
 
     @Override
-    public HashSet<String> listPermissions(long userID, long processID, long targetID) throws DatabaseException, LoadConfigException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<String> listPermissions(long userID, long processID, long targetID) throws PMException {
         HashSet<String> perms = new HashSet<>();
 
         //walk the user side and get all target nodes reachable by the user through associations
@@ -104,8 +104,7 @@ public class PReviewDecider implements Decider {
             try {
                 return !hasPermissions(userID, processID, n.getID(), perms);
             }
-            catch (SessionDoesNotExistException | LoadConfigException | DatabaseException | MissingPermissionException | NodeNotFoundException | InvalidProhibitionSubjectTypeException e) {
-                e.printStackTrace();
+            catch (PMException e) {
                 return true;
             }
         });
@@ -113,7 +112,7 @@ public class PReviewDecider implements Decider {
     }
 
     @Override
-    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws PMException {
         HashSet<Node> children = graph.getChildren(targetID);
         return filter(userID, processID, children, perms);
     }
@@ -126,7 +125,7 @@ public class PReviewDecider implements Decider {
      * new operations to the already existing ones.
      * @return A Map of target nodes that the user can reach via associations and the operations the user has on each.
      */
-    private synchronized HashMap<Long, HashSet<String>> getBorderTargets(long userID) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    private synchronized HashMap<Long, HashSet<String>> getBorderTargets(long userID) throws PMException {
         HashMap<Long, HashSet<String>> borderTargets = new HashMap<>();
 
         //get the parents of the user to start bfs on user side
@@ -170,7 +169,7 @@ public class PReviewDecider implements Decider {
      * @param visitedNodes The map of nodes that have been visited
      * @param borderTargets The target nodes reachable by the user via associations
      */
-    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws SessionDoesNotExistException, LoadConfigException, DatabaseException, MissingPermissionException, NodeNotFoundException, InvalidProhibitionSubjectTypeException {
+    private synchronized void dfs(long targetID, HashMap<Long, HashMap<Long, HashSet<String>>> visitedNodes, HashMap<Long, HashSet<String>> borderTargets) throws PMException {
         //visit the current target node
         visitedNodes.put(targetID, new HashMap<>());
 
@@ -207,7 +206,7 @@ public class PReviewDecider implements Decider {
      * @param userID The ID of the User.
      * @return A Map of nodes the user has access to and the permissions on each.
      */
-    public synchronized HashMap<Long, HashSet<String>> getAccessibleNodes(long userID) throws SessionDoesNotExistException, InvalidProhibitionSubjectTypeException, LoadConfigException, NodeNotFoundException, MissingPermissionException, DatabaseException, NullNodeException, NoIDException, InvalidAssignmentException, NullTypeException, NullNameException {
+    public synchronized HashMap<Long, HashSet<String>> getAccessibleNodes(long userID) throws PMException {
         //Node->{ops}
         HashMap<Long, HashSet<String>> results = new HashMap<>();
 
@@ -259,7 +258,7 @@ public class PReviewDecider implements Decider {
         return results;
     }
 
-    private HashSet<Node> getAscendants(Long vNode) throws DatabaseException, SessionDoesNotExistException, NodeNotFoundException, LoadConfigException, InvalidProhibitionSubjectTypeException, MissingPermissionException {
+    private HashSet<Node> getAscendants(Long vNode) throws PMException {
         HashSet<Node> ascendants = new HashSet<>();
         HashSet<Node> children = graph.getChildren(vNode);
         if(children.isEmpty()){
@@ -274,8 +273,9 @@ public class PReviewDecider implements Decider {
         return ascendants;
     }
 
-    private synchronized Long createVNode(HashMap<Long, HashSet<String>> dc) throws NullNameException, LoadConfigException, DatabaseException, NullTypeException, NullNodeException, NoIDException, SessionDoesNotExistException, MissingPermissionException, NodeNotFoundException, InvalidAssignmentException, InvalidProhibitionSubjectTypeException {
-        Node vNode = new Node(new Random().nextLong(), "VNODE", NodeType.OA);
+
+    private synchronized long createVNode(HashMap<Long, HashSet<String>> dc) throws PMException {
+        Node vNode = new Node("VNODE", NodeType.OA);
         long vNodeID = graph.createNode(vNode);
         for(long nodeID : dc.keySet()){
             graph.assign(nodeID, NodeType.OA, vNode.getID(), NodeType.OA);
