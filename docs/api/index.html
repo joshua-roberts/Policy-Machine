@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>REST API - Policy Machine</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "REST API";
+    var mkdocs_page_input_path = "api.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Policy Machine</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="tocbase current">
+    
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="..">Introduction</a>
+  </li>
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="../getting-started">Getting Started</a>
+  </li>
+    
+      
+
+
+  
+    
+    <li class="navtree toctree-l1 page current">
+      <a class="current" href="">
+        REST API
+      </a>
+    </li>
+    
+      
+
+
+
+  <li class="toctree-l1 current">
+    <ul class="subnav-l1 current">
+    
+      
+        <li class="toctree-l2">
+          <a class="toctree-l3" href="#what-is-the-purpose-of-the-api">What is the Purpose of the API?</a>
+        </li>
+    
+      
+          
+
+  <li class="toctree-l2">
+    <a href="#important-notes">
+      Important Notes
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#special-cases">Special Cases</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l2">
+    <a href="#deployment">
+      Deployment
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#run-docker-compose">Run Docker Compose</a>
+        </li>
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#docker-compose-file">Docker Compose File</a>
+        </li>
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#tested-operating-systems">Tested Operating Systems</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l2">
+    <a href="#how-to-use-the-api">
+      How to Use the API
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#requests">Requests</a>
+        </li>
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#responses">Responses</a>
+        </li>
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#response-codes">Response codes</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l2">
+    <a href="#sessions-api">
+      Sessions API
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+          
+
+  <li class="toctree-l3 current with-children">
+    <a href="#create-session">
+      Create session
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3 current">
+    <ul class="subnav-l3 current">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request-body">Example request body</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#delete-session">
+      Delete session
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_1">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_1">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_1">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#get-session-user">
+      Get session user
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_2">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_2">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_2">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l2">
+    <a href="#graph-api">
+      Graph API
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+          
+
+  <li class="toctree-l3 current with-children">
+    <a href="#get-nodes">
+      Get nodes
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3 current">
+    <ul class="subnav-l3 current">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_3">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_1">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_3">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_3">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#create-node">
+      Create node
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_4">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_2">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_4">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request-body_1">Example request body</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_4">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#get-node">
+      Get node
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_5">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_3">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_5">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_5">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#update-node">
+      Update node
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_6">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_4">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_6">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request-body_2">Example request body</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_6">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#delete-node">
+      Delete node
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_7">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_5">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_7">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_7">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#get-node-children">
+      Get node children
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_8">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_6">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_8">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_8">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#get-node-parents">
+      Get node parents
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_9">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_7">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_9">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_9">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#create-assignment">
+      Create assignment
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_10">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_10">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#delete-assignment">
+      Delete assignment
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_10">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_8">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_11">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_11">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#get-associations">
+      Get associations
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_11">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_9">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_12">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_12">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#create-association">
+      Create association
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_12">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_10">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_13">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request-body_3">Example request body</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_13">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#update-association">
+      Update association
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_13">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_11">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_14">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_14">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#delete-association">
+      Delete association
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_14">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_12">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request_15">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-response_15">Example response</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+    </ul>
+  </li>
+
+      
+    
+    </ul>
+  </li>
+
+
+  
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="../demos">Demos</a>
+  </li>
+    
+  </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Policy Machine</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>REST API</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="rest-api">REST API</h1>
+<h2 id="what-is-the-purpose-of-the-api">What is the Purpose of the API?</h2>
+<p>The Policy Machine REST API exposes a standard set of administrative NGAC commands.  This API also acts as a Policy Enforcement Point (PEP) by ensuring any calling user has permission to carry out a command before any action is taken. Exposing the PEP allows users to create web-based, NGAC aware applications.</p>
+<h2 id="important-notes">Important Notes</h2>
+<p>Users have to have permissions to carry out actions
+Super user is the root user that has root permissions.
+-- describe the super user configuration.</p>
+<h3 id="special-cases">Special Cases</h3>
+<p>There are two special cases when using the API. The first is creating Policy Classes and the second is assigning to Policy Classes.  Since NGAC does not allow associations with Policy Classes, there must be a way yo determine if a user is allowed to carry out these actions. Our solution to these cases is specific to this implementation and is not required by the standard.</p>
+<ol>
+<li>Creating a Policy Class<ul>
+<li>To determine if a user has the permission to create a policy class, we check if the user has the "create policy class" permission on the super object described above.  By default, the super user will have this permission and will be able to create policy classes out of the box.  The super user has the ability to grant this permission to other users as needed.</li>
+</ul>
+</li>
+<li>Assigning to a Policy Class<ul>
+<li>When a Policy Class is created, an Object Attribute that represents this Policy Class is also created and assigned to the Super Object Attribute described above. This gives the super user permissions on this Policy Class, and allows the super user to grant other users permissions on this object attribute.  Then, when any user is attempts to assign an attribute (user or object) to the Policy Class, that user must have the "assign user/object attribute" permission on the Object Attribute that represents the target Policy Class. The same approach is applied to deleting an assignment with a Policy Class.</li>
+</ul>
+</li>
+</ol>
+<h2 id="deployment">Deployment</h2>
+<h3 id="run-docker-compose">Run Docker Compose</h3>
+<ol>
+<li>Build the war file by running <code>mvn clean package install</code> from the project root. This will create <code>pm.war</code> in the project's <code>/target/</code> directory.</li>
+<li>Run <code>docker-compose up</code> from the project root to start the docker container.</li>
+</ol>
+<h3 id="docker-compose-file">Docker Compose File</h3>
+<pre><code class="yaml">version: '3'
+services:
+  neo4j:
+    image: neo4j:latest
+    volumes:
+      - $HOME/neo4j/data:/data
+      - $HOME/neo4j/logs:/logs
+    ports:
+      - 7474:7474
+      - 7687:7687
+  pm:
+    image: tomcat:8-jre8
+    volumes:
+      - ./target/pm.war:/usr/local/tomcat/webapps/pm.war
+    ports:
+      - 8080:8080
+    links:
+      - neo4j
+</code></pre>
+
+<p>The Compose file creates two linked containers.  </p>
+<ol>
+<li>A Neo4j container which is where we will store our access control policy data. We expose the ports 7474 and 7687 to interact with the Neo4j database.</li>
+<li>The tomcat server that will deploy <code>pm.war</code>.</li>
+</ol>
+<h3 id="tested-operating-systems">Tested Operating Systems</h3>
+<ol>
+<li>macOS<ul>
+<li><a href="https://hub.docker.com/editions/community/docker-ce-desktop-mac">Docker for Mac</a></li>
+</ul>
+</li>
+<li>Windows 7<ul>
+<li><a href="https://docs.docker.com/toolbox/toolbox_install_windows">Docker Toolbox</a></li>
+<li><strong>Note</strong>: Docker Toolbox is legacy software and handles volumes differently than Docker for Windows/Mac.  There is one line in the Docker Compose file that needs to be updated.<ul>
+<li>Create a shared folder in Oracle VirtualBox called <code>/target/</code> which points to the target folder of the PM project.</li>
+<li>change this line in the Compose file:
+<code>./target/pm.war:/usr/local/tomcat/webapps/pm.war</code>
+to
+<code>//target/pm.war:/usr/local/tomcat/webapps/pm.war</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use-the-api">How to Use the API</h2>
+<h3 id="requests">Requests</h3>
+<p>The exposed web services act as an administrative Policy Enforcement Point (PEP).  When a request comes in the PEP forwards the request to the PDP, which ensures the requesting user is allowed to carry out the action. This means the PEP always needs to know which user is sending a request.  This is tracked using session IDs that represent users who have authenticated successfully with the server.  Every endpoint requires this session ID to determine the user.  The only API that does not require a session ID is the Sessions API.  This API is used to authenticate users and provides the session IDs that will be used in subsequent requests to the Policy Machine.</p>
+<p>For example, to sign in as the super user:</p>
+<pre><code>POST /pm/api/sessions
+Content-Type:application/json
+{
+  &quot;username&quot;: &quot;super&quot;,
+  &quot;password&quot;: &quot;super&quot;
+}
+</code></pre>
+
+<p>The response from the server will look like:</p>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: &quot;NEW_SESSION_ID&quot;
+}
+</code></pre>
+
+<p>Now the user can pass this session ID to the server for any other calls to the API.</p>
+<h3 id="responses">Responses</h3>
+<p>A response from the Policy Machine will always return an HTTP status code of 200, with more details provided in the body of the response.  For example:</p>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: &quot;return value of the API call&quot;
+}
+</code></pre>
+
+<h3 id="response-codes">Response codes</h3>
+<h2 id="sessions-api">Sessions API</h2>
+<h3 id="create-session">Create session</h3>
+<p>Authenticate the provided credentials and return a session ID if successfully authenticated.</p>
+<h6 id="endpoint">Endpoint</h6>
+<p><code>POST /pm/api/sessions</code></p>
+<h6 id="parameters">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>username</td>
+<td>required</td>
+<td>body</td>
+<td>The username of the user</td>
+</tr>
+<tr>
+<td>password</td>
+<td>required</td>
+<td>body</td>
+<td>The password of the user</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request">Example request</h6>
+<pre><code class="curl">$ curl -X POST {host}:{port}/pm/api/sessions
+</code></pre>
+
+<h6 id="example-request-body">Example request body</h6>
+<pre><code class="json">{
+  &quot;username&quot;: &quot;super&quot;,
+  &quot;password&quot;: &quot;super&quot;
+}
+</code></pre>
+
+<h6 id="example-response">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: &quot;{sessionID}&quot;
+}
+</code></pre>
+
+<hr />
+<h3 id="delete-session">Delete session</h3>
+<p>Delete the session with the given session ID.</p>
+<h6 id="endpoint_1">Endpoint</h6>
+<p><code>DELETE /pm/api/sessions/{sessionID}</code></p>
+<h6 id="example-request_1">Example request</h6>
+<pre><code class="curl">$ curl -X DELETE {host}:{port}/pm/api/sessions/{sessionID}
+</code></pre>
+
+<h6 id="example-response_1">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: &quot;session deleted&quot;
+}
+</code></pre>
+
+<hr />
+<h3 id="get-session-user">Get session user</h3>
+<p>Get the ID of the user that corresponds with the provided session ID.</p>
+<h6 id="endpoint_2">Endpoint</h6>
+<p><code>GET /pm/api/sessions/{sessionID}</code></p>
+<h6 id="example-request_2">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/sessions/{sessionID}
+</code></pre>
+
+<h6 id="example-response_2">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: 1234
+}
+</code></pre>
+
+<hr />
+<h2 id="graph-api">Graph API</h2>
+<h3 id="get-nodes">Get nodes</h3>
+<p>Retrieve nodes from the graph. Use query parameters to filter nodes based on name, type, or any other properties nodes may have. The returned set of nodes will only contain those the user, identified by the session parameter, has access to.</p>
+<h6 id="endpoint_3">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes</code></p>
+<h6 id="parameters_1">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>name</td>
+<td>false</td>
+<td>query</td>
+<td>The name of the nodes to search for.</td>
+</tr>
+<tr>
+<td>type</td>
+<td>false</td>
+<td>query</td>
+<td>The type of the nodes to search for.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important Notes</strong></p>
+<ol>
+<li>The <strong>name</strong> and <strong>type</strong> query parameters are the only preset parameters to search for.  It is possible to search for nodes with any property key value pair by including the pair in the query parameters of the request. For example, <code>?key1=value1&amp;key2=value2</code>.</li>
+<li>Only nodes that match every provided property will be returned.</li>
+<li>To search for all nodes that have a specfic property key but an arbitrary value use the wildcard <code>*</code>. For example,  <code>key3=*</code>.</li>
+</ol>
+<h6 id="example-request_3">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}&amp;type=OA
+</code></pre>
+
+<h6 id="example-response_3">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: [
+    {
+    &quot;name&quot;: &quot;node1&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key1&quot;: &quot;value1&quot;
+      }
+    },
+    {
+    &quot;name&quot;: &quot;node2&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key2&quot;: &quot;value2&quot;
+      }
+    }
+  ]
+}
+</code></pre>
+
+<h3 id="create-node">Create node</h3>
+<p>Create a new node in the NGAC graph with the provided name, type, and properties. When creating a Policy Class, leave the baseID parameter empty, as it will be ignored.  For all other node type, a base ID is required in order to connect the node to the graph and ensure the calling user (identified by the provided session ID) has the permission to create a node in the base node (check that the user can assign to the base node).</p>
+<h6 id="endpoint_4">Endpoint</h6>
+<p><code>POST /pm/api/graph/nodes</code></p>
+<h6 id="parameters_2">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>baseID</td>
+<td>false</td>
+<td>body</td>
+<td>The ID of the node to create the new node in.</td>
+</tr>
+<tr>
+<td>name</td>
+<td>true</td>
+<td>body</td>
+<td>The name of the node.</td>
+</tr>
+<tr>
+<td>type</td>
+<td>true</td>
+<td>body</td>
+<td>The type of the node.</td>
+</tr>
+<tr>
+<td>properties</td>
+<td>true</td>
+<td>body</td>
+<td>A map of properties to give the node.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_4">Example request</h6>
+<pre><code class="curl">$ curl -X POST {host}:{port}/pm/api/graph/nodes?session={sessionID}
+</code></pre>
+
+<h6 id="example-request-body_1">Example request body</h6>
+<pre><code class="json">{
+  &quot;name&quot;: &quot;newNode&quot;,
+  &quot;type&quot;: &quot;OA&quot;,
+  &quot;properties&quot;: {
+  &quot;key1&quot;: &quot;value1&quot;,
+  &quot;key2&quot;: &quot;value2&quot;
+  }
+}
+</code></pre>
+
+<h6 id="example-response_4">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: {
+  &quot;id&quot;: 12345678,
+  &quot;name&quot;: &quot;newNode&quot;,
+  &quot;type&quot;: &quot;OA&quot;,
+  &quot;properties&quot;: {
+    &quot;key1&quot;: &quot;value1&quot;,
+    &quot;key2&quot;: &quot;value2&quot;
+    }
+  }
+}
+</code></pre>
+
+<h3 id="get-node">Get node</h3>
+<p>Retrieve the information for a node identified by the given ID.</p>
+<h6 id="endpoint_5">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes/{nodeID}</code></p>
+<h6 id="parameters_3">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to retrieve.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_5">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes/12345678?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_5">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: {
+  &quot;id&quot;: 12345678,
+  &quot;name&quot;: &quot;newNode&quot;,
+  &quot;type&quot;: &quot;OA&quot;,
+  &quot;properties&quot;: {
+    &quot;key1&quot;: &quot;value1&quot;,
+    &quot;key2&quot;: &quot;value2&quot;
+    }
+  }
+}
+</code></pre>
+
+<h3 id="update-node">Update node</h3>
+<p>Update the name and/or properties of a node with the given ID. The properties provided in the parameters will overwrite existing properties.</p>
+<h6 id="endpoint_6">Endpoint</h6>
+<p><code>UPDATE /pm/api/graph/nodes/{nodeID}</code></p>
+<h6 id="parameters_4">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to update.</td>
+</tr>
+<tr>
+<td>name</td>
+<td>false</td>
+<td>body</td>
+<td>The updated name.</td>
+</tr>
+<tr>
+<td>properties</td>
+<td>false</td>
+<td>body</td>
+<td>The properties to override the existing properties of the node.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_6">Example request</h6>
+<pre><code class="curl">$ curl -X PUT {host}:{port}/pm/api/graph/nodes/12345?session={sessionID}
+</code></pre>
+
+<h6 id="example-request-body_2">Example request body</h6>
+<pre><code class="json">{
+  &quot;name&quot;: &quot;updated_name&quot;,
+  &quot;properties&quot;: {
+  &quot;key3&quot;: &quot;value3&quot;,
+  }
+}
+</code></pre>
+
+<h6 id="example-response_6">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;Node was successfully updated&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="delete-node">Delete node</h3>
+<p>Delete the node with the given ID.  The calling user must have permission to delete the node in order for the action to successfully be carried out.</p>
+<h6 id="endpoint_7">Endpoint</h6>
+<p><code>DELETE /pm/api/graph/nodes/{nodeID}</code></p>
+<h6 id="parameters_5">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to delete.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_7">Example request</h6>
+<pre><code class="curl">$ curl -X DELETE {host}:{port}/pm/api/graph/nodes/12345?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_7">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;Node successfully deleted&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="get-node-children">Get node children</h3>
+<p>Get the nodes that are assigned to the node with the given ID.  The method will return only the children the calling user has access to.</p>
+<h6 id="endpoint_8">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes/{nodeID}/children</code></p>
+<h6 id="parameters_6">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to get the children of.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_8">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes/{nodeID}/children?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_8">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: [
+    {
+    &quot;name&quot;: &quot;child1&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key1&quot;: &quot;value1&quot;
+      }
+    },
+    {
+    &quot;name&quot;: &quot;child2&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key2&quot;: &quot;value2&quot;
+      }
+    }
+  ]
+}
+</code></pre>
+
+<h3 id="get-node-parents">Get node parents</h3>
+<p>Get the nodes that a node is assigned to.  Only the parents that the calling user has access to will be returned.</p>
+<h6 id="endpoint_9">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes/{nodeID}/parents</code></p>
+<h6 id="parameters_7">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to get the parents of.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_9">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes/1234/parents?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_9">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;success&quot;,
+  &quot;entity&quot;: [
+    {
+    &quot;name&quot;: &quot;parent1&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key1&quot;: &quot;value1&quot;
+      }
+    },
+    {
+    &quot;name&quot;: &quot;parent2&quot;,
+    &quot;type&quot;: &quot;OA&quot;,
+    &quot;properties&quot;: {
+      &quot;key2&quot;: &quot;value2&quot;
+      }
+    }
+  ]
+}
+</code></pre>
+
+<h3 id="create-assignment">Create assignment</h3>
+<p>Create an assignment between two nodes.  An assignment must not already exist between the nodes, and the types of the nodes must make a valid assignment.</p>
+<table>
+<thead>
+<tr>
+<th>child</th>
+<th>parent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PC</td>
+<td></td>
+</tr>
+<tr>
+<td>OA</td>
+<td>OA, PC</td>
+</tr>
+<tr>
+<td>UA</td>
+<td>UA, PC</td>
+</tr>
+<tr>
+<td>O</td>
+<td>OA</td>
+</tr>
+<tr>
+<td>u</td>
+<td>UA</td>
+</tr>
+<tr>
+<td>###### Endpoint</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /pm/api/graph/{child}/assignments/{parent}</code></td>
+<td></td>
+</tr>
+<tr>
+<td>###### Parameters</td>
+<td></td>
+</tr>
+<tr>
+<td>Parameter</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>---</td>
+<td>---</td>
+</tr>
+<tr>
+<td>session</td>
+<td>true</td>
+</tr>
+<tr>
+<td>child</td>
+<td>true</td>
+</tr>
+<tr>
+<td>parent</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_10">Example request</h6>
+<pre><code class="curl">$ curl -X POST {host}:{port}/pm/api/graph/child;id=1234;type=OA/assignments/parent;id=4321;type=OA?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_10">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;Assignment successfully created&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="delete-assignment">Delete assignment</h3>
+<p>Delete an assignment between two nodes, as long as the calling user has permissions to do so. If an assignment does not exist between the two nodes, nothing will happen and a success code will be returned.</p>
+<h6 id="endpoint_10">Endpoint</h6>
+<p><code>DELETE /pm/api/graph/{childID}/assignments/{parentID}</code></p>
+<h6 id="parameters_8">Parameters</h6>
+<p>Parameter | Required | Location | Description | Example
+---|---|---|---
+session | true | query | The ID of the current session. |
+child | true | body | The ID of the child node and a martix parameter for the type. | child;id=1234;type=OA
+parent | true | body | The ID of the parent node and a matrix parameter for the type. | parent;id=4321;type=OA</p>
+<h6 id="example-request_11">Example request</h6>
+<pre><code class="curl">$ curl -X DELETE {host}:{port}/pm/api/graph/child;id=1234;type=OA/assignments/parent;id=4321;type=OA?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_11">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;Assignment successfully deleted&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="get-associations">Get associations</h3>
+<p>Get the associations the given node is apart of.  The node must exist in the graph. The query parameter <code>type</code> is required and denotes which type of associations to retrieve for the node.  Accepted values are <code>source</code> and <code>target</code>. Source will get the associations the given node is the source of.  Target will get the associations the given node is a target of.</p>
+<h6 id="endpoint_11">Endpoint</h6>
+<p><code>GET /pm/api/graph/{nodeID}/associations</code></p>
+<h6 id="parameters_9">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>nodeID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the node to get the associations for.</td>
+</tr>
+<tr>
+<td>type</td>
+<td>true</td>
+<td>query</td>
+<td>Either <code>source</code> or <code>target</code>.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_12">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/101?session={sessionID}&amp;type=source
+</code></pre>
+
+<h6 id="example-response_12">Example response</h6>
+<pre><code class="json">{
+  &quot;1234&quot;: [
+  &quot;read&quot;,
+  &quot;write&quot;
+  ],
+  &quot;4321&quot;: [
+  &quot;read&quot;
+  ]
+}
+</code></pre>
+
+<h3 id="create-association">Create association</h3>
+<p>Create an association between a user attribute and a target node.  The user attribute and target nodes need to already exist in the graph. The target node can be another user attribute or an object attribute. The target segment of the request url must contain the ID and type of the intended target node.</p>
+<h6 id="endpoint_12">Endpoint</h6>
+<p><code>POST /pm/api/graph/{uaID}/associations/{target}</code></p>
+<h6 id="parameters_10">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>uaID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the User Attribute.</td>
+</tr>
+<tr>
+<td>target</td>
+<td>true</td>
+<td>path</td>
+<td>The target of the association.  The ID and Type are <strong>required</strong> matrix parameters.</td>
+</tr>
+<tr>
+<td>operations</td>
+<td>false</td>
+<td>body</td>
+<td>The set of operations to give the association.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_13">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?session={sessionID}
+</code></pre>
+
+<h6 id="example-request-body_3">Example request body</h6>
+<pre><code class="json">{
+  &quot;operations&quot;: [
+  &quot;read&quot;,
+  &quot;write&quot;
+  ]
+}
+</code></pre>
+
+<h6 id="example-response_13">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;Association successfully created&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="update-association">Update association</h3>
+<h6 id="endpoint_13">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes</code></p>
+<h6 id="parameters_11">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_14">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
+</code></pre>
+
+<h6 id="example-response_14">Example response</h6>
+<h3 id="delete-association">Delete association</h3>
+<h6 id="endpoint_14">Endpoint</h6>
+<p><code>GET /pm/api/graph/nodes</code></p>
+<h6 id="parameters_12">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_15">Example request</h6>
+<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
+</code></pre>
+
+<h4 id="example-response_15">Example response</h4>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../demos" class="btn btn-neutral float-right" title="Demos">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../getting-started" class="btn btn-neutral" title="Getting Started"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../getting-started" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../demos" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

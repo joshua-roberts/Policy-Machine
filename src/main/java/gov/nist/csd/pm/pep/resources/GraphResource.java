@@ -1,5 +1,6 @@
 package gov.nist.csd.pm.pep.resources;
 
+import com.google.gson.Gson;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;

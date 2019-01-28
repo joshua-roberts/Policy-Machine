@@ -36,7 +36,11 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
 
         //check the user can create a prohibition on the subject and the nodes
         Decider decider = newPolicyDecider();
-        if(subject.getSubjectType().equals(ProhibitionSubjectType.U)) {
+        if(subject.getSubjectType().equals(ProhibitionSubjectType.U) || subject.getSubjectType().equals(ProhibitionSubjectType.UA)) {
+            // first check that the subject exists
+            if(!getGraphMem().exists(subject.getSubjectID())) {
+                throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
+            }
             if(!decider.hasPermissions(getSessionUserID(), getProcessID(), subject.getSubjectID(), ANY_OPERATIONS)) {
                 throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", subject.getSubjectID(), PROHIBIT_SUBJECT));
             }
@@ -45,7 +49,6 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         for(ProhibitionNode node : nodes) {
             if(!decider.hasPermissions(getSessionUserID(), getProcessID(), node.getID(), ANY_OPERATIONS)) {
                 throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", node.getID(), Operations.PROHIBIT_RESOURCE));
-
             }
         }
 
@@ -72,6 +75,9 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
 
     @Override
     public void updateProhibition(Prohibition prohibition) throws PMException {
+        // delete the prohibition
+        deleteProhibition(prohibition.getName());
+
         //create prohibition in PAP
         getProhibitionsDB().updateProhibition(prohibition);
         getProhibitionsMem().updateProhibition(prohibition);
