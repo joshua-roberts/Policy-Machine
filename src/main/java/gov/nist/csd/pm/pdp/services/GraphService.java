@@ -7,6 +7,8 @@ import gov.nist.csd.pm.common.model.graph.nodes.Node;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
 import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.pap.graph.MemGraph;
+import gov.nist.csd.pm.pap.search.MemGraphSearch;
 import gov.nist.csd.pm.pdp.engine.Decider;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
@@ -17,8 +19,12 @@ import java.util.HashSet;
 import java.util.Map;
 
 import static gov.nist.csd.pm.common.constants.Operations.*;
+import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
+import static gov.nist.csd.pm.common.constants.Properties.REP_PROPERTY;
 import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.PC;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 /**
@@ -47,11 +53,6 @@ public class GraphService extends Service implements Graph, Search {
             throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when creating a node in the PDP");
         }
 
-        //check that the parent node exists
-        if(!exists(parentID)) {
-            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with ID %d does not exist", parentID));
-        }
-
         //if this node is a user, hash the password if present in the properties
         HashMap<String, String> properties = ctx.getProperties();
         if(properties.containsKey(PASSWORD_PROPERTY)) {
@@ -63,29 +64,56 @@ public class GraphService extends Service implements Graph, Search {
             }
         }
 
-        // if the node is a policy class, check that the user has permissions on super o
-        // this will enforce only users with super permissions can create policy classes
-        if(ctx.getType().equals(NodeType.PC)) {
+        // if the node is a policy class, check that the user has the "create policy class" permission on super o
+        if(ctx.getType().equals(PC)) {
             Decider decider = newPolicyDecider();
-            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
+            if (!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO()
+                    .getID(), CREATE_POLICY_CLASS)) {
                 throw new PMException(Errors.ERR_MISSING_PERMISSIONS, "missing permissions to create a Policy Class");
             }
-        }
 
-        //create the node
-        long id = createNode(ctx);
-        ctx.id(id);
+            // create a node to represent the policy class in the super policy class
+            // this way we can set permissions on this node to control who can (de)assign to the policy class node.
+            long repID = createNode(new Node(ctx.getName() + " rep", OA, Node.toProperties(NAMESPACE_PROPERTY, ctx.getName())));
 
-        //get the parent node to make the assignment
-        Node parentNode = getNode(parentID);
+            // add the ID of the rep node to the properties of the policy class node
+            ctx.property(REP_PROPERTY, String.valueOf(repID));
+            // create pc node
+            long id = createNode(ctx);
+            ctx.id(id);
 
-        //assign the new node to the parent
-        try {
-            assign(ctx.getID(), ctx.getType(), parentNode.getID(), parentNode.getType());
-        } catch (PMException e) {
-            // delete the newly created node if the assignment fails
-            getGraphDB().deleteNode(id);
-            getGraphMem().deleteNode(id);
+            // assign the rep object in the super pc
+            //create assignment in db
+            getGraphDB().assign(repID, OA, getPAP().getSuperOA().getID(), OA);
+            //create assignment in-memory
+            getGraphMem().assign(repID, OA, getPAP().getSuperOA().getID(), OA);
+        } else {
+            //check that the parent node exists
+            if(!exists(parentID)) {
+                throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with ID %d does not exist", parentID));
+            }
+
+            //create the node
+            long id = createNode(ctx);
+            ctx.id(id);
+
+            //get the parent node to make the assignment
+            Node parentNode = getNode(parentID);
+
+            // check that the user has the permission to assign to the parent node
+            Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+            if (!decider.hasPermissions(getSessionUserID(), getProcessID(), parentNode.getID(), ASSIGN_TO)) {
+                // if the user cannot assign to the parent node, delete the newly created node
+                getGraphDB().deleteNode(id);
+                getGraphMem().deleteNode(id);
+                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permission %s on node with ID %d", ASSIGN_TO, parentID));
+            }
+
+            // make the assignments
+            // create assignment in db
+            getGraphDB().assign(ctx.getID(), ctx.getType(), parentNode.getID(), parentNode.getType());
+            // create assignment in-memory
+            getGraphMem().assign(ctx.getID(), ctx.getType(), parentNode.getID(), parentNode.getType());
         }
 
         return ctx;
@@ -133,27 +161,40 @@ public class GraphService extends Service implements Graph, Search {
     /**
      * Delete the node with the given ID from the db and in-memory graphs.  First check that the current user
      * has the correct permissions to do so. Do this by checking that the user has the permission to deassign from each
-     * of the node's parents, and that the user can delete the object
+     * of the node's parents, and that the user can delete the node.  If the node is a Policy Class or is assigned to a
+     * Policy Class, check the permissions on the representative node.
      * @param nodeID the ID of the node to delete.
      */
     @Override
     public void deleteNode(long nodeID) throws PMException {
-        //check that the user can delete the node
-        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
-        if (!decider.hasPermissions(getSessionUserID(), getProcessID(), nodeID, DELETE_NODE)) {
-            throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", nodeID, DELETE_NODE));
+        MemGraphSearch search = new MemGraphSearch((MemGraph) getGraphMem());
+        Node node = search.getNode(nodeID);
+
+        if(node.getType().equals(PC)) {
+            // if the node to delete is a PC, get the rep node
+            nodeID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
         }
-        //check the user can deassign the node
+
+        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+
+        // check the user can deassign the node
         if (!decider.hasPermissions(getSessionUserID(), getProcessID(), nodeID, DEASSIGN)) {
             throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", nodeID, DEASSIGN));
         }
 
-        //check that the user can deassign from the node's parents
+        // check that the user can deassign from the node's parents
         HashSet<Node> parents = getGraphMem().getParents(nodeID);
         for(Node parent : parents) {
-            //check the user can deassign from parent
-            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), parent.getID(), DEASSIGN_FROM)) {
-                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", parent.getID(), DEASSIGN_FROM));
+            // check the user can deassign from parent
+            // if the parent is a policy class, get the rep oa
+            long targetID;
+            if(parent.getType().equals(PC)) {
+                targetID = Long.parseLong(parent.getProperties().get(REP_PROPERTY));
+            } else {
+                targetID = parent.getID();
+            }
+            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), targetID, DEASSIGN_FROM)) {
+                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", targetID, DEASSIGN_FROM));
             }
         }
 
@@ -249,8 +290,6 @@ public class GraphService extends Service implements Graph, Search {
         //check if the assignment is valid
         NGACAssignment.checkAssignment(childType, parentType);
 
-        // if assigning to a pc, check that the user can assign to the super o
-
         //check the user can assign the child
         Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
         if(!decider.hasPermissions(getSessionUserID(), getProcessID(), childID, ASSIGN)) {
@@ -258,14 +297,19 @@ public class GraphService extends Service implements Graph, Search {
         }
 
         //check that the user can assign to the parent
-        // if the parent is a PC, check for permissions on the super o
+        // if the parent is a PC, check for permissions on the rep node
         long targetID = parentID;
-        if(parentType.equals(NodeType.PC)) {
-            targetID = getPAP().getSuperO().getID();
+        if(parentType.equals(PC)) {
+            // get the policy class node
+            Node node = new MemGraphSearch((MemGraph) getGraphMem()).getNode(targetID);
+            // get the rep property which is the ID of the rep node
+            // set the target of the permission check to the rep node
+            targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
         }
-        
+
+        // check that the user can assign to the parent node
         if (!decider.hasPermissions(getSessionUserID(), getProcessID(), targetID, ASSIGN_TO)) {
-            throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permission %s on node with ID %d", ASSIGN_TO, parentID));
+            throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permission %s on node with ID %d", ASSIGN_TO, targetID));
         }
 
         //create assignment in db
@@ -298,15 +342,18 @@ public class GraphService extends Service implements Graph, Search {
             throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", childID, DEASSIGN));
         }
         //check that the user can deassign from the parent
-        // if the parent is a PC, check for permissions on the super o
-        if(parentType.equals(NodeType.PC)) {
-            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), getPAP().getSuperO().getID(), ALL_OPERATIONS)) {
-                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", parentID, DEASSIGN_FROM));
-            }
-        } else {
-            if (!decider.hasPermissions(getSessionUserID(), getProcessID(), parentID, DEASSIGN_FROM)) {
-                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", parentID, DEASSIGN_FROM));
-            }
+        // if the parent is a PC, check for permissions on the rep node
+        long targetID = parentID;
+        if(parentType.equals(PC)) {
+            // get the policy class node
+            Node node = new MemGraphSearch((MemGraph) getGraphMem()).getNode(targetID);
+            // get the rep property which is the ID of the rep node
+            // set the target of the permission check to the rep node
+            targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
+        }
+
+        if (!decider.hasPermissions(getSessionUserID(), getProcessID(), targetID, DEASSIGN_FROM)) {
+            throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("missing permissions on %d: %s", targetID, DEASSIGN_FROM));
         }
 
         //delete assignment in db

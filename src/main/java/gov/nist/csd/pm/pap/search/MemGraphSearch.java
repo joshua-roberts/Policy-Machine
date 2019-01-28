@@ -21,13 +21,16 @@ public class MemGraphSearch implements Search {
     @Override
     public HashSet<Node> search(String name, String type, Map<String, String> properties) {
         HashSet<Node> results = new HashSet<>();
+        // iterate over the nodes to find ones that match the search parameters
         for(Long id : nodes.keySet()) {
             Node node = nodes.get(id);
 
+            // if the name parameter is not null and the current node name does not equal the name parameter, do not add
             if (name != null && !node.getName().equals(name)) {
                 continue;
             }
 
+            // if the type parameter is not null and the current node type does not equal the type parameter, do not add
             if (type != null && !node.getType().toString().equals(type)) {
                 continue;
             }

@@ -8,6 +8,7 @@ public class Operations {
     public static final String FILE_READ = "file read";
     public static final String WRITE = "write";
     public static final String READ = "read";
+    public static final String CREATE_POLICY_CLASS = "create policy class";
     public static final String ASSIGN_OBJECT_ATTRIBUTE = "assign object attribute";
     public static final String ASSIGN_OBJECT_ATTRIBUTE_TO = "assign object attribute to";
     public static final String ASSIGN_OBJECT = "assign object";

@@ -87,7 +87,7 @@ public class Neo4jGraphLoader implements GraphLoader {
 
     @Override
     public HashSet<NGACAssociation> getAssociations() throws PMException {
-        String cypher = "match(ua:UA)-[a:associated_with]->(oa:OA) return ua.id,oa.id,a.operations";
+        String cypher = "match(ua:UA)-[a:associated_with]->(target) return ua.id,target.id,a.operations";
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
