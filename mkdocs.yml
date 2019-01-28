@@ -1,0 +1,9 @@
+site_name: Policy Machine
+nav:
+  - Introduction: index.md
+  - Getting Started: getting-started.md
+  - REST API: api.md
+  - Demos: demos.md
+theme:
+  name: 'rtd-dropdown'
+extra_css: [extra.css]
