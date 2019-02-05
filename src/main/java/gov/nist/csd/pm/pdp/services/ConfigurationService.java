@@ -3,9 +3,11 @@ package gov.nist.csd.pm.pdp.services;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
 
 
+import javax.xml.soap.Node;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
@@ -14,30 +16,38 @@ import java.util.Map;
 
 import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.generatePasswordHash;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
 
     public ConfigurationService() {}
 
+    // TODO add prohibition and obligations to json
+    /**
+     * Return a json string representation of the entire graph.  The json object will have 3 fields: nodes, assignments,
+     * and associations.
+     * @return The json string representation of the graph.
+     * @throws PMException
+     */
     public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        HashSet<Node> nodes = getGraphDB().getNodes();
+        HashSet<NodeContext> nodes = getGraphPAP().getNodes();
         HashSet<JsonAssignment> jsonAssignments = new HashSet<>();
         HashSet<JsonAssociation> jsonAssociations = new HashSet<>();
-        for(Node node : nodes) {
-            HashSet<Node> parents = getGraphDB().getParents(node.getID());
+        for(NodeContext node : nodes) {
+            HashSet<NodeContext> parents = getGraphPAP().getParents(node.getID());
 
-            for (Node parent : parents) {
+            for (NodeContext parent : parents) {
                 jsonAssignments.add(new JsonAssignment(node.getID(), parent.getID()));
             }
 
-            HashMap<Long, HashSet<String>> associations = getGraphDB().getSourceAssociations(node.getID());
+            HashMap<Long, HashSet<String>> associations = getGraphPAP().getSourceAssociations(node.getID());
             for (long targetID : associations.keySet()) {
                 HashSet<String> ops = associations.get(targetID);
-                Node targetNode = getSearch().getNode(targetID);
+                NodeContext targetNode = getGraphPAP().getNode(targetID);
 
                 jsonAssociations.add(new JsonAssociation(node.getID(), targetNode.getID(), ops));
             }
@@ -46,12 +56,20 @@ public class ConfigurationService extends Service {
         return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
     }
 
+    /**
+     * Given a json string, presumably returned from calling save(), load the nodes, assignments, and associations into
+     * the Policy Machine.  This does not erase any existing data.  The data loaded through this method will initially be
+     * sent to only the database.  After processing the entire json structure, the in-memory graph is then also updated
+     * with the information in the database.
+     * @param config The json string containing the nodes, assignments, and associations
+     * @throws PMException If the configuration is malformed or if the contents of the configuration are not consistent.
+     */
     public void load(String config) throws PMException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
-        HashSet<Node> nodes = graph.getNodes();
-        HashMap<Long, Node> nodesMap = new HashMap<>();
-        for(Node node : nodes) {
+        HashSet<NodeContext> nodes = graph.getNodes();
+        HashMap<Long, NodeContext> nodesMap = new HashMap<>();
+        for(NodeContext node : nodes) {
             Map<String, String> properties = node.getProperties();
 
             //if a password is present encrypt it.
@@ -67,19 +85,19 @@ public class ConfigurationService extends Service {
                 }
             }
 
-            long newNodeID = getGraphDB().createNode(node);
+            long newNodeID = getGraphPAP().createNode(node);
             nodesMap.put(node.getID(), node.id(newNodeID));
         }
 
         HashSet<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
-            Node childCtx = nodesMap.get(assignment.getChild());
-            Node parentCtx = nodesMap.get(assignment.getParent());
+            NodeContext childCtx = nodesMap.get(assignment.getChild());
+            NodeContext parentCtx = nodesMap.get(assignment.getParent());
             System.out.println("{" +
                     assignment.getChild() + "=" + childCtx.getName() + ":" + childCtx.getType() +
                     assignment.getParent() + "=" + parentCtx.getName() + ":" + parentCtx.getType() +
                     "}");
-            getGraphDB().assign(childCtx.getID(), childCtx.getType(), parentCtx.getID(), parentCtx.getType());
+            getGraphPAP().assign(childCtx, parentCtx);
         }
 
         HashSet<JsonAssociation> associations = graph.getAssociations();
@@ -87,15 +105,19 @@ public class ConfigurationService extends Service {
             System.out.println(association.getUa() + "-->" + association.getTarget() + association.getOps());
             long uaID = association.getUa();
             long targetID = association.getTarget();
-            Node targetNode = nodesMap.get(targetID);
-            getGraphDB().associate(nodesMap.get(uaID).getID(), targetNode.getID(), targetNode.getType(), association.getOps());
+            NodeContext targetNode = nodesMap.get(targetID);
+            getGraphPAP().associate(new NodeContext(nodesMap.get(uaID).getID(), UA), new NodeContext(targetNode.getID(), targetNode.getType()), association.getOps());
         }
     }
 
+    /**
+     * Delete all nodes from the database.  Reinitialize the PAP to update the in-memory graph and recreate the super nodes.
+     * @throws PMException
+     */
     public void reset() throws PMException {
-        HashSet<Node> nodes = getGraphMem().getNodes();
-        for(Node node : nodes) {
-            getGraphDB().deleteNode(node.getID());
+        HashSet<NodeContext> nodes = getGraphPAP().getNodes();
+        for(NodeContext node : nodes) {
+            getGraphPAP().deleteNode(node.getID());
         }
 
         //reinitialize the PAP to update the in memory graph
@@ -145,17 +167,17 @@ public class ConfigurationService extends Service {
     }
 
     class JsonGraph {
-        HashSet<Node>            nodes;
+        HashSet<NodeContext>     nodes;
         HashSet<JsonAssignment>  assignments;
         HashSet<JsonAssociation> associations;
 
-        public JsonGraph(HashSet<Node> nodes, HashSet<JsonAssignment> assignments, HashSet<JsonAssociation> associations) {
+        public JsonGraph(HashSet<NodeContext> nodes, HashSet<JsonAssignment> assignments, HashSet<JsonAssociation> associations) {
             this.nodes = nodes;
             this.assignments = assignments;
             this.associations = associations;
         }
 
-        public HashSet<Node> getNodes() {
+        public HashSet<NodeContext> getNodes() {
             return nodes;
         }
 

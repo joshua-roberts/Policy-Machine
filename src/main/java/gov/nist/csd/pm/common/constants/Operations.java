@@ -32,6 +32,7 @@ public class Operations {
     public static final String ALL_OPERATIONS = "*";
     public static final String ANY_OPERATIONS = "any";
     public static final String GET_PERMISSIONS = "get permissions";
+    public static final String CREATE_PROHIBITION = "create prohibition";
     public static final String GET_ACCESSIBLE_CHILDREN = "get accessible children";
     public static final String GET_PROHIBITED_OPS = "get prohibited ops";
     public static final String GET_ACCESSIBLE_NODES = "get accessible nodes";

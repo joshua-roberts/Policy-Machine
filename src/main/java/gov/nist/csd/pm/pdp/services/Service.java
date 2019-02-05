@@ -4,7 +4,9 @@ import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
-import gov.nist.csd.pm.pap.sessions.SessionsDAO;
+import gov.nist.csd.pm.pap.graph.GraphPAP;
+import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
+import gov.nist.csd.pm.pap.sessions.SessionManager;
 import gov.nist.csd.pm.pdp.engine.Decider;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
@@ -18,7 +20,7 @@ public class Service {
     /**
      * The ID of the session currently using the service.
      */
-    private String sessionID;
+    private long userID;
 
     /**
      * The ID of the process currently using the service.
@@ -27,16 +29,16 @@ public class Service {
 
     /**
      * Create a new Service with a sessionID and processID from the request context.
-     * @param sessionID The ID of the current session. This cannot be null or empty.
+     * @param userID The ID of the user.
      * @param processID The ID of the current process. This can be 0.
-     * @throws IllegalArgumentException If the session ID provided by the request context is null or empty
+     * @throws IllegalArgumentException If the user ID provided is 0.
      */
-    public Service(String sessionID, long processID) throws PMException {
-        if(sessionID == null || sessionID.isEmpty()) {
-            throw new PMException(Errors.ERR_NULL_SESSION, "The session ID cannot be null or empty");
+    public Service(long userID, long processID) throws PMException {
+        if(userID == 0) {
+            throw new PMException(Errors.ERR_NO_USER_PARAMETER, "no user or a user ID of 0 was provided to the PDP service");
         }
 
-        this.sessionID = sessionID;
+        this.userID = userID;
         this.processID = processID;
     }
 
@@ -46,8 +48,8 @@ public class Service {
      * Get the ID of the current session.
      * @return The current session's ID.
      */
-    protected String getSessionID() {
-        return sessionID;
+    protected long getUserID() {
+        return userID;
     }
 
     /**
@@ -59,46 +61,19 @@ public class Service {
         return processID;
     }
 
-
-    // The following methods are getter methods for the PAP.
-
-    Graph getGraphDB() throws PMException {
-        return getPAP().getGraphDB();
+    protected GraphPAP getGraphPAP() throws PMException {
+        return getPAP().getGraphPAP();
     }
 
-    Graph getGraphMem() throws PMException {
-        return getPAP().getGraphMem();
+    protected ProhibitionsPAP getProhibitionsPAP() throws PMException {
+        return getPAP().getProhibitionsPAP();
     }
 
-    Search getSearch() throws PMException {
-        return getPAP().getSearch();
+    SessionManager getSessionManager() throws PMException {
+        return getPAP().getSessionManager();
     }
 
-    ProhibitionsDAO getProhibitionsDB() throws PMException {
-        return getPAP().getProhibitionsDB();
-    }
-
-    ProhibitionsDAO getProhibitionsMem() throws PMException {
-        return getPAP().getProhibitionsMem();
-    }
-
-    SessionsDAO getSessionsDB() throws PMException {
-        return getPAP().getSessionsDB();
-    }
-
-    SessionsDAO getSessionsMem() throws PMException {
-        return getPAP().getSessionsMem();
-    }
-
-    /**
-     * Get the ID of the User that is associated with the current session ID.
-     * @return The ID of the user node.
-     */
-    public long getSessionUserID() throws PMException {
-        return getPAP().getSessionsMem().getSessionUserID(sessionID);
-    }
-
-    public Decider newPolicyDecider() throws PMException {
-        return new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
+    public Decider getDecider() throws PMException {
+        return new PReviewDecider(getGraphPAP(), getProhibitionsPAP().getProhibitions());
     }
 }

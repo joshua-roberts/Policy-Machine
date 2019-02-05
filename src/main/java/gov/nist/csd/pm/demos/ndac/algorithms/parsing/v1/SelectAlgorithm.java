@@ -3,7 +3,7 @@ package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row.CompositeRow;
@@ -23,7 +23,6 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.SelectUtils;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -195,12 +194,12 @@ public class SelectAlgorithm extends Algorithm {
                 }
                 HashMap<String, String> props = new HashMap<>();
                 props.put(NAMESPACE_PROPERTY, row.getTableName());
-                HashSet<Node> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
+                HashSet<NodeContext> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
                 if(nodes.isEmpty()) {
                     throw new PMException(Errors.ERR_NODE_NOT_FOUND,
                             String.format("could not find node with name %s and properties %s", row.getRowName(), props.toString()));
                 }
-                Node rowNode = nodes.iterator().next();
+                NodeContext rowNode = nodes.iterator().next();
                 System.out.println("found node for row: " + rowNode);
 
                 List<Column> columns = compositeTable.getTable(row.getTableName()).getColumns();
@@ -225,7 +224,7 @@ public class SelectAlgorithm extends Algorithm {
                         throw new PMException(Errors.ERR_NODE_NOT_FOUND,
                                 String.format("could not find node with name %s and properties %s", column.getColumnName(), props.toString()));
                     }
-                    Node columnNode = nodes.iterator().next();
+                    NodeContext columnNode = nodes.iterator().next();
                     System.out.println("found node for column: " + columnNode);
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
@@ -249,7 +248,7 @@ public class SelectAlgorithm extends Algorithm {
                         if(nodes.isEmpty()) {
                             throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("could not find node with name %s and properties %s", column.getColumnName(), props.toString()));
                         }
-                        Node columnNode = nodes.iterator().next();
+                        NodeContext columnNode = nodes.iterator().next();
 
                         if (!checkColumn(columnNode.getID(), rowNode.getID(), READ)) {
                             okColumns.clear();

@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.common.model.graph;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -21,11 +21,11 @@ public interface Search {
      * @param properties The properties of the nodes to search for.
      * @return A set of nodes that match the given search criteria.
      */
-    HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException;
+    HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException;
     /**
      * Retrieve the node with the given ID.
      * @param id the ID of the node to get.
      * @return The Node with the given ID.
      */
-    Node getNode(long id) throws PMException;
+    NodeContext getNode(long id) throws PMException;
 }

@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.common.constants;
 
 /**
- * Common properties used in the Policy Machine
+ * Common properties used for nodes
  */
 public class Properties {
     public static final int HASH_LENGTH = 163;
@@ -10,6 +10,7 @@ public class Properties {
     public static final String PASSWORD_PROPERTY        = "password";
     public static final String DESCRIPTION_PROPERTY     = "description";
     public static final String NAMESPACE_PROPERTY       = "namespace";
+    public static final String DEFAULT_NAMESPACE       = "default";
     public static final String REP_PROPERTY       = "repID";
     public static final String SOURCE_PROPERTY       = "source";
     public static final String STORAGE_PROPERTY       = "storage";

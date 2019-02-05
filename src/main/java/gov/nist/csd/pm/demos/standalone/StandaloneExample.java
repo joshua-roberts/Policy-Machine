@@ -2,7 +2,8 @@ package gov.nist.csd.pm.demos.standalone;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
@@ -27,20 +28,20 @@ public class StandaloneExample {
     public static HashSet<String> runExample(Graph graph) {
         try {
             // create a node for each type
-            long pc1 = graph.createNode(new Node(1, "pc1", PC, Node.toProperties("key1", "value1")));
-            long oa1 = graph.createNode(new Node(2, "oa1", OA, Node.toProperties("key1", "value1")));
-            long o1 = graph.createNode(new Node(3, "o1", O, Node.toProperties("key1", "value1")));
-            long ua1 = graph.createNode(new Node(4, "ua1", UA, Node.toProperties("key1", "value1")));
-            long u1 = graph.createNode(new Node(5, "u1", U, Node.toProperties("key1", "value1")));
+            long pc1 = graph.createNode(new NodeContext(1, "pc1", PC, NodeUtils.toProperties("key1", "value1")));
+            long oa1 = graph.createNode(new NodeContext(2, "oa1", OA, NodeUtils.toProperties("key1", "value1")));
+            long o1 = graph.createNode(new NodeContext(3, "o1", O, NodeUtils.toProperties("key1", "value1")));
+            long ua1 = graph.createNode(new NodeContext(4, "ua1", UA, NodeUtils.toProperties("key1", "value1")));
+            long u1 = graph.createNode(new NodeContext(5, "u1", U, NodeUtils.toProperties("key1", "value1")));
 
             // create assignments
-            graph.assign(o1, O, oa1, OA);
-            graph.assign(oa1, OA, pc1, PC);
-            graph.assign(u1, U, ua1, UA);
-            graph.assign(ua1, UA, pc1, PC);
+            graph.assign(new NodeContext(o1, O), new NodeContext(oa1, OA));
+            graph.assign(new NodeContext(oa1, OA), new NodeContext(pc1, PC));
+            graph.assign(new NodeContext(u1, U), new NodeContext(ua1, UA));
+            graph.assign(new NodeContext(ua1, UA), new NodeContext(pc1, PC));
 
             // create an association
-            graph.associate(ua1, oa1, OA, new HashSet<>(Arrays.asList("read", "write")));
+            graph.associate(new NodeContext(ua1, UA), new NodeContext(oa1, OA), new HashSet<>(Arrays.asList("read", "write")));
 
             // create a prohibition for u1 on oa1
             Prohibition prohibition = new Prohibition();

@@ -75,7 +75,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
 
                 //get nodes
                 List<ProhibitionNode> nodes = new ArrayList<>();
-                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.resourceID, r.complement";
+                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.id, r.complement";
                 try(
                         Connection resConn = neo4j.getConnection();
                         PreparedStatement resStmt = resConn.prepareStatement(cypher);

@@ -1,30 +1,43 @@
 package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 
 public class MemGraphSearch implements Search {
 
-    private HashMap<Long, Node> nodes;
+    /**
+     * Data structure to store detailed node information.
+     */
+    private MemGraph memGraph;
+
+    /**
+     * Constructor for an in-memory graph search.
+     * @param graph The MemGraph instance to use to search.
+     */
     public MemGraphSearch(MemGraph graph) {
         if(graph == null) {
             throw new IllegalArgumentException("nodes to search in cannot be null");
         }
-        this.nodes = graph.getNodesMap();
+        this.memGraph = graph;
     }
 
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) {
-        HashSet<Node> results = new HashSet<>();
-        // iterate over the nodes to find ones that match the search parameters
-        for(Long id : nodes.keySet()) {
-            Node node = nodes.get(id);
+    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) {
+        if(properties == null) {
+            properties = new HashMap<>();
+        }
 
+        HashSet<NodeContext> results = new HashSet<>();
+        // iterate over the nodes to find ones that match the search parameters
+        for(NodeContext node : memGraph.getNodes()) {
             // if the name parameter is not null and the current node name does not equal the name parameter, do not add
             if (name != null && !node.getName().equals(name)) {
                 continue;
@@ -36,18 +49,16 @@ public class MemGraphSearch implements Search {
             }
 
             boolean add = true;
-            if (properties != null) {
-                for (String key : properties.keySet()) {
-                    String checkValue = properties.get(key);
-                    String foundValue = node.getProperties().get(key);
-                    // if the property provided in the search parameters is null or *, continue to the next property
-                    if(checkValue == null || checkValue.equals("*")) {
-                        continue;
-                    }
-                    if(foundValue == null || !foundValue.equals(checkValue)) {
-                        add = false;
-                        break;
-                    }
+            for (String key : properties.keySet()) {
+                String checkValue = properties.get(key);
+                String foundValue = node.getProperties().get(key);
+                // if the property provided in the search parameters is null or *, continue to the next property
+                if(checkValue == null || checkValue.equals("*")) {
+                    continue;
+                }
+                if(foundValue == null || !foundValue.equals(checkValue)) {
+                    add = false;
+                    break;
                 }
             }
 
@@ -60,7 +71,7 @@ public class MemGraphSearch implements Search {
     }
 
     @Override
-    public Node getNode(long id) {
-        return nodes.get(id);
+    public NodeContext getNode(long id) {
+        return memGraph.getNodesMap().get(id);
     }
 }

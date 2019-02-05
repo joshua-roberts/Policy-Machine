@@ -4,28 +4,13 @@ import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
-import gov.nist.csd.pm.pap.graph.MemGraph;
-import gov.nist.csd.pm.pap.graph.Neo4jGraph;
-import gov.nist.csd.pm.pap.graph.SQLGraph;
-import gov.nist.csd.pm.pap.loader.graph.Neo4jGraphLoader;
-import gov.nist.csd.pm.pap.loader.graph.SQLGraphLoader;
-import gov.nist.csd.pm.pap.loader.prohibitions.Neo4jProhibitionsLoader;
-import gov.nist.csd.pm.pap.loader.prohibitions.SQLProhibitionsLoader;
-import gov.nist.csd.pm.pap.loader.sessions.Neo4jSessionsLoader;
-import gov.nist.csd.pm.pap.loader.sessions.SQLSessionsLoader;
-import gov.nist.csd.pm.pap.prohibitions.MemProhibitionsDAO;
-import gov.nist.csd.pm.pap.prohibitions.Neo4jProhibitionsDAO;
-import gov.nist.csd.pm.pap.prohibitions.SQLProhibitionsDAO;
-import gov.nist.csd.pm.pap.search.Neo4jSearch;
-import gov.nist.csd.pm.pap.search.SQLSearch;
-import gov.nist.csd.pm.pap.sessions.MemSessionsDAO;
-import gov.nist.csd.pm.pap.sessions.Neo4jSessionsDAO;
-import gov.nist.csd.pm.pap.sessions.SQLSessionsDAO;
-import gov.nist.csd.pm.pap.sessions.SessionsDAO;
+import gov.nist.csd.pm.pap.graph.GraphPAP;
+import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
+import gov.nist.csd.pm.pap.sessions.SessionManager;
 
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
@@ -38,13 +23,14 @@ import java.util.Properties;
 import static gov.nist.csd.pm.common.constants.Operations.ALL_OPERATIONS;
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
+import static gov.nist.csd.pm.common.constants.Properties.REP_PROPERTY;
 import static gov.nist.csd.pm.common.exceptions.Errors.ERR_HASHING_USER_PSWD;
-import static gov.nist.csd.pm.common.model.graph.nodes.Node.generatePasswordHash;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
+import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.generatePasswordHash;
 
 /**
- * PAP is the Policy Access Point. The purpose of the PA is to expose the underlying policy data to the PDP and EPP.
- * It initializes the NGAC backend using the connection properties set through. SetConnectionServlet.  This servlet can
+ * PAP is the Policy Access Point. The purpose of the PAP is to expose the underlying policy data to the PDP and EPP.
+ * It initializes the NGAC backend using the connection properties set through SetConnectionServlet.  This servlet can
  * be access via ../config.jsp upon starting the server.The PAP also stores the in memory graph that will be used for
  * decision making.
  */
@@ -52,20 +38,17 @@ public class PAP {
 
     private int      interval = 30;
 
-    private Graph           graphDB;
-    private Graph           graphMem;
-    private Search          search;
-    private ProhibitionsDAO prohibitionsDB;
-    private ProhibitionsDAO prohibitionsMem;
-    private SessionsDAO     sessionsDB;
-    private SessionsDAO     sessionsMem;
+    private GraphPAP        graphPAP;
+    private ProhibitionsPAP prohibitionsPAP;
+    private SessionManager  sessionManager;
 
-    private Node superPC;
-    private Node superUA1;
-    private Node superUA2;
-    private Node superU;
-    private Node superOA;
-    private Node superO;
+    private NodeContext superPC;
+    private NodeContext superPCRep;
+    private NodeContext superUA1;
+    private NodeContext superUA2;
+    private NodeContext superU;
+    private NodeContext superOA;
+    private NodeContext superO;
 
     private PAP() throws PMException {
         // deserialize the configuration properties
@@ -107,7 +90,7 @@ public class PAP {
     /**
      * Instantiate the backend database, in memory graph, and DAOs. Then, make sure the super user, user attribute,
      * and policy class exist, if not, add them to the graph.  This is done because there must always be a super or root
-     * user who can create policy classes.
+     * user.
      *
      * @param database The database to use.  Neo4j or MySQL.
      * @param host The name of the database host machine.
@@ -117,57 +100,39 @@ public class PAP {
      * @param password The password of the database user
      */
     private void setup(String database, String host, int port, String schema, String username, String password) throws PMException {
-        DatabaseContext ctx = new DatabaseContext(host, port, username, password, schema);
+        DatabaseContext ctx = new DatabaseContext(database, host, port, username, password, schema);
 
-        //instantiate PAP fields according to the selected database
-        if(database.equalsIgnoreCase("neo4j")) {
-            graphDB = new Neo4jGraph(ctx);
-            search = new Neo4jSearch(ctx);
-            graphMem = new MemGraph(new Neo4jGraphLoader(ctx));
-            prohibitionsDB = new Neo4jProhibitionsDAO(ctx);
-            prohibitionsMem = new MemProhibitionsDAO(new Neo4jProhibitionsLoader(ctx));
-            sessionsDB = new Neo4jSessionsDAO(ctx);
-            sessionsMem = new MemSessionsDAO(new Neo4jSessionsLoader(ctx));
-        } else {
-            graphDB = new SQLGraph(ctx);
-            search = new SQLSearch(ctx);
-            graphMem = new MemGraph(new SQLGraphLoader(ctx));
-            prohibitionsDB = new SQLProhibitionsDAO(ctx);
-            prohibitionsMem = new MemProhibitionsDAO(new SQLProhibitionsLoader(ctx));
-            sessionsDB = new SQLSessionsDAO(ctx);
-            sessionsMem = new MemSessionsDAO(new SQLSessionsLoader(ctx));
-        }
+        graphPAP = new GraphPAP(ctx);
+        prohibitionsPAP = new ProhibitionsPAP(ctx);
+        sessionManager = new SessionManager();
 
         // check that the super nodes are created
         checkMetadata();
     }
 
+    /**
+     * Check that all of the super meta data is in the graph.  Create any nodes, assignments, or associations that do not
+     * exist but should
+     */
     private void checkMetadata() throws PMException {
         HashMap<String, String> props = new HashMap<>();
         props.put(NAMESPACE_PROPERTY, "super");
 
-        HashSet<Node> nodes = search.search("super", NodeType.PC.toString(), props);
+        HashSet<NodeContext> nodes = getGraphPAP().search("super_ua1", UA.toString(), props);
         if(nodes.isEmpty()) {
-            long pcID = graphDB.createNode(new Node("super", NodeType.PC, props));
-            superPC = search.getNode(pcID);
-        } else {
-            superPC = nodes.iterator().next();
-        }
-        nodes = search.search("super_ua1", NodeType.UA.toString(), props);
-        if(nodes.isEmpty()) {
-            long uaID = graphDB.createNode(new Node("super_ua1", NodeType.UA, props));
-            superUA1 = search.getNode(uaID);
+            long uaID = getGraphPAP().createNode(new NodeContext("super_ua1", UA, props));
+            superUA1 = getGraphPAP().getNode(uaID);
         } else {
             superUA1 = nodes.iterator().next();
         }
-        nodes = search.search("super_ua2", NodeType.UA.toString(), props);
+        nodes = getGraphPAP().search("super_ua2", UA.toString(), props);
         if(nodes.isEmpty()) {
-            long uaID = graphDB.createNode(new Node("super_ua2", NodeType.UA, props));
-            superUA2 = search.getNode(uaID);
+            long uaID = getGraphPAP().createNode(new NodeContext("super_ua2", UA, props));
+            superUA2 = getGraphPAP().getNode(uaID);
         } else {
             superUA2 = nodes.iterator().next();
         }
-        nodes = search.search("super", NodeType.U.toString(), props);
+        nodes = getGraphPAP().search("super", NodeType.U.toString(), props);
         if(nodes.isEmpty()) {
             try {
                 props.put(PASSWORD_PROPERTY, generatePasswordHash("super"));
@@ -175,112 +140,128 @@ public class PAP {
             catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
                 throw new PMException(ERR_HASHING_USER_PSWD, e.getMessage());
             }
-            long uID = graphDB.createNode(new Node("super", NodeType.U, props));
-            superU = search.getNode(uID);
+            long uID = getGraphPAP().createNode(new NodeContext("super", NodeType.U, props));
+            superU = getGraphPAP().getNode(uID);
+            props.remove(PASSWORD_PROPERTY);
         } else {
             superU = nodes.iterator().next();
         }
-        nodes = search.search("super", NodeType.OA.toString(), props);
+
+        nodes = getGraphPAP().search("super", NodeType.OA.toString(), props);
         if(nodes.isEmpty()) {
-            long oaID = graphDB.createNode(new Node("super", NodeType.OA, props));
-            superOA = search.getNode(oaID);
+            long oaID = getGraphPAP().createNode(new NodeContext("super", NodeType.OA, props));
+            superOA = getGraphPAP().getNode(oaID);
         } else {
             superOA = nodes.iterator().next();
         }
-        nodes = search.search("super", NodeType.O.toString(), props);
+        nodes = getGraphPAP().search("super", NodeType.O.toString(), props);
         if(nodes.isEmpty()) {
-            long oID = graphDB.createNode(new Node("super", NodeType.O, props));
-            superO = search.getNode(oID);
+            long oID = getGraphPAP().createNode(new NodeContext("super", NodeType.O, props));
+            superO = getGraphPAP().getNode(oID);
         } else {
             superO = nodes.iterator().next();
         }
+        nodes = getGraphPAP().search("super rep", NodeType.OA.toString(), props);
+        if(nodes.isEmpty()) {
+            long repID = getGraphPAP().createNode(new NodeContext("super rep", NodeType.OA, props));
+            superPCRep = getGraphPAP().getNode(repID);
+        } else {
+            superPCRep = nodes.iterator().next();
+        }
+        nodes = getGraphPAP().search("super", NodeType.PC.toString(), props);
+        if(nodes.isEmpty()) {
+            // add the rep oa ID to the properties
+            props.put(REP_PROPERTY, String.valueOf(superPCRep.getID()));
+            long pcID = getGraphPAP().createNode(new NodeContext("super", NodeType.PC, props));
+            superPC = getGraphPAP().getNode(pcID);
+            props.remove(REP_PROPERTY);
+        } else {
+            superPC = nodes.iterator().next();
+
+            // make sure the rep ID property is correct
+            // if the rep Id for the pc node is null, empty, or doesn't match the current rep ID, update the ID
+            String repID = superPC.getProperties().get(REP_PROPERTY);
+            if(repID == null || repID.isEmpty() || !repID.equals(String.valueOf(superPCRep.getID()))) {
+                repID = String.valueOf(superPCRep.getID());
+                superPC.getProperties().put(REP_PROPERTY, repID);
+                // update the node
+                getGraphPAP().updateNode(superPC);
+            }
+        }
 
         // check super ua1 is assigned to super pc
-        HashSet<Node> children = graphDB.getChildren(superPC.getID());
+        HashSet<NodeContext> children = getGraphPAP().getChildren(superPC.getID());
         if(!children.contains(superUA1)) {
-            graphDB.assign(superUA1.getID(), superUA1.getType(), superPC.getID(), superPC.getType());
+            getGraphPAP().assign(new NodeContext(superUA1.getID(), superUA1.getType()), new NodeContext(superPC.getID(), superPC.getType()));
         }
         // check super ua2 is assigned to super pc
-        children = graphDB.getChildren(superPC.getID());
+        children = getGraphPAP().getChildren(superPC.getID());
         if(!children.contains(superUA2)) {
-            graphDB.assign(superUA2.getID(), superUA2.getType(), superPC.getID(), superPC.getType());
+            getGraphPAP().assign(new NodeContext(superUA2.getID(), superUA2.getType()), new NodeContext(superPC.getID(), superPC.getType()));
         }
         // check super user is assigned to super ua1
-        children = graphDB.getChildren(superUA1.getID());
+        children = getGraphPAP().getChildren(superUA1.getID());
         if(!children.contains(superU)) {
-            graphDB.assign(superU.getID(), superU.getType(), superUA1.getID(), superUA1.getType());
+            getGraphPAP().assign(new NodeContext(superU.getID(), superU.getType()), new NodeContext(superUA1.getID(), superUA1.getType()));
         }
         // check super user is assigned to super ua2
-        children = graphDB.getChildren(superUA2.getID());
+        children = getGraphPAP().getChildren(superUA2.getID());
         if(!children.contains(superU)) {
-            graphDB.assign(superU.getID(), superU.getType(), superUA2.getID(), superUA2.getType());
+            getGraphPAP().assign(new NodeContext(superU.getID(), superU.getType()), new NodeContext(superUA2.getID(), superUA2.getType()));
         }
         // check super oa is assigned to super pc
-        children = graphDB.getChildren(superPC.getID());
+        children = getGraphPAP().getChildren(superPC.getID());
         if(!children.contains(superOA)) {
-            graphDB.assign(superOA.getID(), superOA.getType(), superPC.getID(), superPC.getType());
+            getGraphPAP().assign(new NodeContext(superOA.getID(), superOA.getType()), new NodeContext(superPC.getID(), superPC.getType()));
+        }
+        // check that the super rep is assigned to super oa
+        children = getGraphPAP().getChildren(superOA.getID());
+        if(!children.contains(superPCRep)) {
+            getGraphPAP().assign(new NodeContext(superPCRep.getID(), superPCRep.getType()), new NodeContext(superOA.getID(), superOA.getType()));
         }
         // check super o is assigned to super oa
-        children = graphDB.getChildren(superOA.getID());
         if(!children.contains(superO)) {
-            graphDB.assign(superO.getID(), superO.getType(), superOA.getID(), superOA.getType());
+            getGraphPAP().assign(new NodeContext(superO.getID(), superO.getType()), new NodeContext(superOA.getID(), superOA.getType()));
         }
 
         // associate super ua to super oa
-        graphDB.associate(superUA1.getID(), superOA.getID(), superOA.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
-        graphDB.associate(superUA1.getID(), superUA2.getID(), superUA2.getType(), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
-
+        getGraphPAP().associate(new NodeContext(superUA2.getID(), UA), new NodeContext(superOA.getID(), superOA.getType()), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
+        getGraphPAP().associate(new NodeContext(superUA1.getID(), UA), new NodeContext(superUA2.getID(), superUA2.getType()), new HashSet<>(Arrays.asList(ALL_OPERATIONS)));
     }
 
-    public Graph getGraphDB() {
-        return graphDB;
+    public GraphPAP getGraphPAP() {
+        return graphPAP;
     }
 
-    public Graph getGraphMem() {
-        return graphMem;
+    public ProhibitionsPAP getProhibitionsPAP() {
+        return prohibitionsPAP;
     }
 
-    public Search getSearch() {
-        return search;
+    public SessionManager getSessionManager() {
+        return sessionManager;
     }
 
-    public ProhibitionsDAO getProhibitionsDB() {
-        return prohibitionsDB;
-    }
-
-    public ProhibitionsDAO getProhibitionsMem() {
-        return prohibitionsMem;
-    }
-
-    public SessionsDAO getSessionsDB() {
-        return sessionsDB;
-    }
-
-    public SessionsDAO getSessionsMem() {
-        return sessionsMem;
-    }
-
-    public Node getSuperPC() {
+    public NodeContext getSuperPC() {
         return superPC;
     }
 
-    public Node getSuperUA1() {
+    public NodeContext getSuperUA1() {
         return superUA1;
     }
 
-    public Node getSuperUA2() {
+    public NodeContext getSuperUA2() {
         return superUA2;
     }
 
-    public Node getSuperU() {
+    public NodeContext getSuperU() {
         return superU;
     }
 
-    public Node getSuperOA() {
+    public NodeContext getSuperOA() {
         return superOA;
     }
 
-    public Node getSuperO() {
+    public NodeContext getSuperO() {
         return superO;
     }
 
@@ -303,6 +284,15 @@ public class PAP {
         }
         return PAP;
     }
+
+    public static synchronized PAP getPAP(boolean init, String database, String host, int port, String username, String password, String schema, int interval) throws PMException {
+        if(PAP == null || init) {
+            PAP = new PAP(database, host, port, username, password, schema, interval);
+        }
+        return PAP;
+    }
+
+
 
     /**
      * Initialize the PAP with the given properties

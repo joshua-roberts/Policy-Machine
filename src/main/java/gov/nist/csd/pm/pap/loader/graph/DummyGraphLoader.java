@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
-import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
+import gov.nist.csd.pm.common.model.graph.relationships.Association;
 
 import java.util.HashSet;
 
@@ -18,17 +18,17 @@ public class DummyGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Node> getNodes() {
+    public HashSet<NodeContext> getNodes() {
         return new HashSet<>();
     }
 
     @Override
-    public HashSet<NGACAssignment> getAssignments() {
+    public HashSet<Assignment> getAssignments() {
         return new HashSet<>();
     }
 
     @Override
-    public HashSet<NGACAssociation> getAssociations() {
+    public HashSet<Association> getAssociations() {
         return new HashSet<>();
     }
 }

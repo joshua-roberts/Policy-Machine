@@ -3,7 +3,7 @@ package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.model.row.CompositeRow;
@@ -24,7 +24,6 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.SelectUtils;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -184,7 +183,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
         HashMap<Long, HashSet<String>> prohibitedPerms = proDecider.listProhibitedPermissions(ctx.getUserID(), accessibleNodes.keySet());
         System.out.println("time to get prohibted ops on all targets: " + (double)(System.nanoTime() - start1) / 1000000000 + " s");
 
-        HashMap<String, Node> columnNodes = new HashMap<>();
+        HashMap<String, NodeContext> columnNodes = new HashMap<>();
         for (CompositeRow compositeRow : compositeRows) {
             long start = System.nanoTime();
             List<Column> okColumns = new ArrayList<>();
@@ -195,12 +194,12 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 }
                 HashMap<String, String> props = new HashMap<>();
                 props.put(NAMESPACE_PROPERTY, row.getTableName());
-                HashSet<Node> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
+                HashSet<NodeContext> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
                 if(nodes.isEmpty()) {
                     throw new PMException(Errors.ERR_UNEXPECTED_NUMBER_OF_NODES,
                             String.format("unexpected number of nodes with name %s and properties %s", row.getRowName(), props.toString()));
                 }
-                Node rowNode = nodes.iterator().next();
+                NodeContext rowNode = nodes.iterator().next();
 
                 //iterate through the requested columns and find the intersection of the current row and current column
                 List<Column> columns = compositeTable.getTable(row.getTableName()).getColumns();
@@ -215,7 +214,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                     }
                     if (skip) continue;
 
-                    Node columnNode = columnNodes.get(column.getColumnName());
+                    NodeContext columnNode = columnNodes.get(column.getColumnName());
                     if(columnNode == null) {
                         nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                         if(nodes.isEmpty()) {
@@ -228,7 +227,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
                     //else if not in accChildren, check if its in where clause
-                    Node inter = getIntersection(columnNode.getID(), rowNode.getID());
+                    NodeContext inter = getIntersection(columnNode.getID(), rowNode.getID());
                     if(inter != null) {
                         HashSet<String> ops = accessibleNodes.get(inter.getID());
                         HashSet<String> perms = prohibitedPerms.get(inter.getID());
@@ -249,7 +248,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 //  else check if its accessible
                 for (Column column : whereColumns) {
                     if(columnInList(compositeTable.getTable(row.getTableName()).getColumns(), column)){
-                        Node columnNode = columnNodes.get(column.getColumnName());
+                        NodeContext columnNode = columnNodes.get(column.getColumnName());
                         if(columnNode == null) {
                             nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                             if(nodes.isEmpty()) {
@@ -260,7 +259,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                             columnNodes.put(column.getColumnName(), columnNode);
                         }
 
-                        Node inter = getIntersection(columnNode.getID(), rowNode.getID());
+                        NodeContext inter = getIntersection(columnNode.getID(), rowNode.getID());
                         if(inter != null) {
                             HashSet<String> ops = accessibleNodes.get(inter.getID());
                             HashSet<String> perms = prohibitedPerms.get(inter.getID());

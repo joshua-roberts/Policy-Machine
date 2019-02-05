@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -43,7 +43,7 @@ public class Neo4jSearch implements Search {
     }
 
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException {
+    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException {
         // get the cypher query
         String cypher = getSearchCypher(name, type, properties);
         // query neo4j for the nodes
@@ -60,7 +60,7 @@ public class Neo4jSearch implements Search {
     }
 
     @Override
-    public Node getNode(long id) throws PMException {
+    public NodeContext getNode(long id) throws PMException {
         // get the cypher query
         String cypher = String.format("match(n{id:%d}) return n", id);
         // query neo4j for the nodes

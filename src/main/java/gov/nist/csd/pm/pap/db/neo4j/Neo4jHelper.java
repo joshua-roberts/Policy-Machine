@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -34,12 +34,12 @@ public class Neo4jHelper {
     /**
      * Given a ResultSet, extract a list of nodes. Each element in the ResultSet is a json representation of a Node
      */
-    public static HashSet<Node> getNodesFromResultSet(ResultSet rs) throws PMException {
+    public static HashSet<NodeContext> getNodesFromResultSet(ResultSet rs) throws PMException {
         try {
-            HashSet<Node> nodes = new HashSet<>();
+            HashSet<NodeContext> nodes = new HashSet<>();
             while (rs.next()) {
                 HashMap map = (HashMap) rs.getObject(1);
-                Node node = mapToNode(map);
+                NodeContext node = mapToNode(map);
                 nodes.add(node);
             }
             return nodes;
@@ -52,7 +52,7 @@ public class Neo4jHelper {
     /**
      * Given a map of properties representing a Node, return a Node object.
      */
-    public static Node mapToNode(Map map) throws PMException {
+    public static NodeContext mapToNode(Map map) throws PMException {
         // first, convert the json to a map
         long id = (long) map.get("id");
         String name = (String)map.get("name");
@@ -65,7 +65,7 @@ public class Neo4jHelper {
             }
         }
 
-        return new Node(id, name, type, properties);
+        return new NodeContext(id, name, type, properties);
     }
 
     /**

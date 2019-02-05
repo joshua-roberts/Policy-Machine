@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import gov.nist.csd.pm.pdp.engine.Decider;
@@ -15,8 +15,8 @@ import java.util.*;
  */
 public class AnalyticsService extends Service {
 
-    public AnalyticsService(String sessionID, long processID) throws PMException {
-        super(sessionID, processID);
+    public AnalyticsService(long userID, long processID) throws PMException {
+        super(userID, processID);
     }
 
     /**
@@ -25,8 +25,8 @@ public class AnalyticsService extends Service {
      * @return The set of operations the current user has on the target node.
      */
     public HashSet<String> getPermissions(long targetID) throws PMException {
-        Decider decider = new PReviewDecider(getGraphMem(), getProhibitionsMem().getProhibitions());
-        return decider.listPermissions(getSessionUserID(), getProcessID(), targetID);
+        Decider decider = getDecider();
+        return decider.listPermissions(getUserID(), getProcessID(), targetID);
     }
 
 
@@ -35,7 +35,7 @@ public class AnalyticsService extends Service {
      * the user has direct access to.
      * @return The set of nodes that the user has direct access.
      */
-    public HashSet<Node> getPos() throws PMException {
+    public HashSet<NodeContext> getPos() throws PMException {
         // Prepare the hashset to return.
         HashSet<Long> hsOa = new HashSet<>();
 
@@ -67,10 +67,10 @@ public class AnalyticsService extends Service {
             }
         }
 
-        HashSet<Node> nodes = new HashSet<>();
-        Search search = getSearch();
+        HashSet<NodeContext> nodes = new HashSet<>();
+        Search search = getGraphPAP();
         for(Long id : hsOa) {
-            Node node = search.getNode(id);
+            NodeContext node = search.getNode(id);
             nodes.add(node);
         }
 
@@ -78,8 +78,6 @@ public class AnalyticsService extends Service {
     }
 
     private Hashtable findBorderOaPrivRestrictedInternal() throws PMException {
-        long userID = getSessionUserID();
-
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
         // An oa is a key in this hashtable. The value is another hashtable that
         // represents a label of the oa. A label is a set of pairs {(op -> pcset)}, with
@@ -88,12 +86,12 @@ public class AnalyticsService extends Service {
         Hashtable htReachableOas = new Hashtable();
 
         // BFS from u (the base node). Prepare a queue.
-        HashSet<Node> visited = new HashSet<>();
-        Node crtNode;
+        HashSet<NodeContext> visited = new HashSet<>();
+        NodeContext crtNode;
 
         // Get u's directly assigned attributes and put them into the queue.
-        HashSet<Node> hsAttrs = getGraphMem().getParents(userID);
-        ArrayList<Node> queue = new ArrayList<>(hsAttrs);
+        HashSet<NodeContext> hsAttrs = getGraphPAP().getParents(getUserID());
+        ArrayList<NodeContext> queue = new ArrayList<>(hsAttrs);
 
         // While the queue has elements, extract an element from the queue
         // and visit it.
@@ -110,7 +108,7 @@ public class AnalyticsService extends Service {
 
                     // Find the opsets of this user attribute. Note that the set of containers for this
                     // node (user attribute) may contain not only opsets.
-                    HashMap<Long, HashSet<String>> assocs = getGraphMem().getSourceAssociations(crtNode.getID());
+                    HashMap<Long, HashSet<String>> assocs = getGraphPAP().getSourceAssociations(crtNode.getID());
 
                     // Go through the containers and only for opsets do the following.
                     // For each opset ops of ua:
@@ -163,10 +161,10 @@ public class AnalyticsService extends Service {
                 }
                 visited.add(crtNode);
 
-                HashSet hsDescs = getGraphMem().getParents(crtNode.getID());
+                HashSet hsDescs = getGraphPAP().getParents(crtNode.getID());
                 Iterator descsIter = hsDescs.iterator();
                 while (descsIter.hasNext()) {
-                    Node d = (Node) descsIter.next();
+                    NodeContext d = (NodeContext) descsIter.next();
                     queue.add(d);
                 }
             }
@@ -219,11 +217,11 @@ public class AnalyticsService extends Service {
                 // Extract its direct descendants. If a descendant is an attribute,
                 // insert it into the queue. If it is a pc, add it to reachable,
                 // if not already there
-                HashSet<Node> hsContainers = getGraphMem().getParents(crtNode);
-                Iterator<Node> hsiter = hsContainers.iterator();
+                HashSet<NodeContext> hsContainers = getGraphPAP().getParents(crtNode);
+                Iterator<NodeContext> hsiter = hsContainers.iterator();
                 while (hsiter.hasNext()) {
-                    Node n = hsiter.next();
-                    if(getGraphMem().getPolicies().contains(n.getID())) {
+                    NodeContext n = hsiter.next();
+                    if(getGraphPAP().getPolicies().contains(n.getID())) {
                         reachable.add(n.getID());
                     } else {
                         queue.add(n.getID());
@@ -234,7 +232,12 @@ public class AnalyticsService extends Service {
         return reachable;
     }
 
-    private boolean inMemUattrHasOpsets(Node uaNode) throws PMException {
-        return !getGraphMem().getSourceAssociations(uaNode.getID()).isEmpty();
+    private boolean inMemUattrHasOpsets(NodeContext uaNode) throws PMException {
+        return !getGraphPAP().getSourceAssociations(uaNode.getID()).isEmpty();
+    }
+
+    public Object explain(long userID, long targetID) throws PMException {
+        Decider decider = getDecider();
+        return decider.listPermissions(userID, getProcessID(), targetID);
     }
 }

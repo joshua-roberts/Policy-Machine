@@ -2,7 +2,7 @@ version: '3'
 
 services:
   neo4j:
-    image: neo4j:3.3.3
+    image: neo4j:latest
     volumes:
       - $HOME/neo4j/data:/data
       - $HOME/neo4j/logs:/logs

@@ -4,16 +4,15 @@
 The Policy Machine REST API exposes a standard set of administrative NGAC commands.  This API also acts as a Policy Enforcement Point (PEP) by ensuring any calling user has permission to carry out a command before any action is taken. Exposing the PEP allows users to create web-based, NGAC aware applications.
 
 ## Important Notes
-Users have to have permissions to carry out actions
-Super user is the root user that has root permissions.
--- describe the super user configuration.
-### Special Cases
-There are two special cases when using the API. The first is creating Policy Classes and the second is assigning to Policy Classes.  Since NGAC does not allow associations with Policy Classes, there must be a way yo determine if a user is allowed to carry out these actions. Our solution to these cases is specific to this implementation and is not required by the standard.
 
-1. Creating a Policy Class
-    - To determine if a user has the permission to create a policy class, we check if the user has the "create policy class" permission on the super object described above.  By default, the super user will have this permission and will be able to create policy classes out of the box.  The super user has the ability to grant this permission to other users as needed.
-2. Assigning to a Policy Class
-    - When a Policy Class is created, an Object Attribute that represents this Policy Class is also created and assigned to the Super Object Attribute described above. This gives the super user permissions on this Policy Class, and allows the super user to grant other users permissions on this object attribute.  Then, when any user is attempts to assign an attribute (user or object) to the Policy Class, that user must have the "assign user/object attribute" permission on the Object Attribute that represents the target Policy Class. The same approach is applied to deleting an assignment with a Policy Class.
+1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well. 
+![alt text](super.png "super")
+2. **Creating a Policy Class** - When creating a Policy Class we check if the requesting user has the permission "create a Policy Class" on the super object.
+3. **Policy Class assignments** - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
+![alt text](pc.png "creating a policy class")
+
+## Secure Communication
+The NGAC standard calls for secure communication between each component of the NGAC functional architecture.  We have omitted this in this implementation in order to make it easier to get started with NGAC and creating NGAC aware applications.
 
 ## Deployment
 ### Run Docker Compose
@@ -221,7 +220,7 @@ Create a new node in the NGAC graph with the provided name, type, and properties
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
-baseID | false | body | The ID of the node to create the new node in.
+parentID | false | body | The ID of the node to assign the new node to.
 name | true | body | The name of the node.
 type | true | body | The type of the node.
 properties | true | body | A map of properties to give the node.
@@ -246,15 +245,7 @@ $ curl -X POST {host}:{port}/pm/api/graph/nodes?session={sessionID}
 {
   "code": 9000,
   "message": "success",
-  "entity": {
-  "id": 12345678,
-  "name": "newNode",
-  "type": "OA",
-  "properties": {
-    "key1": "value1",
-    "key2": "value2"
-    }
-  }
+  "entity": 12345
 }
 ```
 

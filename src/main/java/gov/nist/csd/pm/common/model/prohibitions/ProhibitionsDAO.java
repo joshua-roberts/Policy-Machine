@@ -5,11 +5,12 @@ import gov.nist.csd.pm.common.exceptions.*;
 import java.util.List;
 
 /**
- * Interface to maintain Prohibitions for an NGAC environment.
+ * Interface to maintain Prohibitions for an NGAC environment. This interface is in the common package because the
+ * Prohibition service in the PDP will also implement this interface as well as any implementations in the PAP.
  */
 public interface ProhibitionsDAO {
     /**
-     * Create a new prohibition and add it to the stored map of prohibitions
+     * Create a new prohibition.
      * @param prohibition The prohibition to be created.
      */
     void createProhibition(Prohibition prohibition) throws PMException;

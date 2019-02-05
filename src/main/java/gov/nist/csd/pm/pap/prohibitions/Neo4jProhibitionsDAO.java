@@ -37,7 +37,17 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
     }
 
     /**
-     * Create a prohibition in the database.
+     * Create a prohibition in Neo4j.
+     *
+     * 1. Create a base neo4j node for the prohibition.
+     *      - store the name of the prohibition, the operations, and a boolean indicating the intersection value.
+     * 2. Create neo4j nodes to represent each node in the prohibition.
+     *      - store the ID fo the node and a boolean complement value.
+     *      - create a relationship between these nodes and the base node.
+     * 3. Create a neo4j node to represent the subject of the prohibition.
+     *      - store the ID and type of the subject.
+     *
+     * Prohibitions are tagged with 'prohibition' and are stored separately from the rest of the graph.
      *
      * @param prohibition The prohibition to be created.
      * @throws PMException If there is an error creating in the prohibition in the database.
@@ -52,7 +62,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
         String nodesStr = "";
         for (ProhibitionNode pr : nodes) {
-            nodesStr += String.format("with p create(p)<-[:prohibition]-(pr:prohibition:%s{resourceID:%d, complement:%b})", name, pr.getID(), pr.isComplement());
+            nodesStr += String.format("with p create(p)<-[:prohibition]-(pr:prohibition:%s{id:%d, complement:%b})", name, pr.getID(), pr.isComplement());
         }
 
         String cypher =
@@ -115,16 +125,16 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
                 //get nodes
                 List<ProhibitionNode> nodes = new ArrayList<>();
-                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.resourceID, r.complement";
+                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.id, r.complement";
                 try(
                         Connection resConn = neo4j.getConnection();
                         PreparedStatement resStmt = resConn.prepareStatement(cypher);
                         ResultSet resRs = resStmt.executeQuery()
                 ) {
                     while(resRs.next()) {
-                        long resourceID = resRs.getLong(1);
+                        long id = resRs.getLong(1);
                         boolean comp = resRs.getBoolean(2);
-                        nodes.add(new ProhibitionNode(resourceID, comp));
+                        nodes.add(new ProhibitionNode(id, comp));
                     }
                 }
 

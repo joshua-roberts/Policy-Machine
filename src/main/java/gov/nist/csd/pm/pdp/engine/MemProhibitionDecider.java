@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.engine;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 
@@ -106,18 +106,18 @@ public class MemProhibitionDecider implements ProhibitionDecider {
 
     private HashSet<Long> getSubGraph(long id) throws PMException {
         HashSet<Long> nodes = new HashSet<>();
-        HashSet<Node> children = graph.getChildren(id);
+        HashSet<NodeContext> children = graph.getChildren(id);
         if(children.isEmpty()){
             return nodes;
         }
 
         //add all the children to the set of nodes
-        for(Node node : children) {
+        for(NodeContext node : children) {
             nodes.add(node.getID());
         }
 
         //for each child add it's subgraph
-        for(Node child : children){
+        for(NodeContext child : children){
             nodes.addAll(getSubGraph(child.getID()));
         }
 

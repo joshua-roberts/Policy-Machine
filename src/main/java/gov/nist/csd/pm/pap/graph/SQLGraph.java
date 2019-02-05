@@ -3,7 +3,7 @@ package gov.nist.csd.pm.pap.graph;
 import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -24,7 +24,7 @@ public class SQLGraph implements Graph {
 
 
     @Override
-    public long createNode(Node node) throws PMException {
+    public long createNode(NodeContext node) throws PMException {
         if (node == null) {
             throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when updating a node in mysql");
         }
@@ -67,7 +67,7 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void updateNode(Node node) throws PMException {
+    public void updateNode(NodeContext node) throws PMException {
         if(node == null) {
             throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when updating a node in neo4j");
         } else if(node.getID() == 0) {
@@ -134,12 +134,12 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public HashSet<Node> getNodes() throws PMException {
+    public HashSet<NodeContext> getNodes() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id from node")
         ){
-            HashSet<Node> nodes = new HashSet<>();
+            HashSet<NodeContext> nodes = new HashSet<>();
             while (rs.next()) {
                 long id = rs.getInt(1);
                 nodes.add(getNode(id));
@@ -150,7 +150,7 @@ public class SQLGraph implements Graph {
         }
     }
 
-    private Node getNode(long id) throws PMException {
+    private NodeContext getNode(long id) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
@@ -160,7 +160,7 @@ public class SQLGraph implements Graph {
             NodeType type = SQLHelper.toNodeType(rs.getInt(3));
             HashMap<String, String> properties = getNodeProps(id);
 
-            return new Node(id, name, type, properties);
+            return new NodeContext(id, name, type, properties);
         }
         catch (SQLException e) {
             throw new PMException(ERR_DB, e.getMessage());
@@ -204,13 +204,13 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public HashSet<Node> getChildren(long nodeID) throws PMException {
+    public HashSet<NodeContext> getChildren(long nodeID) throws PMException {
         String sql = String.format("select end_node_id from assignments where start_node_id=%d and depth=1", nodeID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)
         ){
-            HashSet<Node> nodes = new HashSet<>();
+            HashSet<NodeContext> nodes = new HashSet<>();
             while (rs.next()) {
                 long id = rs.getInt(1);
                 nodes.add(getNode(id));
@@ -222,13 +222,13 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public HashSet<Node> getParents(long nodeID) throws PMException {
+    public HashSet<NodeContext> getParents(long nodeID) throws PMException {
         String sql = String.format("select start_node_id from assignments where end_node_id=%d and depth=1", nodeID);
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)
         ){
-            HashSet<Node> nodes = new HashSet<>();
+            HashSet<NodeContext> nodes = new HashSet<>();
             while (rs.next()) {
                 long id = rs.getInt(1);
                 nodes.add(getNode(id));
@@ -240,10 +240,10 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void assign(long childID, NodeType childType, long parentID, NodeType parentType) throws PMException {
+    public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
         try (CallableStatement stmt = conn.getConnection().prepareCall("{call create_assignment(?,?,?)}")) {
-            stmt.setLong(1, childID);
-            stmt.setLong(2, parentID);
+            stmt.setLong(1, childCtx.getID());
+            stmt.setLong(2, parentCtx.getID());
             stmt.registerOutParameter(3, Types.VARCHAR);
             stmt.execute();
             String errorMsg = stmt.getString(3);
@@ -257,12 +257,12 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void deassign(long childID, NodeType childType, long parentID, NodeType parentType) throws PMException {
+    public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
         try {
             CallableStatement stmt = conn.getConnection().prepareCall("{call delete_assignment(?,?,?)}");
 
-            stmt.setLong(1, childID);
-            stmt.setLong(2, parentID);
+            stmt.setLong(1, childCtx.getID());
+            stmt.setLong(2, parentCtx.getID());
             stmt.registerOutParameter(3, Types.VARCHAR);
             stmt.execute();
             String errorMsg = stmt.getString(3);
@@ -276,7 +276,7 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void associate(long uaID, long targetID, NodeType targetType, HashSet<String> operations) throws PMException {
+    public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMException {
         String ops = "";
         for (String op : operations) {
             ops += op + ",";
@@ -286,7 +286,7 @@ public class SQLGraph implements Graph {
         //if an association does not already exist create a new one.  Update the operations
         //if an association does already exist between the two nodes
         boolean associated;
-        String sql = String.format("select count(*) from association where ua_id=%d && target_id=%d", uaID, targetID);
+        String sql = String.format("select count(*) from association where ua_id=%d && target_id=%d", uaCtx.getID(), targetCtx.getID());
         try(Statement stmt = conn.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
@@ -301,8 +301,8 @@ public class SQLGraph implements Graph {
             try (
                     CallableStatement stmt = conn.getConnection().prepareCall("{call create_association(?,?,?,?)}");
             ) {
-                stmt.setLong(1, uaID);
-                stmt.setLong(2, targetID);
+                stmt.setLong(1, uaCtx.getID());
+                stmt.setLong(2, targetCtx.getID());
                 stmt.setString(3, ops);
                 stmt.registerOutParameter(4, Types.VARCHAR);
                 stmt.execute();
@@ -318,8 +318,8 @@ public class SQLGraph implements Graph {
             try {
                 CallableStatement stmt = conn.getConnection().prepareCall("{? = call update_opset(?,?,?)}");
                 stmt.registerOutParameter(1, Types.INTEGER);
-                stmt.setLong(2, uaID);
-                stmt.setLong(3, targetID);
+                stmt.setLong(2, uaCtx.getID());
+                stmt.setLong(3, targetCtx.getID());
                 stmt.setString(4, ops);
                 stmt.execute();
             }
@@ -330,12 +330,12 @@ public class SQLGraph implements Graph {
     }
 
     @Override
-    public void dissociate(long uaID, long targetID, NodeType targetType) throws PMException {
+    public void dissociate(NodeContext uaCtx, NodeContext targetCtx) throws PMException {
         try (
                 CallableStatement stmt = conn.getConnection().prepareCall("{call delete_association(?,?,?)}")
         ) {
-            stmt.setLong(1, uaID);
-            stmt.setLong(2, targetID);
+            stmt.setLong(1, uaCtx.getID());
+            stmt.setLong(2, targetCtx.getID());
             stmt.registerOutParameter(3, Types.VARCHAR);
             stmt.execute();
             String errorMsg = stmt.getString(3);

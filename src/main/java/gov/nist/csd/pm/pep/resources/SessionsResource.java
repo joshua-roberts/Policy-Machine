@@ -44,7 +44,7 @@ public class SessionsResource {
     @GET
     public Response getSessionUser(@PathParam("session") String session) throws PMException {
         SessionsService sessionsService = new SessionsService();
-        long userID = sessionsService.getSessionUserID();
+        long userID = sessionsService.getSessionUserID(session);
         return ApiResponse.Builder
                 .success()
                 .entity(userID)

@@ -1,5 +1,8 @@
 package gov.nist.csd.pm.common.exceptions;
 
+/**
+ * Every error has an error code and general message
+ */
 public enum Errors {
     ERR_ASSIGNMENT_DOES_NOT_EXIST(6001, "assignment does not exist"),
     ERR_PROHIBITION_NAME_EXISTS(6002, "prohibition name already exists"),
@@ -38,15 +41,15 @@ public enum Errors {
     ERR_POLICY_NAME_EXISTS(6036, "a policy name with the given name already exists"),
     ERR_INVALID_CREDENTIALS(6037, "invalid credentials"),
     ERR_LOADER(6038, "loading exception"),
-    ERR_NULL_NODE_CTX(6039, "null node provided"),
+    ERR_NULL_NODE_CTX(6039, "null node context provided"),
     ERR_NOT_IMPLEMENTED(6041, "not implemented"),
     ERR_LOADING_DB_CONFIG_PROPS(6042, "error loading database configuration"),
     ERR_HASHING_USER_PSWD(6043, "error hashing user password"),
     ERR_NULL_OPERATIONS(6044, "null operations"),
     ERR_AUTH(6045, "authentication error"),
     ERR_NULL_SESSION(6046, "null session ID"),
+    ERR_NO_REP(6047, "policy class has no rep node"),
     ERR_DB(7000, "database error");
-
     private int code;
     private String message;
 

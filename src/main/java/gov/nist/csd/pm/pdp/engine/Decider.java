@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pdp.engine;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 
 
 import java.util.HashSet;
@@ -33,7 +33,7 @@ public interface Decider {
      * @param perms The permissions to check for.
      * @return A subset of the given nodes that the user has the given permissions on.
      */
-    HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String ... perms) throws PMException;
+    HashSet<NodeContext> filter(long userID, long processID, HashSet<NodeContext> nodes, String ... perms) throws PMException;
 
     /**
      * Get the children of the target node that the user has the given permissions on.
@@ -41,5 +41,5 @@ public interface Decider {
      * @param perms The permissions the user must have on the child nodes.
      * @return The set of NGACNodes that are children of the target node and the user has the given permissions on.
      */
-    HashSet<Node> getChildren(long userID, long processID, long targetID, String ... perms) throws PMException;
+    HashSet<NodeContext> getChildren(long userID, long processID, long targetID, String ... perms) throws PMException;
 }

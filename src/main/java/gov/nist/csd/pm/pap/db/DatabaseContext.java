@@ -5,6 +5,7 @@ package gov.nist.csd.pm.pap.db;
  * will be ignored for Neo4j.
  */
 public class DatabaseContext {
+    String database;
     private String host;
     private int port;
     private String username;
@@ -17,6 +18,19 @@ public class DatabaseContext {
         this.username = username;
         this.password = password;
         this.schema = schema;
+    }
+
+    public DatabaseContext(String database, String host, int port, String username, String password, String schema) {
+        this.database = database;
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.schema = schema;
+    }
+
+    public String getDatabase() {
+        return database;
     }
 
     public String getHost() {

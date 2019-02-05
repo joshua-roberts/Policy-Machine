@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
-import gov.nist.csd.pm.common.model.graph.relationships.NGACAssignment;
-import gov.nist.csd.pm.common.model.graph.relationships.NGACAssociation;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
+import gov.nist.csd.pm.common.model.graph.relationships.Association;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLHelper;
@@ -55,13 +55,13 @@ public class SQLGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Node> getNodes() throws PMException {
+    public HashSet<NodeContext> getNodes() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id from node")
         ){
             SQLSearch search = new SQLSearch(dbCtx);
-            HashSet<Node> nodes = new HashSet<>();
+            HashSet<NodeContext> nodes = new HashSet<>();
             while (rs.next()) {
                 long id = rs.getInt(1);
                 nodes.add(search.getNode(id));
@@ -73,7 +73,7 @@ public class SQLGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<NGACAssignment> getAssignments() throws PMException {
+    public HashSet<Assignment> getAssignments() throws PMException {
         String sql = String.format("SELECT start_node_id,end_node_id FROM assignment " +
                 "join node a on start_node_id = a.node_id and a.node_type_id <> %d " +
                 "join node b on end_node_id=b.node_id and b.node_type_id <> %d where assignment.depth=1;", SQLHelper.OS_ID, SQLHelper.OS_ID);
@@ -81,11 +81,11 @@ public class SQLGraphLoader implements GraphLoader {
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)
         ) {
-            HashSet<NGACAssignment> assignments = new HashSet<>();
+            HashSet<Assignment> assignments = new HashSet<>();
             while(rs.next()){
                 long startID = rs.getLong(1);
                 long endID = rs.getLong(2);
-                assignments.add(new NGACAssignment(endID, startID));
+                assignments.add(new Assignment(endID, startID));
             }
             return assignments;
         } catch(SQLException e){
@@ -94,18 +94,18 @@ public class SQLGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<NGACAssociation> getAssociations() throws PMException {
+    public HashSet<Association> getAssociations() throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT ua_id, get_operations(opset_id),target_id FROM association join node a on ua_id = a.node_id join node b on target_id=b.node_id");
         ) {
-            HashSet<NGACAssociation> associations = new HashSet<>();
+            HashSet<Association> associations = new HashSet<>();
             while (rs.next()) {
                 long uaID = rs.getLong(1);
                 HashSet<String> ops = new HashSet<>(Arrays.asList(rs.getString(2).split(",")));
                 long targetID = rs.getInt(3);
 
-                associations.add(new NGACAssociation(uaID, targetID, ops));
+                associations.add(new Association(uaID, targetID, ops));
             }
             return associations;
         } catch(SQLException e){

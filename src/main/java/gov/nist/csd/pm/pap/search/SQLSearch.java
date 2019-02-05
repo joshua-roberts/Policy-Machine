@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -35,12 +35,12 @@ public class SQLSearch implements Search {
     }
 
     @Override
-    public HashSet<Node> search(String name, String type, Map<String, String> properties) throws PMException {
+    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException {
         return null;
     }
 
     @Override
-    public Node getNode(long id) throws PMException {
+    public NodeContext getNode(long id) throws PMException {
         try (
                 Statement stmt = conn.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("select node_id,name,node_type_id from node where node_id="+id);
@@ -50,7 +50,7 @@ public class SQLSearch implements Search {
             NodeType type = SQLHelper.toNodeType(rs.getInt(3));
             HashMap<String, String> properties = getNodeProps(id);
 
-            return new Node(id, name, type, properties);
+            return new NodeContext(id, name, type, properties);
         }
         catch (SQLException e) {
             throw new PMException(ERR_DB, e.getMessage());

@@ -10,7 +10,7 @@ public class PMException extends Exception {
     private String detailedMessage;
 
     public PMException(Errors error, String msg) {
-        super(msg);
+        super("(code=" + error.getCode() + ") " + msg);
         this.error = error;
         this.detailedMessage = msg;
     }

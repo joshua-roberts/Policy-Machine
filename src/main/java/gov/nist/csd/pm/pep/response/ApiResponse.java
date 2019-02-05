@@ -1,15 +1,10 @@
 package gov.nist.csd.pm.pep.response;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
-import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
 import javax.ws.rs.core.Response;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class ApiResponse {
     private int code;

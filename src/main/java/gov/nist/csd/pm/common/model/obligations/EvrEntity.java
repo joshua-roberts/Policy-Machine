@@ -1,14 +1,14 @@
 package gov.nist.csd.pm.common.model.obligations;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class EvrEntity {
-    private Node                node;
+    private NodeContext         node;
     private String              name;
     private String              type;
     private Map<String, String> properties;
@@ -30,11 +30,11 @@ public class EvrEntity {
     }
 
     //node
-    public EvrEntity(Node node) {
+    public EvrEntity(NodeContext node) {
         this.node = node;
     }
 
-    public Node getNode() throws PMException {
+    public NodeContext getNode() throws PMException {
         return node;
     }
 

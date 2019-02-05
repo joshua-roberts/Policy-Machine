@@ -2,6 +2,7 @@ package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.requests.CreateProhibitionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pdp.services.ProhibitionsService;
@@ -20,7 +21,7 @@ public class ProhibitionsResource {
     public Response createProhibition(CreateProhibitionRequest request,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process) throws PMException {
-        ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
+        ProhibitionsService prohibitionsService = new ProhibitionsService(new SessionsService().getSessionUserID(session), process);
         Prohibition prohibition = new Prohibition(request.getName(), request.getSubject(), request.getNodes(), request.getOperations(), request.isIntersection());
         prohibitionsService.createProhibition(prohibition);
         return ApiResponse.Builder.success().message(ApiResponse.CREATE_PROHIBITION_SUCCESS).build();
@@ -29,7 +30,7 @@ public class ProhibitionsResource {
     @GET
     public Response getProhibitions(@QueryParam("session") String session,
                                     @QueryParam("process") long process) throws PMException {
-        ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
+        ProhibitionsService prohibitionsService = new ProhibitionsService(new SessionsService().getSessionUserID(session), process);
         List<Prohibition> prohibitions = prohibitionsService.getProhibitions();
         return ApiResponse.Builder.success().entity(prohibitions).build();
     }
@@ -39,7 +40,7 @@ public class ProhibitionsResource {
     public Response getProhibition(@PathParam("prohibitionName") String prohibitionName,
                                    @QueryParam("session") String session,
                                    @QueryParam("process") long process) throws PMException {
-        ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
+        ProhibitionsService prohibitionsService = new ProhibitionsService(new SessionsService().getSessionUserID(session), process);
         return ApiResponse.Builder.success().entity(prohibitionsService.getProhibition(prohibitionName)).build();
     }
 
@@ -49,7 +50,7 @@ public class ProhibitionsResource {
                                       CreateProhibitionRequest request,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process) throws PMException {
-        ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
+        ProhibitionsService prohibitionsService = new ProhibitionsService(new SessionsService().getSessionUserID(session), process);
         Prohibition prohibition = new Prohibition(request.getName(), request.getSubject(), request.getNodes(), request.getOperations(), request.isIntersection());
         prohibitionsService.updateProhibition(prohibition);
         return ApiResponse.Builder.success().message(ApiResponse.UPDATE_PROHIBITION_SUCCESS).build();
@@ -60,7 +61,7 @@ public class ProhibitionsResource {
     public Response deleteProhibition(@PathParam("prohibitionName") String prohibitionName,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process) throws PMException {
-        ProhibitionsService prohibitionsService = new ProhibitionsService(session, process);
+        ProhibitionsService prohibitionsService = new ProhibitionsService(new SessionsService().getSessionUserID(session), process);
         prohibitionsService.deleteProhibition(prohibitionName) ;
         return ApiResponse.Builder.success().message(ApiResponse.DELETE_PROHIBITION_SUCCESS).build();
     }

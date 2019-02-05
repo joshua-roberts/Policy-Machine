@@ -1,8 +1,11 @@
 package gov.nist.csd.pm.demos.ndac.pep;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.Algorithm;
 import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v1.SelectAlgorithm;
@@ -11,8 +14,11 @@ import gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2.SelectAlgorithmV2;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pap.graph.MemGraph;
+import gov.nist.csd.pm.pap.graph.Neo4jGraph;
 import gov.nist.csd.pm.pap.loader.graph.DummyGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
+import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -24,6 +30,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
@@ -32,35 +39,6 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class NDACResource {
-
-    public static void main(String[] args) throws PMException, JSQLParserException, ClassNotFoundException, SQLException, IOException {
-        MemGraph graph = new MemGraph(new DummyGraphLoader());
-        //Graph graph = new Neo4jGraph(new DatabaseContext("localhost", 7687, "neo4j", "root", null));
-        NGACContext ngacCtx = buildGraph(graph, 0);
-        String sql = "select employee_info.name, employee_info.ssn, employee_info.salary from employee_info limit 4";
-        Select select = (Select) CCJSqlParserUtil.parse(sql);
-
-        MemGraphSearch search = new MemGraphSearch(graph);
-        HashSet<Node> nodes = search.search("dave", NodeType.U.toString(), null);
-        Node bob = nodes.iterator().next();
-        System.out.println("alice ID: " + bob.getID());
-
-        DatabaseContext ctx = new DatabaseContext("localhost", 3306, "root", "root", "employees");
-        AlgorithmV2 algorithm = new SelectAlgorithmV2(select, bob.getID(), 0, ctx, ngacCtx.getGraph(), search, ngacCtx.getProhibitions());
-
-        long start = System.nanoTime();
-        String result = algorithm.run();
-        long time = System.nanoTime() - start;
-
-
-        System.out.println("original sql: " + sql);
-        System.out.println("permitted sql: " + result);
-        System.out.println("time: " + (double)time/1000000000);
-        /*for (int i = 1; i <= 1000; i++) {
-            System.out.println("insert into employee_info (id, name, ssn, salary) values (" + (i+4) + ", 'emp_" + i + "', " + ThreadLocalRandom
-                    .current().nextInt(100000000, 999999999) + ", " + ThreadLocalRandom.current().nextInt(30000, 100000 + 1) + ");");
-        }*/
-    }
 
     private static final String EMPLOYEES = "employees";
     private static final String EMPLOYEE_INFO = "employee_info";
@@ -86,11 +64,11 @@ public class NDACResource {
                 .build();
     }
 
-    private NDACResponse runParsing(String version, NDACRequest request, MemGraph graph, List<Prohibition> prohibitions) throws JSQLParserException, PMException, ClassNotFoundException, SQLException, IOException {
+    private NDACResponse runParsing(String version, NDACRequest request, Graph graph, List<Prohibition> prohibitions) throws JSQLParserException, PMException, ClassNotFoundException, SQLException, IOException {
         NDACResponse response = new NDACResponse();
         MemGraphSearch search = new MemGraphSearch((MemGraph) graph);
-        HashSet<Node> nodes = search.search(null, NodeType.U.toString(), null);
-        for(Node user : nodes) {
+        HashSet<NodeContext> nodes = search.search(null, NodeType.U.toString(), null);
+        for(NodeContext user : nodes) {
             String originalSQL = request.getSql();
             Select select = (Select) CCJSqlParserUtil.parse(originalSQL);
 
@@ -147,9 +125,9 @@ public class NDACResource {
                 userResult.setData(new NDACResponse.SQLResults(columns, results));
             }
 
-            HashSet<Node> parents = graph.getParents(user.getID());
+            HashSet<NodeContext> parents = graph.getParents(user.getID());
             List<String> attrs = new ArrayList<>();
-            for(Node node : parents) {
+            for(NodeContext node : parents) {
                 attrs.add(node.getName());
             }
 
@@ -178,224 +156,293 @@ public class NDACResource {
      * @param numEmployees the number of records to add on top of the aforementioned users
      * @return the NGAC graph with a simple policy configuration of this "database"
      */
-    public static NGACContext buildGraph(MemGraph graph, int numEmployees) throws PMException {
+    public static NGACContext buildGraph(Graph graph, int numEmployees) throws PMException {
         //create employees pc
-        long pcID = graph.createNode(new Node(getID(), EMPLOYEES, PC, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
-        long baseID = graph.createNode(new Node(getID(), EMPLOYEES, OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
-        graph.assign(baseID, OA, pcID, PC);
+        long pcID = graph.createNode(new NodeContext(getID(), EMPLOYEES, PC, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
+        long baseID = graph.createNode(new NodeContext(getID(), EMPLOYEES, OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
+        graph.assign(new NodeContext(baseID, OA), new NodeContext(pcID, PC));
 
         //create employee_info table
-        long empInfoTableID = graph.createNode(new Node(getID(), EMPLOYEE_INFO, OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
-        graph.assign(empInfoTableID, OA, baseID, OA);
+        long empInfoTableID = graph.createNode(new NodeContext(getID(), EMPLOYEE_INFO, OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEES)));
+        graph.assign(new NodeContext(empInfoTableID, OA), new NodeContext(baseID, OA));
 
-        long rowsID = graph.createNode(new Node(getID(), "rows", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        long colsID = graph.createNode(new Node(getID(), "columns", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(rowsID, OA, empInfoTableID, OA);
-        graph.assign(colsID, OA, empInfoTableID, OA);
+        long rowsID = graph.createNode(new NodeContext(getID(), "rows", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        long colsID = graph.createNode(new NodeContext(getID(), "columns", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(rowsID, OA), new NodeContext(empInfoTableID, OA));
+        graph.assign(new NodeContext(colsID, OA), new NodeContext(empInfoTableID, OA));
 
         //create column nodes
-        long idID = graph.createNode(new Node(getID(), "id", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "pk", "true", "schema_comp", "column")));
-        graph.assign(idID, OA, colsID, OA);
-        long nameID = graph.createNode(new Node(getID(), "name", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
-        graph.assign(nameID, OA, colsID, OA);
-        long ssnID = graph.createNode(new Node(getID(), "ssn", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
-        graph.assign(ssnID, OA, colsID, OA);
-        long salaryID = graph.createNode(new Node(getID(), "salary", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
-        graph.assign(salaryID, OA, colsID, OA);
+        long idID = graph.createNode(new NodeContext(getID(), "id", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "pk", "true", "schema_comp", "column")));
+        graph.assign(new NodeContext(idID, OA), new NodeContext(colsID, OA));
+        long nameID = graph.createNode(new NodeContext(getID(), "name", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
+        graph.assign(new NodeContext(nameID, OA), new NodeContext(colsID, OA));
+        long ssnID = graph.createNode(new NodeContext(getID(), "ssn", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
+        graph.assign(new NodeContext(ssnID, OA), new NodeContext(colsID, OA));
+        long salaryID = graph.createNode(new NodeContext(getID(), "salary", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO, "schema_comp", "column")));
+        graph.assign(new NodeContext(salaryID, OA), new NodeContext(colsID, OA));
 
 
         List<Long> group1Records = new ArrayList<>();
         List<Long> group2Records = new ArrayList<>();
 
         //bob row
-        long bobInfoID = graph.createNode(new Node(getID(), "1", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(bobInfoID, OA, rowsID, OA);
+        long bobInfoID = graph.createNode(new NodeContext(getID(), "1", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(bobInfoID, OA), new NodeContext(rowsID, OA));
         group1Records.add(bobInfoID);
-        long oID = graph.createNode(new Node(getID(), "bob_id", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, bobInfoID, OA);
-        graph.assign(oID, O, idID, OA);
-        oID = graph.createNode(new Node(getID(), "bob_name", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, bobInfoID, OA);
-        graph.assign(oID, O, nameID, OA);
-        oID = graph.createNode(new Node(getID(), "bob_ssn", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, bobInfoID, OA);
-        graph.assign(oID, O, ssnID, OA);
-        oID = graph.createNode(new Node(getID(), "bob_salary", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, bobInfoID, OA);
-        graph.assign(oID, O, salaryID, OA);
+        long bob_id = graph.createNode(new NodeContext(getID(), "bob_id", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(bob_id, O), new NodeContext(bobInfoID, OA));
+        graph.assign(new NodeContext(bob_id, O), new NodeContext(idID, OA));
+        long bob_name = graph.createNode(new NodeContext(getID(), "bob_name", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(bob_name, O), new NodeContext(bobInfoID, OA));
+        graph.assign(new NodeContext(bob_name, O), new NodeContext(nameID, OA));
+        long bob_ssn = graph.createNode(new NodeContext(getID(), "bob_ssn", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(bob_ssn, O), new NodeContext(bobInfoID, OA));
+        graph.assign(new NodeContext(bob_ssn, O), new NodeContext(ssnID, OA));
+        long bob_salary = graph.createNode(new NodeContext(getID(), "bob_salary", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(bob_salary, O), new NodeContext(bobInfoID, OA));
+        graph.assign(new NodeContext(bob_salary, O), new NodeContext(salaryID, OA));
 
         //alice row
-        long aliceInfoID = graph.createNode(new Node(getID(), "2", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(aliceInfoID, OA, rowsID, OA);
+        long aliceInfoID = graph.createNode(new NodeContext(getID(), "2", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(aliceInfoID, OA), new NodeContext(rowsID, OA));
         group2Records.add(aliceInfoID);
-        oID = graph.createNode(new Node(getID(), "alice_id", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, aliceInfoID, OA);
-        graph.assign(oID, O, idID, OA);
-        oID = graph.createNode(new Node(getID(), "alice_name", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, aliceInfoID, OA);
-        graph.assign(oID, O, nameID, OA);
-        oID = graph.createNode(new Node(getID(), "alice_ssn", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, aliceInfoID, OA);
-        graph.assign(oID, O, ssnID, OA);
-        oID = graph.createNode(new Node(getID(), "alice_salary", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, aliceInfoID, OA);
-        graph.assign(oID, O, salaryID, OA);
+        long alice_id = graph.createNode(new NodeContext(getID(), "alice_id", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(alice_id, O), new NodeContext(aliceInfoID, OA));
+        graph.assign(new NodeContext(alice_id, O), new NodeContext(idID, OA));
+        long alice_name = graph.createNode(new NodeContext(getID(), "alice_name", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(alice_name, O), new NodeContext(aliceInfoID, OA));
+        graph.assign(new NodeContext(alice_name, O), new NodeContext(nameID, OA));
+        long alice_ssn = graph.createNode(new NodeContext(getID(), "alice_ssn", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(alice_ssn, O), new NodeContext(aliceInfoID, OA));
+        graph.assign(new NodeContext(alice_ssn, O), new NodeContext(ssnID, OA));
+        long alice_salary = graph.createNode(new NodeContext(getID(), "alice_salary", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(alice_salary, O), new NodeContext(aliceInfoID, OA));
+        graph.assign(new NodeContext(alice_salary, O), new NodeContext(salaryID, OA));
 
         //charlie row
-        long charlieInfoID = graph.createNode(new Node(getID(), "3", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(charlieInfoID, OA, rowsID, OA);
-        oID = graph.createNode(new Node(getID(), "charlie_id", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, charlieInfoID, OA);
-        graph.assign(oID, O, idID, OA);
-        oID = graph.createNode(new Node(getID(), "charlie_name", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, charlieInfoID, OA);
-        graph.assign(oID, O, nameID, OA);
-        oID = graph.createNode(new Node(getID(), "charlie_ssn", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, charlieInfoID, OA);
-        graph.assign(oID, O, ssnID, OA);
-        oID = graph.createNode(new Node(getID(), "charlie_salary", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, charlieInfoID, OA);
-        graph.assign(oID, O, salaryID, OA);
+        long charlieInfoID = graph.createNode(new NodeContext(getID(), "3", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(charlieInfoID, OA), new NodeContext(rowsID, OA));
+        long charlie_id = graph.createNode(new NodeContext(getID(), "charlie_id", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(charlie_id, O), new NodeContext(charlieInfoID, OA));
+        graph.assign(new NodeContext(charlie_id, O), new NodeContext(idID, OA));
+        long charlie_name = graph.createNode(new NodeContext(getID(), "charlie_name", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(charlie_name, O), new NodeContext(charlieInfoID, OA));
+        graph.assign(new NodeContext(charlie_name, O), new NodeContext(nameID, OA));
+        long charlie_ssn = graph.createNode(new NodeContext(getID(), "charlie_ssn", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(charlie_ssn, O), new NodeContext(charlieInfoID, OA));
+        graph.assign(new NodeContext(charlie_ssn, O), new NodeContext(ssnID, OA));
+        long charlie_salary = graph.createNode(new NodeContext(getID(), "charlie_salary", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(charlie_salary, O), new NodeContext(charlieInfoID, OA));
+        graph.assign(new NodeContext(charlie_salary, O), new NodeContext(salaryID, OA));
 
         //dave row
-        long daveInfoID = graph.createNode(new Node(getID(), "4", OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(daveInfoID, OA, rowsID, OA);
+        long daveInfoID = graph.createNode(new NodeContext(getID(), "4", OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(daveInfoID, OA), new NodeContext(rowsID, OA));
         group1Records.add(daveInfoID);
-        oID = graph.createNode(new Node(getID(), "dave_id", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, daveInfoID, OA);
-        graph.assign(oID, O, idID, OA);
-        oID = graph.createNode(new Node(getID(), "dave_name", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, daveInfoID, OA);
-        graph.assign(oID, O, nameID, OA);
-        oID = graph.createNode(new Node(getID(), "dave_ssn", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, daveInfoID, OA);
-        graph.assign(oID, O, ssnID, OA);
-        oID = graph.createNode(new Node(getID(), "dave_salary", O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-        graph.assign(oID, O, daveInfoID, OA);
-        graph.assign(oID, O, salaryID, OA);
+        long dave_id = graph.createNode(new NodeContext(getID(), "dave_id", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(dave_id, O), new NodeContext(daveInfoID, OA));
+        graph.assign(new NodeContext(dave_id, O), new NodeContext(idID, OA));
+        long dave_name = graph.createNode(new NodeContext(getID(), "dave_name", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(dave_name, O), new NodeContext(daveInfoID, OA));
+        graph.assign(new NodeContext(dave_name, O), new NodeContext(nameID, OA));
+        long dave_ssn = graph.createNode(new NodeContext(getID(), "dave_ssn", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(dave_ssn, O), new NodeContext(daveInfoID, OA));
+        graph.assign(new NodeContext(dave_ssn, O), new NodeContext(ssnID, OA));
+        long dave_salary = graph.createNode(new NodeContext(getID(), "dave_salary", O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+        graph.assign(new NodeContext(dave_salary, O), new NodeContext(daveInfoID, OA));
+        graph.assign(new NodeContext(dave_salary, O), new NodeContext(salaryID, OA));
+
+        pcID = graph.createNode(new NodeContext(getID(), "ndac", PC, null));
+
+        long grp1SalID = graph.createNode(new NodeContext(getID(), "Grp1Sal", OA, null));
+        long grp2SalID = graph.createNode(new NodeContext(getID(), "Grp2Sal", OA, null));
+        graph.assign(new NodeContext(grp1SalID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(grp2SalID, OA), new NodeContext(pcID, PC));
+
+        // assign users' salaries
+        graph.assign(new NodeContext(bob_salary, O), new NodeContext(grp1SalID, OA));
+        graph.assign(new NodeContext(dave_salary, O), new NodeContext(grp1SalID, OA));
+        graph.assign(new NodeContext(alice_salary, O), new NodeContext(grp2SalID, OA));
 
         for (int i = 1; i <= numEmployees; i++) {
             System.out.println(String.valueOf(i + 4));
-            long empID = graph.createNode(new Node(getID(), String.valueOf(i + 4), OA, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-            graph.assign(empID, OA, rowsID, OA);
-            oID = graph.createNode(new Node(getID(), String.format("emp_%d_id", empID), O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-            graph.assign(oID, O, empID, OA);
-            graph.assign(oID, O, idID, OA);
-            oID = graph.createNode(new Node(getID(), String.format("emp_%d_name", empID), O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-            graph.assign(oID, O, empID, OA);
-            graph.assign(oID, O, nameID, OA);
-            oID = graph.createNode(new Node(getID(), String.format("emp_%d_ssn", empID), O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-            graph.assign(oID, O, empID, OA);
-            graph.assign(oID, O, ssnID, OA);
-            oID = graph.createNode(new Node(getID(), String.format("emp_%d_salary", empID), O, Node.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
-            graph.assign(oID, O, empID, OA);
-            graph.assign(oID, O, salaryID, OA);
+            long empID = graph.createNode(new NodeContext(getID(), String.valueOf(i + 4), OA, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+            graph.assign(new NodeContext(empID, OA), new NodeContext(rowsID, OA));
+            long oID = graph.createNode(new NodeContext(getID(), String.format("emp_%d_id", empID), O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+            graph.assign(new NodeContext(oID, O), new NodeContext(empID, OA));
+            graph.assign(new NodeContext(oID, O), new NodeContext(idID, OA));
+            oID = graph.createNode(new NodeContext(getID(), String.format("emp_%d_name", empID), O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+            graph.assign(new NodeContext(oID, O), new NodeContext(empID, OA));
+            graph.assign(new NodeContext(oID, O), new NodeContext(nameID, OA));
+            oID = graph.createNode(new NodeContext(getID(), String.format("emp_%d_ssn", empID), O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+            graph.assign(new NodeContext(oID, O), new NodeContext(empID, OA));
+            graph.assign(new NodeContext(oID, O), new NodeContext(ssnID, OA));
+            oID = graph.createNode(new NodeContext(getID(), String.format("emp_%d_salary", empID), O, NodeUtils.toProperties(NAMESPACE_PROPERTY, EMPLOYEE_INFO)));
+            graph.assign(new NodeContext(oID, O), new NodeContext(empID, OA));
+            graph.assign(new NodeContext(oID, O), new NodeContext(salaryID, OA));
 
             if(i%2 == 0) {
                 group1Records.add(empID);
+                graph.assign(new NodeContext(oID, OA), new NodeContext(grp1SalID, OA));
             } else {
                 group2Records.add(empID);
+                graph.assign(new NodeContext(oID, OA), new NodeContext(grp2SalID, OA));
             }
         }
 
+        // user attributes
+        long hrID = graph.createNode(new NodeContext(getID(), "HR", UA, null));
+        long grp1MgrID = graph.createNode(new NodeContext(getID(), "Grp1Mgr", UA, null));
+        long grp2MgrID = graph.createNode(new NodeContext(getID(), "Grp2Mgr", UA, null));
+        long staffID = graph.createNode(new NodeContext(getID(), "Staff", UA, null));
+        long bobUAID = graph.createNode(new NodeContext(getID(), "Bob", UA, null));
+        long aliceUAID = graph.createNode(new NodeContext(getID(), "Alice", UA, null));
+        long daveUAID = graph.createNode(new NodeContext(getID(), "Dave", UA, null));
+        long charlieUAID = graph.createNode(new NodeContext(getID(), "Charlie", UA, null));
+
+        // assign oas to pc
+        graph.assign(new NodeContext(salaryID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(ssnID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(grp1SalID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(grp2SalID, OA), new NodeContext(pcID, PC));
+
         System.out.println("creating users");
         //create users
-        long bobID = graph.createNode(new Node(getID(), "bob", U, null));
-        long aliceID = graph.createNode(new Node(getID(), "alice", U, null));
-        long daveID = graph.createNode(new Node(getID(), "dave", U, null));
-        long charlieID = graph.createNode(new Node(getID(), "charlie", U, null));
+        long bobID = graph.createNode(new NodeContext(getID(), "bob", U, null));
+        long aliceID = graph.createNode(new NodeContext(getID(), "alice", U, null));
+        long daveID = graph.createNode(new NodeContext(getID(), "dave", U, null));
+        long charlieID = graph.createNode(new NodeContext(getID(), "charlie", U, null));
 
-        long usersID = graph.createNode(new Node(getID(), "users", UA, null));
-        graph.assign(bobID, U, usersID, UA);
-        graph.assign(aliceID, U, usersID, UA);
-        graph.assign(daveID, U, usersID, UA);
-        graph.assign(charlieID, U, usersID, UA);
+        long usersID = graph.createNode(new NodeContext(getID(), "users", UA, null));
+        graph.assign(new NodeContext(bobID, U), new NodeContext(usersID, UA));
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(usersID, UA));
+        graph.assign(new NodeContext(daveID, U), new NodeContext(usersID, UA));
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(usersID, UA));
 
-        graph.assign(usersID, UA, pcID, PC);
+        graph.assign(new NodeContext(usersID, UA), new NodeContext(pcID, PC));
 
-        graph.associate(usersID, baseID, OA, new HashSet<>(Arrays.asList("read")));
+        graph.associate(new NodeContext(usersID, UA), new NodeContext(baseID, OA), new HashSet<>(Arrays.asList("read")));
 
-        System.out.println("configuring RBAC");
+        //hr
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(hrID, UA));
+        graph.associate(new NodeContext(hrID, UA), new NodeContext(ssnID, OA), new HashSet<>(Arrays.asList("read", "write")));
+        graph.associate(new NodeContext(hrID, UA), new NodeContext(salaryID, OA), new HashSet<>(Arrays.asList("read", "write")));
+
+        //Grp1Mgr
+        graph.assign(new NodeContext(bobID, U), new NodeContext(grp1MgrID, UA));
+        graph.associate(new NodeContext(grp1MgrID, UA), new NodeContext(grp1SalID, OA), new HashSet<>(Arrays.asList("read")));
+        //Grp2Mgr
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(grp2MgrID, UA));
+        graph.associate(new NodeContext(grp2MgrID, UA), new NodeContext(grp2SalID, OA), new HashSet<>(Arrays.asList("read")));
+
+        //staff
+        graph.assign(new NodeContext(bobID, U), new NodeContext(staffID, UA));
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(staffID, UA));
+        graph.assign(new NodeContext(daveID, U), new NodeContext(staffID, UA));
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(staffID, UA));
+        // assign name column to public container
+        long publicID = graph.createNode(new NodeContext(getID(), "Public", OA, null));
+        graph.assign(new NodeContext(publicID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(nameID, OA), new NodeContext(publicID, OA));
+
+        graph.associate(new NodeContext(staffID, UA), new NodeContext(publicID, OA), new HashSet<>(Arrays.asList("read")));
+
+        //bob
+        graph.assign(new NodeContext(bobID, U), new NodeContext(bobUAID, UA));
+        graph.assign(new NodeContext(bobInfoID, OA), new NodeContext(pcID, PC));
+        graph.associate(new NodeContext(bobUAID, UA), new NodeContext(bobInfoID, OA), new HashSet<>(Arrays.asList("read", "write")));
+        //alice
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(aliceUAID, UA));
+        graph.assign(new NodeContext(aliceInfoID, OA), new NodeContext(pcID, PC));
+        graph.associate(new NodeContext(aliceUAID, UA), new NodeContext(aliceInfoID, OA), new HashSet<>(Arrays.asList("read", "write")));
+        //dave
+        graph.assign(new NodeContext(daveID, U), new NodeContext(daveUAID, UA));
+        graph.assign(new NodeContext(daveInfoID, OA), new NodeContext(pcID, PC));
+        graph.associate(new NodeContext(daveUAID, UA), new NodeContext(daveInfoID, OA), new HashSet<>(Arrays.asList("read", "write")));
+        //charlie
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(charlieUAID, UA));
+        graph.assign(new NodeContext(charlieInfoID, OA), new NodeContext(pcID, PC));
+        graph.associate(new NodeContext(charlieUAID, UA), new NodeContext(charlieInfoID, OA), new HashSet<>(Arrays.asList("read", "write")));
+
+        /*System.out.println("configuring RBAC");
         System.out.println(group1Records);
         System.out.println(group2Records);
 
         //rbac
-        pcID = graph.createNode(new Node(getID(), "RBAC", PC, null));
+        pcID = graph.createNode(new NodeContext(getID(), "RBAC", PC, null));
         //records
-        long empRecID = graph.createNode(new Node(getID(), "records", OA, null));
-        graph.assign(empRecID, OA, pcID, PC);
+        long empRecID = graph.createNode(new NodeContext(getID(), "records", OA, null));
+        graph.assign(new NodeContext(empRecID, OA), new NodeContext(pcID, PC));
         //group 1 records
-        long group1ID = graph.createNode(new Node(getID(), "group 1 records", OA, null));
-        graph.assign(group1ID, OA, empRecID, OA);
+        long group1ID = graph.createNode(new NodeContext(getID(), "group 1 records", OA, null));
+        graph.assign(new NodeContext(group1ID, OA), new NodeContext(empRecID, OA));
         for(long recID : group1Records) {
-            graph.assign(recID, OA, group1ID, OA);
+            graph.assign(new NodeContext(recID, OA), new NodeContext(group1ID, OA));
         }
         //group 2 records
-        long group2ID = graph.createNode(new Node(getID(), "group 2 records", OA, null));
-        graph.assign(group2ID, OA, empRecID, OA);
+        long group2ID = graph.createNode(new NodeContext(getID(), "group 2 records", OA, null));
+        graph.assign(new NodeContext(group2ID, OA), new NodeContext(empRecID, OA));
         for(long recID : group2Records) {
-            graph.assign(recID, OA, group2ID, OA);
+            graph.assign(new NodeContext(recID, OA), new NodeContext(group2ID, OA));
         }
-        long hrID = graph.createNode(new Node(getID(), "hr records", OA, null));
-        graph.assign(hrID, OA, empRecID, OA);
-        graph.assign(charlieInfoID, OA, hrID, OA);
+        long hrID = graph.createNode(new NodeContext(getID(), "hr records", OA, null));
+        graph.assign(new NodeContext(hrID, OA), new NodeContext(empRecID, OA));
+        graph.assign(new NodeContext(charlieInfoID, OA), new NodeContext(hrID, OA));
 
         // group uas
-        long empsID = graph.createNode(new Node(getID(), "employees", UA, null));
-        graph.assign(empsID, UA, pcID, PC);
-        long grp1UA = graph.createNode(new Node(getID(), "grp1", UA, null));
-        long grp2UA = graph.createNode(new Node(getID(), "grp2", UA, null));
-        long hrUAID = graph.createNode(new Node(getID(), "hr", UA, null));
-        graph.assign(hrUAID, UA, empsID, UA);
-        graph.assign(grp1UA, UA, empsID, UA);
-        graph.assign(grp2UA, UA, empsID, UA);
+        long empsID = graph.createNode(new NodeContext(getID(), "employees", UA, null));
+        graph.assign(new NodeContext(empsID, UA), new NodeContext(pcID, PC));
+        long grp1UA = graph.createNode(new NodeContext(getID(), "grp1", UA, null));
+        long grp2UA = graph.createNode(new NodeContext(getID(), "grp2", UA, null));
+        long hrUAID = graph.createNode(new NodeContext(getID(), "hr", UA, null));
+        graph.assign(new NodeContext(hrUAID, UA), new NodeContext(empsID, UA));
+        graph.assign(new NodeContext(grp1UA, UA), new NodeContext(empsID, UA));
+        graph.assign(new NodeContext(grp2UA, UA), new NodeContext(empsID, UA));
 
-        graph.assign(bobID, U, grp1UA, UA);
-        graph.assign(aliceID, U, grp2UA, UA);
-        graph.assign(charlieID, U, hrUAID, UA);
-        graph.assign(daveID, U, grp1UA, UA);
+        graph.assign(new NodeContext(bobID, U), new NodeContext(grp1UA, UA));
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(grp2UA, UA));
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(hrUAID, UA));
+        graph.assign(new NodeContext(daveID, U), new NodeContext(grp1UA, UA));
 
-        graph.associate(grp1UA, group1ID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.associate(grp2UA, group2ID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.associate(hrUAID, empRecID, OA, new HashSet<>(Arrays.asList("read")));
+        graph.associate(new NodeContext(grp1UA, UA), new NodeContext(group1ID, OA), "read")));
+        graph.associate(new NodeContext(grp2UA, UA), new NodeContext(group2ID, OA), "read")));
+        graph.associate(new NodeContext(hrUAID, UA), new NodeContext(empRecID, OA), "read")));
 
-        //DAC
-        pcID = graph.createNode(new Node(getID(), "DAC", PC, null));
         //homes
-        long bobHomeID = graph.createNode(new Node(getID(), "bob home", OA, null));
-        long aliceHomeID = graph.createNode(new Node(getID(), "alice home", OA, null));
-        long daveHomeID = graph.createNode(new Node(getID(), "dave home", OA, null));
-        long charlieHomeID = graph.createNode(new Node(getID(), "charlie home", OA, null));
-        graph.assign(bobHomeID, OA, pcID, PC);
-        graph.assign(aliceHomeID, OA, pcID, PC);
-        graph.assign(daveHomeID, OA, pcID, PC);
-        graph.assign(charlieHomeID, OA, pcID, PC);
+        long bobHomeID = graph.createNode(new NodeContext(getID(), "bob home", OA, null));
+        long aliceHomeID = graph.createNode(new NodeContext(getID(), "alice home", OA, null));
+        long daveHomeID = graph.createNode(new NodeContext(getID(), "dave home", OA, null));
+        long charlieHomeID = graph.createNode(new NodeContext(getID(), "charlie home", OA, null));
+        graph.assign(new NodeContext(bobHomeID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(aliceHomeID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(daveHomeID, OA), new NodeContext(pcID, PC));
+        graph.assign(new NodeContext(charlieHomeID, OA), new NodeContext(pcID, PC));
 
-        graph.assign(group1ID, OA, bobHomeID, OA);
-        graph.assign(group2ID, OA, aliceHomeID, OA);
-        graph.assign(empRecID, OA, charlieHomeID, OA);
-        graph.assign(daveInfoID, OA, daveHomeID, OA);
+        graph.assign(new NodeContext(group1ID, OA), new NodeContext(bobHomeID, OA));
+        graph.assign(new NodeContext(group2ID, OA), new NodeContext(aliceHomeID, OA));
+        graph.assign(new NodeContext(empRecID, OA), new NodeContext(charlieHomeID, OA));
+        graph.assign(new NodeContext(daveInfoID, OA), new NodeContext(daveHomeID, OA));
 
-        long uaID = graph.createNode(new Node(getID(), "Bob", UA, null));
-        graph.assign(bobID, U, uaID, UA);
-        graph.associate(uaID, bobHomeID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.assign(group1ID, OA, bobHomeID, OA);
+        long uaID = graph.createNode(new NodeContext(getID(), "Bob", UA, null));
+        graph.assign(new NodeContext(bobID, U), new NodeContext(uaID, UA));
+        graph.associate(new NodeContext(uaID, UA), new NodeContext(bobHomeID, OA), "read")));
+        //graph.assign(new NodeContext(group1ID, OA, bobHomeID, OA));
 
-        uaID = graph.createNode(new Node(getID(), "Alice", UA, null));
-        graph.assign(aliceID, U, uaID, UA);
-        graph.associate(uaID, aliceHomeID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.assign(group2ID, OA, aliceHomeID, OA);
+        uaID = graph.createNode(new NodeContext(getID(), "Alice", UA, null));
+        graph.assign(new NodeContext(aliceID, U), new NodeContext(uaID, UA));
+        graph.associate(new NodeContext(uaID, UA), new NodeContext(aliceHomeID, OA), "read")));
+        //graph.assign(new NodeContext(group2ID, OA, aliceHomeID, OA));
 
-        uaID = graph.createNode(new Node(getID(), "Dave", UA, null));
-        graph.assign(daveID, U, uaID, UA);
-        graph.associate(uaID, daveHomeID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.assign(daveInfoID, OA, daveHomeID, OA);
+        uaID = graph.createNode(new NodeContext(getID(), "Dave", UA, null));
+        graph.assign(new NodeContext(daveID, U), new NodeContext(uaID, UA));
+        graph.associate(new NodeContext(uaID, UA), new NodeContext(daveHomeID, OA), "read")));
+        graph.assign(new NodeContext(daveInfoID, OA), new NodeContext(daveHomeID, OA));
 
-        uaID = graph.createNode(new Node(getID(), "Charlie", UA, null));
-        graph.assign(charlieID, U, uaID, UA);
-        graph.associate(uaID, charlieHomeID, OA, new HashSet<>(Arrays.asList("read")));
-        graph.assign(empRecID, OA, charlieHomeID, OA);
-
+        uaID = graph.createNode(new NodeContext(getID(), "Charlie", UA, null));
+        graph.assign(new NodeContext(charlieID, U), new NodeContext(uaID, UA));
+        graph.associate(new NodeContext(uaID, UA), new NodeContext(charlieHomeID, OA), "read")));
+        //graph.assign(new NodeContext(empRecID, OA, charlieHomeID, OA));
+*/
         List<Prohibition> prohibitions = new ArrayList<>();
         //uncomment the below code to add prohibitions
         //prohibitions
@@ -405,7 +452,7 @@ public class NDACResource {
         prohibition.setName("bob_deny_ssn");
         prohibition.setSubject(new ProhibitionSubject(bobID, ProhibitionSubjectType.U));
         prohibition.setIntersection(true);
-        prohibition.setOperations(new HashSet<>(Arrays.asList("read")));
+        prohibition.setOperations("read")));
         prohibition.addNode(new ProhibitionNode(ssnID, false));
         prohibition.addNode(new ProhibitionNode(bobInfoID, true));
         prohibitions.add(prohibition);
@@ -414,7 +461,7 @@ public class NDACResource {
         prohibition.setName("alice_deny_ssn");
         prohibition.setSubject(new ProhibitionSubject(aliceID, ProhibitionSubjectType.U));
         prohibition.setIntersection(true);
-        prohibition.setOperations(new HashSet<>(Arrays.asList("read")));
+        prohibition.setOperations("read")));
         prohibition.addNode(new ProhibitionNode(ssnID, false));
         prohibition.addNode(new ProhibitionNode(aliceInfoID, true));
         prohibitions.add(prohibition);
@@ -424,7 +471,7 @@ public class NDACResource {
         prohibition.setName("dave_deny_ssn");
         prohibition.setSubject(new ProhibitionSubject(daveID, ProhibitionSubjectType.U));
         prohibition.setIntersection(true);
-        prohibition.setOperations(new HashSet<>(Arrays.asList("read")));
+        prohibition.setOperations("read")));
         prohibition.addNode(new ProhibitionNode(ssnID, false));
         prohibition.addNode(new ProhibitionNode(daveInfoID, true));
         prohibitions.add(prohibition);
@@ -432,7 +479,7 @@ public class NDACResource {
         prohibition.setName("dave_deny_salary");
         prohibition.setSubject(new ProhibitionSubject(daveID, ProhibitionSubjectType.U));
         prohibition.setIntersection(true);
-        prohibition.setOperations(new HashSet<>(Arrays.asList("read")));
+        prohibition.setOperations("read")));
         prohibition.addNode(new ProhibitionNode(salaryID, false));
         prohibition.addNode(new ProhibitionNode(daveInfoID, true));
         prohibitions.add(prohibition);*/
@@ -447,15 +494,15 @@ public class NDACResource {
     }
 
     static class NGACContext {
-        MemGraph graph;
+        Graph graph;
         List<Prohibition> prohibitions;
 
-        public NGACContext(MemGraph graph, List<Prohibition> prohibitions) {
+        public NGACContext(Graph graph, List<Prohibition> prohibitions) {
             this.graph = graph;
             this.prohibitions = prohibitions;
         }
 
-        public MemGraph getGraph() {
+        public Graph getGraph() {
             return graph;
         }
 

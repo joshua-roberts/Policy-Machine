@@ -168,11 +168,11 @@
 <h3 id="example-1">Example 1</h3>
 <p>This is an example of building a simple graph, with one of each type of node. We will use the <code>listPermissions</code> function to compute all the permissions <code>u1</code> has on <code>o1</code>.</p>
 <pre><code class="java">// create a node for each type
-long pc1 = graph.createNode(new Node(1, &quot;pc1&quot;, PC, Node.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long oa1 = graph.createNode(new Node(2, &quot;oa1&quot;, OA, Node.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long o1 = graph.createNode(new Node(3, &quot;o1&quot;, O, Node.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long ua1 = graph.createNode(new Node(4, &quot;ua1&quot;, UA, Node.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long u1 = graph.createNode(new Node(5, &quot;u1&quot;, U, Node.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
+long pc1 = graph.createNode(new Node(1, &quot;pc1&quot;, PC, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
+long oa1 = graph.createNode(new Node(2, &quot;oa1&quot;, OA, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
+long o1 = graph.createNode(new Node(3, &quot;o1&quot;, O, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
+long ua1 = graph.createNode(new Node(4, &quot;ua1&quot;, UA, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
+long u1 = graph.createNode(new Node(5, &quot;u1&quot;, U, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
 
 // create assignments
 graph.assign(o1, O, oa1, OA);

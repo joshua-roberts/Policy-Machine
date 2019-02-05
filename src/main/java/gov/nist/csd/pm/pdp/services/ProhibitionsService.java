@@ -7,13 +7,13 @@ import gov.nist.csd.pm.pdp.engine.Decider;
 
 import java.util.List;
 
-import static gov.nist.csd.pm.common.constants.Operations.ANY_OPERATIONS;
+import static gov.nist.csd.pm.common.constants.Operations.CREATE_PROHIBITION;
 import static gov.nist.csd.pm.common.constants.Operations.PROHIBIT_SUBJECT;
 
 public class ProhibitionsService extends Service implements ProhibitionsDAO {
 
-    public ProhibitionsService(String sessionID, long processID) throws PMException {
-        super(sessionID, processID);
+    public ProhibitionsService(long userID, long processID) throws PMException {
+        super(userID, processID);
     }
 
     @Override
@@ -35,52 +35,50 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         }
 
         //check the user can create a prohibition on the subject and the nodes
-        Decider decider = newPolicyDecider();
+        Decider decider = getDecider();
         if(subject.getSubjectType().equals(ProhibitionSubjectType.U) || subject.getSubjectType().equals(ProhibitionSubjectType.UA)) {
             // first check that the subject exists
-            if(!getGraphMem().exists(subject.getSubjectID())) {
+            if(!getGraphPAP().exists(subject.getSubjectID())) {
                 throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
             }
-            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), subject.getSubjectID(), ANY_OPERATIONS)) {
+            if(!decider.hasPermissions(getUserID(), getProcessID(), subject.getSubjectID(), CREATE_PROHIBITION)) {
                 throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", subject.getSubjectID(), PROHIBIT_SUBJECT));
             }
         }
 
         for(ProhibitionNode node : nodes) {
-            if(!decider.hasPermissions(getSessionUserID(), getProcessID(), node.getID(), ANY_OPERATIONS)) {
+            if(!decider.hasPermissions(getUserID(), getProcessID(), node.getID(), CREATE_PROHIBITION)) {
                 throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", node.getID(), Operations.PROHIBIT_RESOURCE));
             }
         }
 
         //create prohibition in PAP
-        getProhibitionsDB().createProhibition(prohibition);
-        getProhibitionsMem().createProhibition(prohibition);
+        getProhibitionsPAP().createProhibition(prohibition);
     }
 
     @Override
     public List<Prohibition> getProhibitions() throws PMException {
-        return getProhibitionsMem().getProhibitions();
+        return getProhibitionsPAP().getProhibitions();
     }
 
     @Override
     public Prohibition getProhibition(String prohibitionName) throws PMException {
-        List<Prohibition> prohibitions = getProhibitions();
-        for(Prohibition prohibition : prohibitions) {
-            if(prohibition.getName().equals(prohibitionName)) {
-                return prohibition;
-            }
+        Prohibition prohibition = getProhibitionsPAP().getProhibition(prohibitionName);
+        if(prohibition == null) {
+            throw new PMException(Errors.ERR_PROHIBITION_DOES_NOT_EXIST, String.format("prohibition with the name %s does not exist", prohibitionName));
         }
-        throw new PMException(Errors.ERR_PROHIBITION_DOES_NOT_EXIST, String.format("prohibition with the name %s does not exist", prohibitionName));
+
+        return prohibition;
     }
 
     @Override
     public void updateProhibition(Prohibition prohibition) throws PMException {
+        // TODO need to check if the user has permission to update the prohibition.
         // delete the prohibition
         deleteProhibition(prohibition.getName());
 
         //create prohibition in PAP
-        getProhibitionsDB().updateProhibition(prohibition);
-        getProhibitionsMem().updateProhibition(prohibition);
+        createProhibition(prohibition);
     }
 
     @Override
@@ -89,7 +87,6 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         getProhibition(prohibitionName);
 
         //delete prohibition in PAP
-        getProhibitionsMem().deleteProhibition(prohibitionName);
-        getProhibitionsDB().deleteProhibition(prohibitionName);
+        getProhibitionsPAP().deleteProhibition(prohibitionName);
     }
 }

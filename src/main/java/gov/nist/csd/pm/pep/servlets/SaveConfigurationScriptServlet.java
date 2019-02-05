@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 public class SaveConfigurationScriptServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
@@ -21,6 +22,9 @@ public class SaveConfigurationScriptServlet extends HttpServlet {
             String configuration = service.save();
 
             String configName = request.getParameter("configName");
+            if(configName == null || configName.isEmpty()) {
+                configName = UUID.randomUUID().toString();
+            }
 
             response.setHeader("Content-Disposition", "attachment; filename=\"" + configName +".pm\"");
             response.setContentType("application/octet-stream");

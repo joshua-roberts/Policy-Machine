@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pdp.engine;
 
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.nodes.Node;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 
@@ -48,6 +48,8 @@ public class PReviewDecider implements Decider {
             return !permissions.isEmpty();
         } else if(permissions.contains(ALL_OPERATIONS)) {
             return true;
+        } else if(permissions.isEmpty()) {
+            return false;
         } else {
             return permissions.containsAll(permsToCheck);
         }
@@ -99,7 +101,7 @@ public class PReviewDecider implements Decider {
     }
 
     @Override
-    public HashSet<Node> filter(long userID, long processID, HashSet<Node> nodes, String... perms) {
+    public HashSet<NodeContext> filter(long userID, long processID, HashSet<NodeContext> nodes, String... perms) {
         nodes.removeIf((n) -> {
             try {
                 return !hasPermissions(userID, processID, n.getID(), perms);
@@ -112,8 +114,8 @@ public class PReviewDecider implements Decider {
     }
 
     @Override
-    public HashSet<Node> getChildren(long userID, long processID, long targetID, String... perms) throws PMException {
-        HashSet<Node> children = graph.getChildren(targetID);
+    public HashSet<NodeContext> getChildren(long userID, long processID, long targetID, String... perms) throws PMException {
+        HashSet<NodeContext> children = graph.getChildren(targetID);
         return filter(userID, processID, children, perms);
     }
 
@@ -129,9 +131,9 @@ public class PReviewDecider implements Decider {
         HashMap<Long, HashSet<String>> borderTargets = new HashMap<>();
 
         //get the parents of the user to start bfs on user side
-        HashSet<Node> parents = graph.getParents(userID);
+        HashSet<NodeContext> parents = graph.getParents(userID);
         while(!parents.isEmpty()){
-            Node parentNode = parents.iterator().next();
+            NodeContext parentNode = parents.iterator().next();
 
             //get the associations the current parent node is the source of
             HashMap<Long, HashSet<String>> assocs = graph.getSourceAssociations(parentNode.getID());
@@ -173,10 +175,10 @@ public class PReviewDecider implements Decider {
         //visit the current target node
         visitedNodes.put(targetID, new HashMap<>());
 
-        HashSet<Node> parents = graph.getParents(targetID);
+        HashSet<NodeContext> parents = graph.getParents(targetID);
 
         //iterate over the parents of the target node
-        for(Node parent : parents){
+        for(NodeContext parent : parents){
             //if the parent has not been visited yet, make recursive call to dfs on it
             if(!visitedNodes.containsKey(parent.getID())){
                 dfs(parent.getID(), visitedNodes, borderTargets);
@@ -227,9 +229,9 @@ public class PReviewDecider implements Decider {
             visitedNodes.put(pc, pcMap);
         }
 
-        HashSet<Node> objects = getAscendants(vNode);
+        HashSet<NodeContext> objects = getAscendants(vNode);
 
-        for(Node objectNode : objects){
+        for(NodeContext objectNode : objects){
             long objectID = objectNode.getID();
 
             // run dfs on the object
@@ -258,15 +260,15 @@ public class PReviewDecider implements Decider {
         return results;
     }
 
-    private HashSet<Node> getAscendants(Long vNode) throws PMException {
-        HashSet<Node> ascendants = new HashSet<>();
-        HashSet<Node> children = graph.getChildren(vNode);
+    private HashSet<NodeContext> getAscendants(Long vNode) throws PMException {
+        HashSet<NodeContext> ascendants = new HashSet<>();
+        HashSet<NodeContext> children = graph.getChildren(vNode);
         if(children.isEmpty()){
             return ascendants;
         }
 
         ascendants.addAll(children);
-        for(Node child : children){
+        for(NodeContext child : children){
             ascendants.addAll(getAscendants(child.getID()));
         }
 
@@ -275,10 +277,10 @@ public class PReviewDecider implements Decider {
 
 
     private synchronized long createVNode(HashMap<Long, HashSet<String>> dc) throws PMException {
-        Node vNode = new Node("VNODE", NodeType.OA);
+        NodeContext vNode = new NodeContext(new Random().nextLong(), "VNODE", NodeType.OA, null);
         long vNodeID = graph.createNode(vNode);
         for(long nodeID : dc.keySet()){
-            graph.assign(nodeID, NodeType.OA, vNode.getID(), NodeType.OA);
+            graph.assign(new NodeContext(nodeID, NodeType.OA), new NodeContext(vNode.getID(), NodeType.OA));
         }
         return vNodeID;
     }
