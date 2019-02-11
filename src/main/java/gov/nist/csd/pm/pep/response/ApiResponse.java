@@ -11,25 +11,15 @@ public class ApiResponse {
     private String  message;
     private Object  entity;
 
-    public static final String DELETE_ASSIGNMENT_SUCCESS      = "Assignment was successfully deleted";
-    public static final String POST_NODE_PROPERTY_SUCCESS     = "The property was successfully added to the node";
-    public static final String DELETE_NODE_PROPERTY_SUCCESS   = "The property was successfully deleted";
-    public static final String DELETE_NODE_CHILDREN_SUCESS    = "The children of the node were all deleted";
-    public static final String DELETE_ASSOCIATION_ASSOCIATION = "Successfully deleted Association";
-    public static final String CREATE_ASSIGNMENT_SUCCESS      = "Assignment was successfully created";
-    public static final String CREATE_ASSOCIATION_SUCCESS     = "Association was successfully created";
-    public static final String UPDATE_ASSOCIATION_SUCCESS     = "Successfully updated the association";
-    public static final String DELETE_NODE_SUCCESS            = "Node successfully deleted";
-    public static final String UPDATE_NODE_SUCCESS               = "Node was successfully updated";
-    public static final String CREATE_PROHIBITION_SUCCESS       = "The Prohibition was successfully created";
-    public static final String UPDATE_PROHIBITION_SUCCESS       = "The Prohibition was successfully updated";
-    public static final String DELETE_PROHIBITION_SUCCESS       = "Prohibition was deleted successfully";
-    public static final String ADD_PROHIBITION_RESOURCE_SUCCESS = "Resource was added to the prohibitions";
-    public static final String REMOVE_PROHIBITION_RESOURCE_SUCCESS  = "The resource was successfully removed from the prohibitions";
-    public static final String POST_PROHIBITION_SUBJECT_SUCCESS     = "The subject was successfully set for the prohibitions";
-    public static final String ADD_PROHIBITION_OPS_SUCCESS          = "The operations were successfully added to the prohibitions";
-    public static final String REMOVE_PROHIBITION_OP_SUCCESS        = "The operation was successfully removed from the prohibitions";
-    public static final String DELETE_NODE_IN_NAMESPACE_SUCCESS     = "The node was successfully deleted";
+    public static final String DELETE_ASSIGNMENT_SUCCESS      = "assignment deleted";
+    public static final String CREATE_ASSIGNMENT_SUCCESS      = "assignment created";
+    public static final String CREATE_ASSOCIATION_SUCCESS     = "association created";
+    public static final String UPDATE_ASSOCIATION_SUCCESS     = "association updated";
+    public static final String DELETE_NODE_SUCCESS            = "node deleted";
+    public static final String UPDATE_NODE_SUCCESS               = "node updated";
+    public static final String CREATE_PROHIBITION_SUCCESS       = "prohibition created";
+    public static final String UPDATE_PROHIBITION_SUCCESS       = "prohibition updated";
+    public static final String DELETE_PROHIBITION_SUCCESS       = "prohibition deleted";
     public static final String DELETE_SESSION_SUCCESS     = "Session was deleted";
 
     private static final String SUCCESS_MSG = "Success";

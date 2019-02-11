@@ -138,8 +138,8 @@ $ curl -X DELETE {host}:{port}/pm/api/sessions/{sessionID}
 ```json
 {
   "code": 9000,
-  "message": "success",
-  "entity": "session deleted"
+  "message": "session deleted",
+  "entity": "null"
 }
 ```
 ---
@@ -300,7 +300,7 @@ $ curl -X PUT {host}:{port}/pm/api/graph/nodes/12345?session={sessionID}
 {
   "name": "updated_name",
   "properties": {
-  "key3": "value3",
+    "key3": "value3"
   }
 }
 ```
@@ -308,7 +308,7 @@ $ curl -X PUT {host}:{port}/pm/api/graph/nodes/12345?session={sessionID}
 ```json
 {
   "code": 9000,
-  "message": "Node was successfully updated",
+  "message": "node updated",
   "entity": null
 }
 ```
@@ -332,7 +332,7 @@ $ curl -X DELETE {host}:{port}/pm/api/graph/nodes/12345?session={sessionID}
 ```json
 {
   "code": 9000,
-  "message": "Node successfully deleted",
+  "message": "node deleted",
   "entity": null
 }
 ```
@@ -424,14 +424,15 @@ OA | OA, PC
 UA | UA, PC
 O | OA
 u | UA
+
 ###### Endpoint
 `POST /pm/api/graph/{child}/assignments/{parent}`
 ###### Parameters
-Parameter | Required | Location | Description | Example
+Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session. |
-child | true | body | The ID of the child node and a martix parameter for the type. | 1234;type=OA
-parent | true | body | The ID of the parent node and a matrix parameter for the type. | 4321;type=OA
+child | true | path | The ID of the child node and a matrix parameter for the type.
+parent | true | path | The ID of the parent node and a matrix parameter for the type.
 
 ###### Example request
 ```curl
@@ -442,7 +443,7 @@ $ curl -X POST {host}:{port}/pm/api/graph/child;id=1234;type=OA/assignments/pare
 ```json
 {
   "code": 9000,
-  "message": "Assignment successfully created",
+  "message": "assignment created",
   "entity": null
 }
 ```
@@ -452,11 +453,11 @@ Delete an assignment between two nodes, as long as the calling user has permissi
 ###### Endpoint
 `DELETE /pm/api/graph/{childID}/assignments/{parentID}`
 ###### Parameters
-Parameter | Required | Location | Description | Example
+Parameter | Required | Location | Description
 ---|---|---|---
-session | true | query | The ID of the current session. |
-child | true | body | The ID of the child node and a martix parameter for the type. | child;id=1234;type=OA
-parent | true | body | The ID of the parent node and a matrix parameter for the type. | parent;id=4321;type=OA
+session | true | query | The ID of the current session.
+child | true | body | The ID of the child node and a martix parameter for the type.
+parent | true | body | The ID of the parent node and a matrix parameter for the type.
 
 ###### Example request
 ```curl
@@ -466,7 +467,7 @@ $ curl -X DELETE {host}:{port}/pm/api/graph/child;id=1234;type=OA/assignments/pa
 ```json
 {
   "code": 9000,
-  "message": "Assignment successfully deleted",
+  "message": "assignment deleted",
   "entity": null
 }
 ```
@@ -519,8 +520,8 @@ $ curl {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?sessi
 ```json
 {
   "operations": [
-  "read",
-  "write"
+    "read",
+    "write"
   ]
 }
 ```
@@ -528,37 +529,65 @@ $ curl {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?sessi
 ```json
 {
   "code": 9000,
-  "message": "Association successfully created",
+  "message": "association created",
   "entity": null
 }
 ```
 
 ### Update association
-
+Update an association between a user attribute and a target node. The existing operations will be overwritten by the operations provided in the request.
+If an association does not exist between the two nodes, one will be created.
 ###### Endpoint
-`GET /pm/api/graph/nodes`
+`PUT /pm/api/graph/{uaID}/associations/{target}`
 ###### Parameters
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
+uaID | true | path | The ID of the User Attribute.
+target | true | path | The target of the association.  The ID and Type are **required** matrix parameters.
+operations | false | body | The set of operations to give the association.
 
 ###### Example request
 ```curl
-$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
+$ curl -X PUT {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?session={sessionID}
+```
+###### Example request body
+```json
+{
+  "operations": [
+    "read"
+  ]
+}
 ```
 ###### Example response
+```json
+{
+  "code": 9000,
+  "message": "association updated",
+  "entity": null
+}
+```
 
 ### Delete association
-
+Delete an association between two nodes. If one does not exist, nothing will happen, and a success code will be returned.
 ###### Endpoint
-`GET /pm/api/graph/nodes`
+`DELETE /pm/api/graph/{uaID}/associations/{target}`
 ###### Parameters
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
+uaID | true | path | The ID of the User Attribute.
+target | true | path | The target of the association.  The ID and Type are **required** matrix parameters.
 
 ###### Example request
 ```curl
-$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
+$ curl -X DELETE {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?session={sessionID}
 ```
-#### Example response
+###### Example response
+```json
+{
+  "code": 9000,
+  "message": "association deleted",
+  "entity": null
+}
+```

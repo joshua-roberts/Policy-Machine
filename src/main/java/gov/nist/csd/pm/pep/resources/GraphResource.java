@@ -107,7 +107,7 @@ public class GraphResource {
         graphService.updateNode(new NodeContext().id(nodeID).name(request.getName()).properties(request.getProperties()));
         return ApiResponse.Builder
                 .success()
-                .entity(ApiResponse.UPDATE_NODE_SUCCESS)
+                .message(ApiResponse.UPDATE_NODE_SUCCESS)
                 .build();
     }
 
@@ -120,6 +120,7 @@ public class GraphResource {
         graphService.deleteNode(id);
         return ApiResponse.Builder
                 .success()
+                .message(ApiResponse.DELETE_NODE_SUCCESS)
                 .build();
     }
 
