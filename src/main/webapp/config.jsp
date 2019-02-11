@@ -29,29 +29,6 @@
     </script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Policy Machine</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarColor01">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="config.jsp">Server Configuration</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="userguide.jsp">User Guide</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="doc.jsp">Documentation</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">About</a>
-            </li>
-        </ul>
-    </div>
-</nav>
 <div id="messageDiv" style="display: <%= request.getParameter("display") != null ? request.getParameter("display") : "none" %>">
     <div class="alert alert-dismissible alert-<%= request.getParameter("result") %>">
         <button type="button" class="close" data-dismiss="alert" onclick="document.getElementById('messageDiv').style.display='none'">&times;</button>
@@ -76,7 +53,7 @@
                     </div>
                     <div class="form-group col-lg-6">
                         <label>Port</label>
-                        <input class="form-control" name="port" placeholder="Port" type="text" value="">
+                        <input class="form-control" name="port" placeholder="Port" type="text" value="7687">
                     </div>
                 </div>
                 <div class="row">
@@ -172,7 +149,7 @@
                 <fieldset>
                     <legend>Save</legend>
                     <p class="text-muted">Save the current policy configurations in the Policy Machine.</p>
-                    <div class="row">
+                    <div class="row" style="margin: 0">
                         <div class="form-group">
                             <input class="form-control" name="configName" placeholder="Configuration Name" type="text">
                         </div>

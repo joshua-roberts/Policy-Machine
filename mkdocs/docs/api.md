@@ -11,7 +11,7 @@ The Policy Machine REST API exposes a standard set of administrative NGAC comman
 3. **Policy Class assignments** - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
 ![alt text](images/pc.png "creating a policy class")
 
-## Deployment
+## Getting Started
 ### Run Docker Compose
 
 1. Build the war file by running `mvn clean package install` from the project root. This will create `pm.war` in the project's `/target/` directory.
@@ -55,6 +55,15 @@ The Compose file creates two linked containers.
 	    `./target/pm.war:/usr/local/tomcat/webapps/pm.war`
 	    to
 	    `//target/pm.war:/usr/local/tomcat/webapps/pm.war`
+
+### Connecting to a Database
+Upon starting the server for the first time, you must provide the database connection details to your desired database. Navigate to `/pm/config.jsp`, choose either Neo4j or Mysql and provide the connection parameters.  Once the connection is set, the details will be saved locally on the server and used anytime the server restarts.
+
+#### Notes on Neo4j
+If using docker-compose to run the Policy Machine server, the web application will recognize the neo4j service by the name `neo4j`.  Therefore, when setting the connection to the database, the host name should be `neo4j`.  Also, the bolt protocol is used so the port should be `7687`.
+
+#### Notes on MySQL
+The MySQL schema can be found at `pmsql.sql`.
 
 ## How to Use the API
 
