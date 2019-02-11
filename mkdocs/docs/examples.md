@@ -7,7 +7,7 @@ Below are examples on how to create a NGAC graph and query that graph for access
 
 The full code for this example can be found at `src/gov/nist/csd/pm/demos/standalone/BankTellerExample.java`
 
-**Example configuration summary**
+**Example configuration summary:**
 
 - Users: u1, u2
 - An object o1
