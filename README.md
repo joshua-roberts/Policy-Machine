@@ -17,4 +17,3 @@ The REST API provides tools to create NGAC aware applications but requires a cer
 2. Run `mvn package` from the project root.
 3. `pm.jar` will be created in /target/.  
 4. Add `pm.jar` to your classpath.
-Examples can be found below and in [examples](/examples/#standalone-examples)
