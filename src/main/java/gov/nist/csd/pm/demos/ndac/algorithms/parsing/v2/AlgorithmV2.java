@@ -85,6 +85,7 @@ public abstract class AlgorithmV2 {
                         public void visit(SelectExpressionItem selectExpressionItem) {
                             selectExpressionItem.getExpression().accept(new ExpressionVisitorAdapter(){
                                 public void visit(Column c){
+                                    System.out.println(">" + c);
                                     visitedColumns.add(c);
                                 }
                             });

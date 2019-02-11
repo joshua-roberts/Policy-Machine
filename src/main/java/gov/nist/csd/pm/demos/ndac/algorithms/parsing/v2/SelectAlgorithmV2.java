@@ -31,6 +31,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static gov.nist.csd.pm.common.constants.Operations.READ;
+import static gov.nist.csd.pm.common.constants.Properties.COLUMN_CONTAINER_NAME;
+import static gov.nist.csd.pm.common.constants.Properties.COLUMN_PROPERTY;
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 
 public class SelectAlgorithmV2 extends AlgorithmV2 {
@@ -102,8 +104,11 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
 
 
             List<String> keys = getKeys(tableName);
-            tableKeys.addAll(keys);
-            table.setKeys(keys);
+            for(String key : keys) {
+                String frmtKey = String.format("%s.%s", tableName, key);
+                tableKeys.add(frmtKey);
+                table.addKey(frmtKey);
+            }
 
             compositeTable.addTable(table);
         }
@@ -173,19 +178,17 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
 
         Hashtable<CompositeRow, List<Column>> results = new Hashtable<>();
 
-        long start1 = System.nanoTime();
         PReviewDecider decider = new PReviewDecider(ctx.getGraph(), ctx.getProhibitions());
+
+        long start = System.nanoTime();
         HashMap<Long, HashSet<String>> accessibleNodes = decider.getAccessibleNodes(ctx.getUserID());
-        System.out.println("time to get accessible nodes: " + (double)(System.nanoTime() - start1) / 1000000000 + " s");
+        System.out.println("getAccessileNodes = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
 
         BatchProhibitionDecider proDecider = new BatchProhibitionDecider(ctx.getGraph(), ctx.getProhibitions());
-        start1 = System.nanoTime();
         HashMap<Long, HashSet<String>> prohibitedPerms = proDecider.listProhibitedPermissions(ctx.getUserID(), accessibleNodes.keySet());
-        System.out.println("time to get prohibted ops on all targets: " + (double)(System.nanoTime() - start1) / 1000000000 + " s");
 
         HashMap<String, NodeContext> columnNodes = new HashMap<>();
         for (CompositeRow compositeRow : compositeRows) {
-            long start = System.nanoTime();
             List<Column> okColumns = new ArrayList<>();
             HashSet<Column> whereColumns = new HashSet<>();
             for(NDACRow row : compositeRow.getCompositeRow()) {
@@ -197,9 +200,15 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 HashSet<NodeContext> nodes = ctx.getSearch().search(row.getRowName(), NodeType.OA.toString(), props);
                 if(nodes.isEmpty()) {
                     throw new PMException(Errors.ERR_UNEXPECTED_NUMBER_OF_NODES,
-                            String.format("unexpected number of nodes with name %s and properties %s", row.getRowName(), props.toString()));
+                            String.format("unexpected number of nodes with name %s and properties %s: 0", row.getRowName(), props.toString()));
                 }
                 NodeContext rowNode = nodes.iterator().next();
+
+                HashSet<NodeContext> children = ctx.getGraph().getChildren(rowNode.getID());
+                HashMap<String, Long> childMap = new HashMap<>();
+                for(NodeContext child : children) {
+                    childMap.put(child.getProperties().get(COLUMN_PROPERTY), child.getID());
+                }
 
                 //iterate through the requested columns and find the intersection of the current row and current column
                 List<Column> columns = compositeTable.getTable(row.getTableName()).getColumns();
@@ -214,7 +223,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                     }
                     if (skip) continue;
 
-                    NodeContext columnNode = columnNodes.get(column.getColumnName());
+                    /*NodeContext columnNode = columnNodes.get(column.getColumnName());
                     if(columnNode == null) {
                         nodes = ctx.getSearch().search(column.getColumnName(), NodeType.OA.toString(), props);
                         if(nodes.isEmpty()) {
@@ -226,11 +235,13 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                     }
 
                     //if the intersection (an object) is in the accessible children add the COLUMN to a list
-                    //else if not in accChildren, check if its in where clause
-                    NodeContext inter = getIntersection(columnNode.getID(), rowNode.getID());
-                    if(inter != null) {
-                        HashSet<String> ops = accessibleNodes.get(inter.getID());
-                        HashSet<String> perms = prohibitedPerms.get(inter.getID());
+                    long s = System.nanoTime();
+                    NodeContext inter = getIntersection(columnNode.getID(), rowNode.getID());*/
+                    long interID = childMap.get(column.getColumnName());
+                    //System.out.println("getIntersection: " + (double)(System.nanoTime() - s) / 1000000000 + " s");
+                    if(interID != 0) {
+                        HashSet<String> ops = accessibleNodes.get(interID);
+                        HashSet<String> perms = prohibitedPerms.get(interID);
                         if(ops != null) {
                             if (perms != null) {
                                 ops.removeAll(perms);
@@ -247,6 +258,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 //  if whereColumn is in requested columns its already been visited
                 //  else check if its accessible
                 for (Column column : whereColumns) {
+                    System.out.println(column);
                     if(columnInList(compositeTable.getTable(row.getTableName()).getColumns(), column)){
                         NodeContext columnNode = columnNodes.get(column.getColumnName());
                         if(columnNode == null) {
@@ -261,16 +273,15 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
 
                         NodeContext inter = getIntersection(columnNode.getID(), rowNode.getID());
                         if(inter != null) {
-                            HashSet<String> ops = accessibleNodes.get(inter.getID());
-                            HashSet<String> perms = prohibitedPerms.get(inter.getID());
-                            if(ops != null) {
-                                if (perms != null) {
-                                    ops.removeAll(perms);
-                                }
-                                if(!ops.contains(READ)) {
-                                    okColumns.clear();
-                                    break;
-                                }
+                            // get the permissions for the current user on the intersection node
+                            HashSet<String> ops = accessibleNodes.getOrDefault(inter.getID(), new HashSet<>());
+                            // get any denied permissions
+                            HashSet<String> perms = prohibitedPerms.getOrDefault(inter.getID(), new HashSet<>());
+                            // remove any denied permissions
+                            ops.removeAll(perms);
+                            if(!ops.contains(READ)) {
+                                okColumns.clear();
+                                break;
                             }
                         }
                     }
@@ -281,7 +292,6 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 existingColumns.addAll(okColumns);
                 results.put(compositeRow, existingColumns);
             }
-            System.out.println("time for 1 composite row = " + (double)(System.nanoTime() - start) / 1000000000 + " s");
         }
 
         //Build the groups of rows based on accessible columns
@@ -430,6 +440,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
     }
 
     private void addToSet(HashSet<Column> columns, HashSet<Column> target) {
+        System.out.println("adding " + columns + " to " + target);
         if(target.isEmpty()){
             target.addAll(columns);
             return;
@@ -449,6 +460,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
                 target.add(column);
             }
         }
+        System.out.println("target: " + target);
     }
 
     private boolean columnInList(List<Column> columns, Column column) {

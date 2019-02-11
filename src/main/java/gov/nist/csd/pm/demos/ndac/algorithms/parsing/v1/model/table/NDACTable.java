@@ -53,6 +53,10 @@ public class NDACTable {
         this.keys = keys;
     }
 
+    public void addKey(String key) {
+        this.keys.add(key);
+    }
+
     public List<NDACRow> getRows() {
         return rows;
     }
