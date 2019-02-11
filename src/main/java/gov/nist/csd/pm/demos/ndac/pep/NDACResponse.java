@@ -4,7 +4,6 @@ import java.util.*;
 
 public class NDACResponse {
     List<NDACResult> results;
-    NDACAnalytics analytics;
 
     public NDACResponse(){
         results = new ArrayList<>();
@@ -25,15 +24,6 @@ public class NDACResponse {
     public void setResults(List<NDACResult> results) {
         this.results = results;
     }
-
-    public NDACAnalytics getAnalytics() {
-        return analytics;
-    }
-
-    public void setAnalytics(NDACAnalytics analytics) {
-        this.analytics = analytics;
-    }
-
 
     static class NDACResult {
         String user;
