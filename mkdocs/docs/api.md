@@ -5,14 +5,11 @@ The Policy Machine REST API exposes a standard set of administrative NGAC comman
 
 ## Important Notes
 
-1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well. 
-![alt text](super.png "super")
+1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
+![alt text](images/super.png "super")
 2. **Creating a Policy Class** - When creating a Policy Class we check if the requesting user has the permission "create a Policy Class" on the super object.
 3. **Policy Class assignments** - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
-![alt text](pc.png "creating a policy class")
-
-## Secure Communication
-The NGAC standard calls for secure communication between each component of the NGAC functional architecture.  We have omitted this in this implementation in order to make it easier to get started with NGAC and creating NGAC aware applications.
+![alt text](images/pc.png "creating a policy class")
 
 ## Deployment
 ### Run Docker Compose

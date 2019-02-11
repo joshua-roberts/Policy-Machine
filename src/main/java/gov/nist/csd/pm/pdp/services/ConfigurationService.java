@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
 
 
@@ -12,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;

@@ -11,7 +11,6 @@ import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubjectType;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
 import gov.nist.csd.pm.pap.graph.Neo4jGraph;
-import gov.nist.csd.pm.pap.loader.graph.DummyGraphLoader;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import gov.nist.csd.pm.pdp.engine.Decider;
 
@@ -66,7 +65,7 @@ public class StandaloneExample {
     public static void main(String[] args) {
         try {
             // run the example with an in memory graph
-            Graph graph = new MemGraph(new DummyGraphLoader());
+            Graph graph = new MemGraph();
 
             HashSet<String> operations = runExample(graph);
             System.out.println(operations);

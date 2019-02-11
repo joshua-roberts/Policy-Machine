@@ -227,7 +227,7 @@ public class GraphService extends Service implements Graph, Search {
         //delete the node in the PAP
         getGraphPAP().deleteNode(nodeID);
         // if there is a rep ID, delete the rep
-        if(repID == 0) {
+        if(repID != 0) {
             getGraphPAP().deleteNode(repID);
         }
     }

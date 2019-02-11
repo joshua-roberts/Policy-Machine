@@ -1,12 +1,13 @@
 package gov.nist.csd.pm.common.model.graph.nodes;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
 
 /**
  * Stores information needed for a node.
  */
-public class NodeContext {
+public class NodeContext implements Serializable {
     private long                    parentID;
     private long                    id;
     private String                  name;

@@ -34,4 +34,5 @@ public class Properties {
     public static final String SCHEMA_NAME_PROPERTY  = "schema";
     public static final String COLUMN_CONTAINER_NAME = "Columns";
     public static final String ROW_CONTAINER_NAME    = "Rows";
+    public static final String COLUMN_PROPERTY    = "column";
 }

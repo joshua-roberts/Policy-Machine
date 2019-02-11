@@ -4,6 +4,7 @@ import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -14,7 +15,7 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
  * This object represents an Association in a NGAC graph. An association is a relationship between two nodes,
  * similar to an assignment, except an Association has a set of operations included.
  */
-public class Association extends Relationship {
+public class Association extends Relationship implements Serializable {
     private HashSet<String> operations;
 
     public Association(long uaID, long targetID, HashSet<String> operations) {

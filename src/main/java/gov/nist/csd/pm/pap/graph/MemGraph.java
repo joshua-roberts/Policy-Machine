@@ -11,26 +11,30 @@ import gov.nist.csd.pm.pap.loader.graph.GraphLoader;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DirectedMultigraph;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static gov.nist.csd.pm.common.constants.Properties.DEFAULT_NAMESPACE;
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 
 /**
  * MemGraph is an in-memory implementation of the graph interface.  It stores the IDs of the nodes in a DAG structure.
  * And stores all other node information in a map for easy/fast retrieval.
  */
-public class MemGraph implements Graph {
+public class MemGraph implements Graph, Serializable {
 
     private DirectedGraph<Long, Relationship> graph;
     private HashSet<Long>                     pcs;
     private HashMap<Long, NodeContext>        nodes;
+    private HashMap<String, Long>             namespaceNames;
 
     public MemGraph(GraphLoader graphLoader) throws PMException {
         graph = new DirectedMultigraph<>(Relationship.class);
         nodes = new HashMap<>();
+        namespaceNames = new HashMap<>();
 
         //load the policies
         pcs = graphLoader.getPolicies();
@@ -56,11 +60,25 @@ public class MemGraph implements Graph {
     }
 
     /**
+     * Default constructor to create an empty graph in memory.
+     */
+    public MemGraph() {
+        graph = new DirectedMultigraph<>(Relationship.class);
+        nodes = new HashMap<>();
+        namespaceNames = new HashMap<>();
+        pcs = new HashSet<>();
+    }
+
+    /**
      * Getter for the underlying data structure containing all the nodes in the graph.
      * @return Map of all the nodes in the graph.
      */
     public HashMap<Long, NodeContext> getNodesMap() {
         return nodes;
+    }
+
+    public HashMap<String, Long> getNamespaceNames() {
+        return namespaceNames;
     }
 
     /**
@@ -69,6 +87,8 @@ public class MemGraph implements Graph {
      * @return The ID that was passed as part of the node parameter.
      * @throws PMException When the provided node is null.
      * @throws PMException When the provided node has an ID of 0.
+     * @throws PMException When the provided node has a null or empty name.
+     * @throws PMException When the provided node has a null type.
      */
     @Override
     public long createNode(NodeContext node) throws PMException {
@@ -77,6 +97,8 @@ public class MemGraph implements Graph {
             throw new PMException(Errors.ERR_NULL_NODE_CTX, "a null node was provided when creating a node in-memory");
         } else if(node.getID() == 0) {
             throw new PMException(Errors.ERR_NO_ID, "no ID was provided when creating a node in the in-memory graph");
+        } else if(node.getName() == null || node.getName().isEmpty()) {
+            throw new PMException(Errors.ERR_NULL_NAME, "no name was provided when creating a node in the in-memory graph");
         } else if(node.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided to the in memory graph when creating a node");
         }
@@ -89,11 +111,32 @@ public class MemGraph implements Graph {
             graph.addVertex(node.getID());
         }
 
+        // store the namespace:name -> id
+        addNamespaceName(node);
+
         //store the node in the map
         nodes.put(node.getID(), new NodeContext(node.getID(), node.getName(), node.getType(), node.getProperties()));
 
         //return the Node with the given info about the node
         return node.getID();
+    }
+
+    private void addNamespaceName(NodeContext node) {
+        String namespace = node.getProperties().get(NAMESPACE_PROPERTY);
+        String name = node.getName();
+        NodeType type = node.getType();
+        long id = node.getID();
+        if(namespace == null) {
+            namespace = DEFAULT_NAMESPACE;
+        }
+        this.namespaceNames.put(namespace + ":" + name + ":" + type, id);
+    }
+
+    private void removeNamespaceName(String namespace, String name, String type) {
+        if(namespace == null) {
+            namespace = "";
+        }
+        this.namespaceNames.remove(namespace + ":" + name + ":" + type);
     }
 
     @Override
@@ -103,12 +146,15 @@ public class MemGraph implements Graph {
 
     @Override
     public void deleteNode(long nodeID) {
+        NodeContext node = nodes.get(nodeID);
         //remove the vertex from the graph
         graph.removeVertex(nodeID);
         //remove the node from the policies if it is a policy class
         pcs.remove(nodeID);
         //remove the node from the map
         nodes.remove(nodeID);
+        //remove name from namespace
+        removeNamespaceName(node.getProperties().get(NAMESPACE_PROPERTY), node.getName(), node.getType().toString());
     }
 
     @Override

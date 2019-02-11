@@ -1,10 +1,12 @@
 package gov.nist.csd.pm.common.model.graph.relationships;
 
+import java.io.Serializable;
+
 /**
  * This class will serve as a parent class for Assignments and Associations.  Both types of relations have a source node
  * and a target node.
  */
-public class Relationship {
+public class Relationship implements Serializable {
     long sourceID;
     long targetID;
 

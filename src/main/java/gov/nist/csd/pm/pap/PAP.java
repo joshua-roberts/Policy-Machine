@@ -6,6 +6,7 @@ import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.GraphPAP;
@@ -115,8 +116,7 @@ public class PAP {
      * exist but should
      */
     private void checkMetadata() throws PMException {
-        HashMap<String, String> props = new HashMap<>();
-        props.put(NAMESPACE_PROPERTY, "super");
+        HashMap<String, String> props = NodeUtils.toProperties(NAMESPACE_PROPERTY, "super");
 
         HashSet<NodeContext> nodes = getGraphPAP().search("super_ua1", UA.toString(), props);
         if(nodes.isEmpty()) {

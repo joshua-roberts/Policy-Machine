@@ -2,8 +2,10 @@ site_name: Policy Machine
 nav:
   - Introduction: index.md
   - Getting Started: getting-started.md
+  - Javadoc: /javadoc/
   - REST API: api.md
-  - Demos: demos.md
+  - Examples: examples.md
+  - Links: links.md
 theme:
   name: 'rtd-dropdown'
 extra_css:

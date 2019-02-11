@@ -4,6 +4,7 @@ import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
@@ -11,7 +12,7 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 /**
  * This object represents an Assignment in a NGAC graph
  */
-public class Assignment extends Relationship {
+public class Assignment extends Relationship implements Serializable {
 
     public Assignment(long childID, long parentID) {
         super(childID, parentID);

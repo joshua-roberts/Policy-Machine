@@ -4,10 +4,7 @@ import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
 
@@ -33,6 +30,19 @@ public class MemGraphSearch implements Search {
     public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) {
         if(properties == null) {
             properties = new HashMap<>();
+        }
+
+        String namespace = properties.get(NAMESPACE_PROPERTY);
+        if((name != null && !name.isEmpty())
+                && (type != null && !type.isEmpty())
+                && (namespace != null && !namespace.isEmpty())) {
+            HashMap<String, Long> namespaceNames = memGraph.getNamespaceNames();
+            String namespaceStr = namespace + ":" + name + ":" + type;
+            Long id = namespaceNames.get(namespaceStr);
+            if(id != null) {
+                NodeContext node = getNode(id);
+                return new HashSet<>(Collections.singleton(node));
+            }
         }
 
         HashSet<NodeContext> results = new HashSet<>();
