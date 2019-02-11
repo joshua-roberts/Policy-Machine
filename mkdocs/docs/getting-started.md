@@ -1,6 +1,6 @@
 # Getting Started
 
-## Standalone Java Libraries
+## Standalone Java Library
 The REST API provides tools to create NGAC aware applications but requires a certain level of already developed infrastructure to really be useful.  If you are looking to just experiment with NGAC graphs and use cases, you can use the Policy Decision Point (PDP), Event Processing Point (EPP), and the Policy Access Point (PAP) packages to test different NGAC policy configurations in your own environments.
 
 ### Build Policy Machine JAR Library
@@ -9,7 +9,7 @@ The REST API provides tools to create NGAC aware applications but requires a cer
 2. Run `mvn package` from the project root.
 3. `pm.jar` will be created in /target/.  
 4. Add `pm.jar` to your classpath.
-Examples can be found below and in [demos](/demos/#standalone-examples)
+Examples can be found below and in [examples](/examples/#standalone-examples)
 
 ### Example
 This is an example of building a simple graph, with one of each type of node. We will use the `listPermissions` function to compute all the permissions `u1` has on `o1`.

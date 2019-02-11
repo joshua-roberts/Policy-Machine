@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Examples - Policy Machine</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Examples";
+    var mkdocs_page_input_path = "examples.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Policy Machine</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="tocbase current">
+    
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="..">Introduction</a>
+  </li>
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="../getting-started/">Getting Started</a>
+  </li>
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="/javadoc/">Javadoc</a>
+  </li>
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="../api/">REST API</a>
+  </li>
+    
+      
+
+
+  
+    
+    <li class="navtree toctree-l1 page current">
+      <a class="current" href="./">
+        Examples
+      </a>
+    </li>
+    
+      
+
+
+
+  <li class="toctree-l1 current">
+    <ul class="subnav-l1 current">
+    
+      
+          
+
+  <li class="toctree-l2 current with-children">
+    <a href="#standalone-examples">
+      Standalone Examples
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l2 current">
+    <ul class="subnav-l2 current">
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#bank-teller">Bank Teller</a>
+        </li>
+    
+      
+        <li class="toctree-l3">
+          <a class="toctree-l4" href="#employee-record">Employee Record</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
+    
+      
+        <li class="toctree-l2">
+          <a class="toctree-l3" href="#rest-api-examples">REST API Examples</a>
+        </li>
+    
+    </ul>
+  </li>
+
+
+  
+    
+      
+
+
+  <li class="navtree toctree-l1 inactive">
+    <a class="" href="../links/">Links</a>
+  </li>
+    
+  </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Policy Machine</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Examples</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="examples">Examples</h1>
+<h2 id="standalone-examples">Standalone Examples</h2>
+<p>Below are examples on how to create a NGAC graph and query that graph for access control decisions using the Policy Machine as a Java library.</p>
+<h3 id="bank-teller">Bank Teller</h3>
+<p>The full code for this example can be found at <code>src/gov/nist/csd/pm/demos/standalone/BankTellerExample.java</code></p>
+<p><strong>Example configuration summary</strong></p>
+<ul>
+<li>Users: u1, u2</li>
+<li>An object o1</li>
+<li>Two policy classes: RBAC and Branches<ul>
+<li>RBAC<ul>
+<li>o1 is assigned to accounts</li>
+<li>u1 is a Teller that has read and write permissions on accounts</li>
+<li>u2 is an Auditor that has read permissions on accounts</li>
+</ul>
+</li>
+<li>Branches<ul>
+<li>u1 and u2 are both assigned to the Branch 1 user attribute</li>
+<li>o1 is assigned to the Branch 1 object attribute</li>
+<li>the Branch 1 user attribute has read and write permissions on the Branch 1 object attribute</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Access control state:</strong></p>
+<ul>
+<li>u1 can read and write o1</li>
+<li>u2 can read o1</li>
+</ul>
+<hr />
+<p><strong>1.</strong> Create a new Graph instance.  For this example, we'll use the <code>MemGraph</code> which is an in memory implementation of the Graph interface.</p>
+<pre><code>Graph graph = new MemGraph();
+</code></pre>
+
+<p><strong>2.</strong> Create the user nodes <code>u1</code> and <code>u2</code>.</p>
+<pre><code>long user1ID = graph.createNode(new NodeContext(rand.nextLong(), &quot;u1&quot;, U, null));
+long user2ID = graph.createNode(new NodeContext(rand.nextLong(), &quot;u2&quot;, U, null));
+</code></pre>
+
+<p><strong>3.</strong> Create the object, <code>o1</code> that will be the target of the access queries.</p>
+<pre><code>long objectID = graph.createNode(new NodeContext(rand.nextLong(), &quot;o1&quot;, O, null));
+</code></pre>
+
+<p><strong>4.</strong> Create the <code>RBAC</code> policy class node.</p>
+<pre><code>long rbacID = graph.createNode(new NodeContext(rand.nextLong(), &quot;RBAC&quot;, PC, null));
+</code></pre>
+
+<p><strong>5.</strong> Create an object attribute for the <code>Accounts</code>.</p>
+<pre><code>long accountsID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Accounts&quot;, OA, null));
+</code></pre>
+
+<p><strong>6.</strong> Create the <code>Teller</code> and <code>Auditor</code> user attributes.</p>
+<pre><code>long tellerID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Teller&quot;, UA, null));
+long auditorID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Auditor&quot;, UA, null));
+</code></pre>
+
+<p><strong>7.</strong> Assign the <code>Accounts</code> object attribute to the <code>RBAC</code> policy class node.</p>
+<pre><code>graph.assign(new NodeContext(accountsID, OA), new NodeContext(rbacID, PC));
+</code></pre>
+
+<p><strong>8.</strong> Assign the object, <code>o1</code>, to the <code>Accounts</code> object attribute.</p>
+<pre><code>graph.assign(new NodeContext(objectID, O), new NodeContext(accountsID, OA));
+</code></pre>
+
+<p><strong>9.</strong> Assign <code>u1</code> to the <code>Teller</code> user attribute and <code>u2</code> to the <code>Auditor</code> user attribute.</p>
+<pre><code>graph.assign(new NodeContext(user1ID, U), new NodeContext(tellerID, UA));
+graph.assign(new NodeContext(user2ID, U), new NodeContext(auditorID, UA));
+</code></pre>
+
+<p><strong>10.</strong> Create the associations for <code>Teller</code> and <code>Auditor</code> on <code>Account</code> in RBAC. <code>Teller</code> has read and write permissions, while <code>Auditor</code> just has read permissions.</p>
+<pre><code>graph.associate(new NodeContext(tellerID, UA), new NodeContext(accountsID, OA), new HashSet&lt;&gt;(Arrays.asList(&quot;r&quot;, &quot;w&quot;)));
+graph.associate(new NodeContext(auditorID, UA), new NodeContext(accountsID, OA), new HashSet&lt;&gt;(Arrays.asList(&quot;r&quot;)));
+</code></pre>
+
+<p><strong>11.</strong> Create the <code>Branches</code> policy class.</p>
+<pre><code>long branchesID = graph.createNode(new NodeContext(rand.nextLong(), &quot;branches&quot;, PC, null));
+</code></pre>
+
+<p><strong>12.</strong> Create an object attribute for <code>Branch 1</code>.</p>
+<pre><code>long branches1OAID = graph.createNode(new NodeContext(rand.nextLong(), &quot;branch 1&quot;, OA, null));
+</code></pre>
+
+<p><strong>13.</strong> Create the <code>Branch 1</code> user attribute</p>
+<pre><code>long branches1UAID = graph.createNode(new NodeContext(rand.nextLong(), &quot;branch 1&quot;, UA, null));
+</code></pre>
+
+<p><strong>14.</strong> Assign the object, <code>o1</code>, to the <code>Branch 1</code> object attribute</p>
+<pre><code>graph.assign(new NodeContext(objectID, O), new NodeContext(branches1OAID, OA));
+</code></pre>
+
+<p><strong>15.</strong> Assign the users, <code>u1</code> and <code>u2</code>, to the branch 1 user attribute</p>
+<pre><code>graph.assign(new NodeContext(user1ID, U), new NodeContext(branches1UAID, UA));
+graph.assign(new NodeContext(user2ID, U), new NodeContext(branches1UAID, UA));
+</code></pre>
+
+<p><strong>16.</strong> Create an association between the <code>branch 1</code> user attribute and the <code>branch 1</code> object attribute.<br />
+This will give both users read and write on <code>o1</code> under the <code>branches</code> policy class.</p>
+<pre><code>graph.associate(new NodeContext(branches1UAID, UA), new NodeContext(branches1OAID, OA), new HashSet&lt;&gt;(Arrays.asList(&quot;r&quot;, &quot;w&quot;)));
+</code></pre>
+
+<p><strong>17.</strong> Test the configuration using the <code>PReviewDecider</code> implementation of the <code>Decider</code> interface.<br />
+The constructor for a <code>PReviewDecider</code> receives the graph we created and a list of prohibitions. 
+Since no prohibitions are used in this example, we'll pass null.</p>
+<pre><code>Decider decider = new PReviewDecider(graph, null);
+</code></pre>
+
+<p><strong>18.</strong> Check that <code>u1</code> has read and write permissions on <code>o1</code>.</p>
+<pre><code>HashSet&lt;String&gt; permissions = decider.listPermissions(user1ID, 0, objectID);
+assertTrue(permissions.contains(&quot;r&quot;));
+assertTrue(permissions.contains(&quot;w&quot;));
+</code></pre>
+
+<p><strong>19.</strong> Check that <code>u1</code> has read permissions on <code>o1</code>.</p>
+<pre><code>permissions = decider.listPermissions(user2ID, 0, objectID);
+assertTrue(permissions.contains(&quot;r&quot;));
+</code></pre>
+
+<p>Below is a visual representation of the graph created in the bank teller example.
+<a href="../images/bankteller.png"><img alt="alt text" src="../images/bankteller.png" title="bank teller example" /></a></p>
+<h3 id="employee-record">Employee Record</h3>
+<p><strong>Example configuration summary:</strong></p>
+<ul>
+<li>Users: bob, alice, charlie</li>
+<li>The objects are bob's and alice's name, salary, and ssn.</li>
+<li>All users are assigned to the Staff user attribute</li>
+<li>The Staff user attribute has read permissions on Public Info, which in this case is names.</li>
+<li>Charlie has the HR attribute</li>
+<li>HR has read and write permissions on Salaries and SSNs</li>
+<li>Bob and Alice have the Grp1Mgr and Grp2Mgr attributes, respectively</li>
+<li>Grp1Mgr and Grp2Mgr have read permissions on Grp1Salaries and Grp2Salaries, respectively</li>
+<li>Bob and Alice have read and write permissions on their name and ssn, and read permissions on their salaries.   </li>
+</ul>
+<p><strong>Access control state:</strong></p>
+<ul>
+<li>Alice can read and write her name and SSN, and read her salary, and the salaries of those in Group 2.</li>
+<li>Bob can read and write his name and SSN, and read his salary, and salaries of those in Group 1.</li>
+<li>Charlie can read and write all salaries and SSNs, and read all names.</li>
+</ul>
+<pre><code>Graph graph = new MemGraph();
+
+// create nodes
+// object attributes
+long salariesID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Salaries&quot;, OA, null));
+long ssnsID = graph.createNode(new NodeContext(rand.nextLong(), &quot;SSNs&quot;, OA, null));
+long grp1SalariesID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Grp1 Salaries&quot;, OA, null));
+long grp2SalariesID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Grp2 Salaries&quot;, OA, null));
+long publicID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Public Info&quot;, OA, null));
+
+long bobRecID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Bob Record&quot;, OA, null));
+long bobRID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Bob r&quot;, OA, null));
+long bobRWID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Bob r/w&quot;, OA, null));
+
+long aliceRecID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Alice Record&quot;, OA, null));
+long aliceRID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Alice r&quot;, OA, null));
+long aliceRWID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Alice r/w&quot;, OA, null));
+
+// objects for bob's name, salary, and ssn
+long bobNameID = graph.createNode(new NodeContext(rand.nextLong(), &quot;bob name&quot;, O, null));
+long bobSalaryID = graph.createNode(new NodeContext(rand.nextLong(), &quot;bob salary&quot;, O, null));
+long bobSSNID = graph.createNode(new NodeContext(rand.nextLong(), &quot;bob ssn&quot;, O, null));
+
+// objects for alice's name, salary, and ssn
+long aliceNameID = graph.createNode(new NodeContext(rand.nextLong(), &quot;alice name&quot;, O, null));
+long aliceSalaryID = graph.createNode(new NodeContext(rand.nextLong(), &quot;alice salary&quot;, O, null));
+long aliceSSNID = graph.createNode(new NodeContext(rand.nextLong(), &quot;alice ssn&quot;, O, null));
+
+// user attributes
+long hrID = graph.createNode(new NodeContext(rand.nextLong(), &quot;HR&quot;, UA, null));
+long grp1MgrID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Grp1Mgr&quot;, UA, null));
+long grp2MgrID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Grp2Mgr&quot;, UA, null));
+long staffID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Staff&quot;, UA, null));
+long bobUAID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Bob&quot;, UA, null));
+long aliceUAID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Alice&quot;, UA, null));
+
+// users
+long bobID = graph.createNode(new NodeContext(rand.nextLong(), &quot;bob&quot;, U, null));
+long aliceID = graph.createNode(new NodeContext(rand.nextLong(), &quot;alice&quot;, U, null));
+long charlieID = graph.createNode(new NodeContext(rand.nextLong(), &quot;charlie&quot;, U, null));
+
+// policy class
+long pcID = graph.createNode(new NodeContext(rand.nextLong(), &quot;Employee Records&quot;, PC, null));
+
+
+// assignments
+// assign users to user attributes
+graph.assign(new NodeContext(charlieID, U), new NodeContext(hrID, UA));
+graph.assign(new NodeContext(bobID, U), new NodeContext(grp1MgrID, UA));
+graph.assign(new NodeContext(aliceID, U), new NodeContext(grp2MgrID, UA));
+graph.assign(new NodeContext(charlieID, U), new NodeContext(staffID, UA));
+graph.assign(new NodeContext(bobID, U), new NodeContext(staffID, UA));
+graph.assign(new NodeContext(aliceID, U), new NodeContext(staffID, UA));
+graph.assign(new NodeContext(bobID, U), new NodeContext(bobUAID, UA));
+graph.assign(new NodeContext(aliceID, U), new NodeContext(aliceUAID, UA));
+
+// assign objects to object attributes
+// salary objects
+graph.assign(new NodeContext(bobSalaryID, O), new NodeContext(salariesID, OA));
+graph.assign(new NodeContext(bobSalaryID, O), new NodeContext(grp1SalariesID, OA));
+graph.assign(new NodeContext(bobSalaryID, O), new NodeContext(bobRID, OA));
+
+graph.assign(new NodeContext(aliceSalaryID, O), new NodeContext(salariesID, OA));
+graph.assign(new NodeContext(aliceSalaryID, O), new NodeContext(grp2SalariesID, OA));
+graph.assign(new NodeContext(aliceSalaryID, O), new NodeContext(aliceRID, OA));
+
+// ssn objects
+graph.assign(new NodeContext(bobSSNID, O), new NodeContext(ssnsID, OA));
+graph.assign(new NodeContext(bobSSNID, O), new NodeContext(bobRWID, OA));
+
+graph.assign(new NodeContext(aliceSSNID, O), new NodeContext(aliceID, OA));
+graph.assign(new NodeContext(aliceSSNID, O), new NodeContext(aliceRWID, OA));
+
+// name objects
+graph.assign(new NodeContext(bobNameID, O), new NodeContext(publicID, OA));
+graph.assign(new NodeContext(bobNameID, O), new NodeContext(bobRWID, OA));
+
+graph.assign(new NodeContext(aliceNameID, O), new NodeContext(publicID, OA));
+graph.assign(new NodeContext(aliceNameID, O), new NodeContext(aliceRWID, OA));
+
+// bob and alice r/w containers to their records
+graph.assign(new NodeContext(bobRID, OA), new NodeContext(bobRecID, OA));
+graph.assign(new NodeContext(bobRWID, OA), new NodeContext(bobRecID, OA));
+
+graph.assign(new NodeContext(aliceRID, OA), new NodeContext(aliceRecID, OA));
+graph.assign(new NodeContext(aliceRWID, OA), new NodeContext(aliceRecID, OA));
+
+
+// assign object attributes to policy classes
+graph.assign(new NodeContext(salariesID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(ssnsID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(grp1SalariesID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(grp2SalariesID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(publicID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(bobRecID, OA), new NodeContext(pcID, PC));
+graph.assign(new NodeContext(aliceRecID, OA), new NodeContext(pcID, PC));
+
+// associations
+HashSet&lt;String&gt; rw = new HashSet&lt;&gt;(Arrays.asList(&quot;r&quot;, &quot;w&quot;));
+HashSet&lt;String&gt; r = new HashSet&lt;&gt;(Arrays.asList(&quot;r&quot;));
+
+graph.associate(new NodeContext(hrID, UA), new NodeContext(salariesID, OA), rw);
+graph.associate(new NodeContext(hrID, UA), new NodeContext(ssnsID, OA), rw);
+graph.associate(new NodeContext(grp1MgrID, UA), new NodeContext(grp1SalariesID, OA), r);
+graph.associate(new NodeContext(grp2MgrID, UA), new NodeContext(grp2SalariesID, OA), r);
+graph.associate(new NodeContext(staffID, UA), new NodeContext(publicID, OA), r);
+graph.associate(new NodeContext(bobUAID, UA), new NodeContext(bobRWID, OA), rw);
+graph.associate(new NodeContext(bobUAID, UA), new NodeContext(bobRID, OA), r);
+graph.associate(new NodeContext(aliceUAID, UA), new NodeContext(aliceRWID, OA), rw);
+graph.associate(new NodeContext(aliceUAID, UA), new NodeContext(aliceRID, OA), r);
+
+// test configuration
+// create a decider
+// not using prohibitions in this example, so null is passed
+Decider decider = new PReviewDecider(graph, null);
+
+// user: bob
+// target: 'bob ssn'
+// expected: [r, w]
+// actual: [r, w]
+HashSet&lt;String&gt; permissions = decider.listPermissions(bobID, 0, bobSSNID);
+assertTrue(permissions.contains(&quot;r&quot;));
+assertTrue(permissions.contains(&quot;w&quot;));
+
+// user: bob
+// target: 'bob ssn'
+// expected: [r]
+// actual: [r]
+permissions = decider.listPermissions(bobID, 0, bobSalaryID);
+assertTrue(permissions.contains(&quot;r&quot;));
+
+// user: bob
+// target: 'alice ssn'
+// expected: []
+// actual: []
+permissions = decider.listPermissions(bobID, 0, aliceSSNID);
+assertTrue(permissions.isEmpty());
+
+// user: bob
+// target: 'alice salary'
+// expected: []
+// actual: []
+permissions = decider.listPermissions(bobID, 0, aliceSalaryID);
+assertTrue(permissions.isEmpty());
+
+// user: bob
+// target: 'bob ssn'
+// expected: [r, w]
+// actual: [r, w]
+permissions = decider.listPermissions(aliceID, 0, aliceSSNID);
+assertTrue(permissions.contains(&quot;r&quot;));
+assertTrue(permissions.contains(&quot;w&quot;));
+
+// user: charlie
+// target: 'alice salary'
+// expected: [r, w]
+// actual: [r, w]
+permissions = decider.listPermissions(charlieID, 0, aliceSalaryID);
+assertTrue(permissions.contains(&quot;r&quot;));
+assertTrue(permissions.contains(&quot;w&quot;));
+</code></pre>
+
+<p>Below is a visual representation of the graph created in the employee record example.
+<a href="../images/emprec.png"><img alt="alt text" src="../images/emprec.png" title="employee record example" /></a></p>
+<h2 id="rest-api-examples">REST API Examples</h2>
+<p>Coming soon...</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../links/" class="btn btn-neutral float-right" title="Links">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../api/" class="btn btn-neutral" title="REST API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../links/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
