@@ -98,9 +98,56 @@ A response from the Policy Machine will always return an HTTP status code of 200
   "entity": "return value of the API call"
 }
 ```
-### Response codes
-
-
+## Response codes
+code | type | description
+---|---|---
+9000 | success | the request was successful
+6001| error | assignment does not exist
+6002 | error | prohibition name already exists
+6003 | error | node is already assigned to the prohibition
+6004 | error | an ID was expected but none was provided
+6005 | error | assignment already exists
+6006 | error | not a valid property
+6007 | error | invalid prohibition subject type
+6008 | error | node not found
+6009 | error | no user provided
+6010 | error | association does not exist
+6011 | error | null name
+6012 | error | node in prohibition does not exist
+6013 | error | no subject was provided
+6014 | error | configuration error
+6015 | error | property not found
+6016 | error | node name not in namespace
+6017 | error | a node already exists with the provided name
+6018 | error | invalid node type
+6019 | error | the subject of the prohibition does not exist
+6020 | error | null type
+6021 | error | a node already exists with the name in the namesapce
+6022 | error | prohibition does not exist
+6023 | error | session does not exist
+6024 | error | access denied
+6025 | error | a node with the given ID already exists
+6026 | error | association already exists
+6027 | error | missing permissions
+6028 | error | session user not found
+6029 | error | unexpected number of nodes returned
+6030 | error | invalid assignment
+6031 | error | no base ID
+6032 | error | no process ID
+6034 | error | invalid association
+6035 | error | node exists
+6036 | error | a policy name with the given name already exists
+6037 | error | invalid credentials
+6038 | error | loading exception
+6039 | error | null node context provided
+6041 | error | not implemented
+6042 | error | error loading database configuration
+6043 | error | error hashing user password
+6044 | error | null operations
+6045 | error | authentication error
+6046 | error | null session ID
+6047 | error | policy class has no rep node
+7000 | error | database error
 
 ## Sessions API
 
