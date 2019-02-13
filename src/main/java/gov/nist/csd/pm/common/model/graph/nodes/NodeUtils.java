@@ -16,6 +16,8 @@ public class NodeUtils {
      * Utility method to hash a password of a user. This will be used by the session and node service classes.
      * @param password The plaintext password to hash.
      * @return The hash of the password;
+     * @throws InvalidKeySpecException If there is an error with the KeySpec
+     * @throws NoSuchAlgorithmException If there is no such algorithm exists when hashing the password.
      */
     public static String generatePasswordHash(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
         int iterations = 100;
@@ -35,6 +37,8 @@ public class NodeUtils {
      * @param stored The hash of the password.
      * @param toCheck The plaintext password to check against the hashed.
      * @return True if the passwords match, false otherwise.
+     * @throws InvalidKeySpecException If there is an error with the KeySpec
+     * @throws NoSuchAlgorithmException If there is no such algorithm exists when hashing the password.
      */
     public static boolean checkPasswordHash(String stored, String toCheck) throws NoSuchAlgorithmException, InvalidKeySpecException{
         String part0 = stored.substring(0, 3);
@@ -85,7 +89,7 @@ public class NodeUtils {
     /**
      * This method receives an array of strings and pairs consecutive parameters as key, value pairs.
      * For example, calling toProperties('prop1', 'value1', 'prop2', 'value2') would create a property map with two
-     * entries.  The first entry will be 'prop1' -> 'value1' and the second will be 'prop2' -> 'value2'. An
+     * entries.  The first entry will be 'prop1' to 'value1' and the second will be 'prop2' to 'value2'. An
      * IllegalArgumentException will be thrown if any value is null or there is an odd number of values, as this will
      * lead to errors in processing the parameters.
      * @param pairs Array of string values to convert to a HashMap

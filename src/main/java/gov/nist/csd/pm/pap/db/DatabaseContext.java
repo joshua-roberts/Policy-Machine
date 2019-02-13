@@ -5,6 +5,10 @@ package gov.nist.csd.pm.pap.db;
  * will be ignored for Neo4j.
  */
 public class DatabaseContext {
+
+    public static final String NEO4J = "neo4j";
+    public static final String MYSQL = "mysql";
+
     String database;
     private String host;
     private int port;

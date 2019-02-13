@@ -21,7 +21,7 @@ public class GraphPAP implements Graph, Search {
 
     public GraphPAP(DatabaseContext ctx) throws PMException {
         GraphLoader loader;
-        if(ctx.getDatabase().equals("neo4j")) {
+        if(ctx.getDatabase().equals(DatabaseContext.NEO4J)) {
             dbGraph = new Neo4jGraph(ctx);
             loader = new Neo4jGraphLoader(ctx);
         } else {
@@ -101,12 +101,12 @@ public class GraphPAP implements Graph, Search {
     }
 
     @Override
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws PMException {
         return memGraph.getSourceAssociations(sourceID);
     }
 
     @Override
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws PMException {
         return memGraph.getTargetAssociations(targetID);
     }
 

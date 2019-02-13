@@ -23,6 +23,7 @@ public class PReviewDecider implements Decider {
     /**
      * Create a new Decider with with the given NGAC graph, user ID, and process ID.
      * @param graph The NGAC Graph to use in the policy decision.
+     * @param prohibitions A list of prohibitions to be taken into account when making decisions.
      */
     public PReviewDecider(Graph graph, Collection<Prohibition> prohibitions) throws IllegalArgumentException {
         if (graph == null) {
@@ -205,8 +206,10 @@ public class PReviewDecider implements Decider {
 
     /**
      * Given a User ID, return every node the user has access to and the permissions they have on each.
+     *
      * @param userID The ID of the User.
      * @return A Map of nodes the user has access to and the permissions on each.
+     * @throws PMException If there is an error traversing the graph to get the accessible node for the user.
      */
     public synchronized HashMap<Long, HashSet<String>> getAccessibleNodes(long userID) throws PMException {
         //Node->{ops}

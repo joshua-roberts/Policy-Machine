@@ -33,6 +33,10 @@ public class Neo4jHelper {
 
     /**
      * Given a ResultSet, extract a list of nodes. Each element in the ResultSet is a json representation of a Node
+     *
+     * @param rs The ResultSet containing the nodes from the database.
+     * @return The set of nodes from the ResultSet.
+     * @throws PMException If there is an error converting the ResultSet into a list of Nodes.
      */
     public static HashSet<NodeContext> getNodesFromResultSet(ResultSet rs) throws PMException {
         try {
@@ -51,8 +55,10 @@ public class Neo4jHelper {
 
     /**
      * Given a map of properties representing a Node, return a Node object.
+     * @param map The map to convert into a NodeContext
+     * @return A NodeContext representation of the provided map.
      */
-    public static NodeContext mapToNode(Map map) throws PMException {
+    public static NodeContext mapToNode(Map map) {
         // first, convert the json to a map
         long id = (long) map.get("id");
         String name = (String)map.get("name");
@@ -91,6 +97,8 @@ public class Neo4jHelper {
 
     /**
      * Convert a json string representing a set of strings to an actual set of Strings.
+     * @param json The json string to convert into a set of strings
+     * @return The set of string converted from the given json string.
      */
     public static HashSet<String> getStringSetFromJson(String json) {
         HashSet<String> set = new HashSet<>();

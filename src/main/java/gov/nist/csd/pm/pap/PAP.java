@@ -269,6 +269,8 @@ public class PAP {
      * Reinitialize the PAP.  Set up the NGAC backend.  This is primarily used when loading a configuration.  Loading
      * a configuration makes changes to the database but not the in memory graph.  So, the in-memory graph needs to get
      * the updated graph from the database.
+     *
+     * @throws PMException If there is an error initializing the PAP.
      */
     public void reinitialize() throws PMException {
         PAP = new PAP();
@@ -296,8 +298,8 @@ public class PAP {
 
     /**
      * Initialize the PAP with the given properties
-     * @param props
-     * @throws PMException
+     * @param props The server properties to initalize the PAP with.
+     * @throws PMException If there is an error initializing the PAP with the new properties.
      */
     public static void init(Properties props) throws PMException {
         //get properties

@@ -11,7 +11,7 @@ import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import java.util.*;
 
 /**
- * Methods to analyze the NGAC data.
+ * Methods to analyze NGAC data.
  */
 public class AnalyticsService extends Service {
 
@@ -23,6 +23,7 @@ public class AnalyticsService extends Service {
      * Given the ID of a target node, return the permissions the current user has on it.
      * @param targetID The ID of the target node.
      * @return The set of operations the current user has on the target node.
+     * @throws PMException If there is an exception thrown creating a Decider or listing the permissions.
      */
     public HashSet<String> getPermissions(long targetID) throws PMException {
         Decider decider = getDecider();
@@ -34,6 +35,7 @@ public class AnalyticsService extends Service {
      * Get the Personal Object System for the user of the current session.  This method returns the first level of nodes
      * the user has direct access to.
      * @return The set of nodes that the user has direct access.
+     * @throws PMException If there is an exception navigating the graph to calculate a user's POS
      */
     public HashSet<NodeContext> getPos() throws PMException {
         // Prepare the hashset to return.

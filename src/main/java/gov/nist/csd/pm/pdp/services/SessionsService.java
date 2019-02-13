@@ -16,19 +16,19 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.checkPasswordHa
 
 public class SessionsService extends Service {
 
-    /**
-     * Call to Service constructor with a sessionID and processID.  The process ID can be 0 and will be 0.  Since the
-     * Service constructor throws an exception for a null or empty session ID, pass a dummy session ID to avoid the exception
-     * being thrown.
-     */
     public SessionsService() {}
 
     /**
      * Given a username and password, check that the user exists and the password matches the one stored for the user.
      * If the user is authenticated, return a new session ID.
+     *
      * @param username The name of the user to create a session for.
      * @param password  The password the user provided, to be checked against the password stored for the user.
      * @return The ID of the new session.
+     *
+     * @throws PMException If a node with the user's name does not exist.
+     * @throws PMException If the provided password does not match the stored password.
+     * @throws PMException If there is an error hashing the provided password.
      */
     public String createSession(String username, String password) throws PMException {
         //get the user node
@@ -66,6 +66,7 @@ public class SessionsService extends Service {
     /**
      * Delete the session with the given ID.
      * @param sessionID The ID of the session to delete.
+     * @throws PMException If there is an error deleting the session in the session manager
      */
     public void deleteSession(String sessionID) throws PMException {
         getSessionManager().deleteSession(sessionID);

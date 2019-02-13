@@ -30,6 +30,8 @@ public enum ProhibitionSubjectType  implements Serializable {
      * Convert a string to a ProhibitionSubjectType.
      * @param subjectType The string to convert.
      * @return The ProhibitionSubjectType that is equivalent to the provided String.
+     * @throws PMException If the provided subject type is null.
+     * @throws PMException If the provided subject type is invalid.
      */
     public static ProhibitionSubjectType toType(String subjectType) throws PMException {
         if(subjectType == null){

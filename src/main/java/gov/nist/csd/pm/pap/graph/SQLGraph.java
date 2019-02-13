@@ -50,15 +50,16 @@ public class SQLGraph implements Graph {
 
         //add properties to the node
         if (node.getProperties() != null && !node.getProperties().isEmpty()) {
-            String sql = "insert into node_property (property_node_id, property_key, property_value) values ";
+            String sql1 = "insert into node_property (property_node_id, property_key, property_value) values ";
             for (String key : node.getProperties().keySet()) {
-                sql += String.format("(%d, '%s', '%s')", id, key, node.getProperties().get(key));
-            }
-            try (Statement stmt = conn.getConnection().createStatement()) {
-                stmt.executeUpdate(sql);
-            }
-            catch (SQLException e) {
-                throw new PMException(ERR_DB, e.getMessage());
+                String sql = sql1 + String.format("(%d, '%s', '%s')", id, key, node.getProperties().get(key));
+                System.out.println(sql);
+                try (Statement stmt = conn.getConnection().createStatement()) {
+                    stmt.executeUpdate(sql);
+                }
+                catch (SQLException e) {
+                    throw new PMException(ERR_DB, e.getMessage());
+                }
             }
         }
 
@@ -92,15 +93,15 @@ public class SQLGraph implements Graph {
                 }
 
                 //insert new properties
-                try (Statement stmt = conn.getConnection().createStatement()) {
-                    String sql = "insert into node_property (property_node_id, property_key, property_value) values ";
-                    for (String key : node.getProperties().keySet()) {
-                        sql += String.format("(%d, '%s', '%s')", node.getID(), key, node.getProperties().get(key));
+                String sql1 = "insert into node_property (property_node_id, property_key, property_value) values ";
+
+                for (String key : node.getProperties().keySet()) {
+                    try (Statement stmt = conn.getConnection().createStatement()) {
+                        String sql = sql1 +  String.format("(%d, '%s', '%s')", node.getID(), key, node.getProperties().get(key));
+                        stmt.executeUpdate(sql);
+                    } catch (SQLException e) {
+                        throw new PMException(ERR_DB, e.getMessage());
                     }
-                    stmt.executeUpdate(sql);
-                }
-                catch (SQLException e) {
-                    throw new PMException(ERR_DB, e.getMessage());
                 }
             }
         }catch(SQLException e){
@@ -242,6 +243,7 @@ public class SQLGraph implements Graph {
     @Override
     public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
         try (CallableStatement stmt = conn.getConnection().prepareCall("{call create_assignment(?,?,?)}")) {
+            System.out.println("Calling SQL statement call create_assignment(?,?,?) with arguments " + childCtx.getID() + ", " + parentCtx.getID());
             stmt.setLong(1, childCtx.getID());
             stmt.setLong(2, parentCtx.getID());
             stmt.registerOutParameter(3, Types.VARCHAR);
@@ -286,7 +288,7 @@ public class SQLGraph implements Graph {
         //if an association does not already exist create a new one.  Update the operations
         //if an association does already exist between the two nodes
         boolean associated;
-        String sql = String.format("select count(*) from association where ua_id=%d && target_id=%d", uaCtx.getID(), targetCtx.getID());
+        String sql = String.format("select count(*) from association where ua_id=%d && oa_id=%d", uaCtx.getID(), targetCtx.getID());
         try(Statement stmt = conn.getConnection().createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();

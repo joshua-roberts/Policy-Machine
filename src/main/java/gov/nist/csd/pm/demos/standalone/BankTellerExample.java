@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 public class BankTellerExample {
 

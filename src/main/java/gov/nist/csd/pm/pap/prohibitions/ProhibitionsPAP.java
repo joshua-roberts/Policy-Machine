@@ -16,7 +16,7 @@ public class ProhibitionsPAP implements ProhibitionsDAO {
 
     public ProhibitionsPAP(DatabaseContext ctx) throws PMException {
         ProhibitionsLoader loader;
-        if(ctx.getDatabase().equals("neo4j")) {
+        if(ctx.getDatabase().equals(DatabaseContext.NEO4J)) {
             dbProhibitions = new Neo4jProhibitionsDAO(ctx);
             loader = new Neo4jProhibitionsLoader(ctx);
         } else {

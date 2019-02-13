@@ -63,10 +63,10 @@ public class ApiResponse {
         }
 
         /**
-         * 
-         * @param code
-         * @param message
-         * @return
+         * Initialize a new Builder with an error code and message.
+         * @param code The error code.
+         * @param message The error message.
+         * @return A new Builder instance.
          */
         public static Builder error(int code, String message) {
             return new Builder(code).message(message);

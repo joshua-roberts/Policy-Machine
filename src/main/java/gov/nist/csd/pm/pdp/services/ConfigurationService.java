@@ -31,7 +31,7 @@ public class ConfigurationService extends Service {
      * Return a json string representation of the entire graph.  The json object will have 3 fields: nodes, assignments,
      * and associations.
      * @return The json string representation of the graph.
-     * @throws PMException
+     * @throws PMException If there is an error reading the graph information from the database and saving it to json.
      */
     public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -114,7 +114,7 @@ public class ConfigurationService extends Service {
 
     /**
      * Delete all nodes from the database.  Reinitialize the PAP to update the in-memory graph and recreate the super nodes.
-     * @throws PMException
+     * @throws PMException If there is an error resetting the graph or reinitializing the PAP.
      */
     public void reset() throws PMException {
         HashSet<NodeContext> nodes = getGraphPAP().getNodes();

@@ -2,7 +2,6 @@ site_name: Policy Machine
 nav:
   - Introduction: index.md
   - Getting Started: getting-started.md
-  - Javadoc: /Policy-Machine-Dev/javadoc/
   - REST API: api.md
   - Examples: examples.md
   - Contact Us: contact.md

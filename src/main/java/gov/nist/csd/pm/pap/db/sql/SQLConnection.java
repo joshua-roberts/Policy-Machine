@@ -29,6 +29,7 @@ public class SQLConnection {
      * Utility method to create a SQLConnection instance using the provided DatabaseContext
      * @param ctx The context to create the SQLConnection from
      * @return A SQLConnection instance
+     * @throws PMException If there is an error establishing a connection.
      */
     public static SQLConnection fromCtx(DatabaseContext ctx) throws PMException {
         return new SQLConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword(), ctx.getSchema());

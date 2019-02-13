@@ -305,7 +305,11 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
-        if(childCtx.getType() == null) {
+        if(childCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "child node context was null");
+        } else if (parentCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "parent node context was null");
+        } else if(childCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the child of the assignment to create.");
         } else if (parentCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the parent of the assignment to create.");
@@ -335,7 +339,11 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
-        if(childCtx.getType() == null) {
+        if(childCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "child node context was null");
+        } else if (parentCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "parent node context was null");
+        } else if(childCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the child of the assignment to delete.");
         } else if (parentCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the parent of the assignment to delete.");
@@ -365,7 +373,11 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMException {
-        if(targetCtx.getType() == null) {
+        if(uaCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "user attribute node context was null");
+        } else if (targetCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "target node context was null");
+        } else if(targetCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the target of the association to create.");
         }
 
@@ -392,7 +404,11 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public void dissociate(NodeContext uaCtx, NodeContext targetCtx) throws PMException {
-        if(targetCtx.getType() == null) {
+        if(uaCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "user attribute node context was null");
+        } else if (targetCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "target node context was null");
+        } else if(targetCtx.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided for the target of the association to delete.");
         }
 

@@ -43,6 +43,7 @@ public class Neo4jConnection {
 
     /**
      * @return The connection to the Neo4j instance.
+     * @throws PMException If there is an error establishing the connection.
      */
     public Connection getConnection() throws PMException {
         try {

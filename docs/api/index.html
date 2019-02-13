@@ -67,13 +67,6 @@
       
 
 
-  <li class="navtree toctree-l1 inactive">
-    <a class="" href="/Policy-Machine-Dev/javadoc/">Javadoc</a>
-  </li>
-    
-      
-
-
   
     
     <li class="navtree toctree-l1 page current">
@@ -103,8 +96,8 @@
           
 
   <li class="toctree-l2">
-    <a href="#deployment">
-      Deployment
+    <a href="#getting-started">
+      Getting Started
       <span class="toctree-expand"></span>
     </a>
   </li>
@@ -128,6 +121,36 @@
         <li class="toctree-l3">
           <a class="toctree-l4" href="#tested-operating-systems">Tested Operating Systems</a>
         </li>
+    
+      
+          
+
+  <li class="toctree-l3">
+    <a href="#connecting-to-a-database">
+      Connecting to a Database
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3">
+    <ul class="subnav-l3 toc-hidden">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#notes-on-neo4j">Notes on Neo4j</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#notes-on-mysql">Notes on MySQL</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
     
     </ul>
   </li>
@@ -159,15 +182,15 @@
           <a class="toctree-l4" href="#responses">Responses</a>
         </li>
     
-      
-        <li class="toctree-l3">
-          <a class="toctree-l4" href="#response-codes">Response codes</a>
-        </li>
-    
     </ul>
   </li>
 
       
+    
+      
+        <li class="toctree-l2">
+          <a class="toctree-l3" href="#response-codes">Response codes</a>
+        </li>
     
       
           
@@ -626,6 +649,16 @@
     
       
         <li class="toctree-l4">
+          <a class="toctree-l5" href="#endpoint_10">Endpoint</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#parameters_8">Parameters</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
           <a class="toctree-l5" href="#example-request_10">Example request</a>
         </li>
     
@@ -656,12 +689,12 @@
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#endpoint_10">Endpoint</a>
+          <a class="toctree-l5" href="#endpoint_11">Endpoint</a>
         </li>
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#parameters_8">Parameters</a>
+          <a class="toctree-l5" href="#parameters_9">Parameters</a>
         </li>
     
       
@@ -696,12 +729,12 @@
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#endpoint_11">Endpoint</a>
+          <a class="toctree-l5" href="#endpoint_12">Endpoint</a>
         </li>
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#parameters_9">Parameters</a>
+          <a class="toctree-l5" href="#parameters_10">Parameters</a>
         </li>
     
       
@@ -736,12 +769,12 @@
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#endpoint_12">Endpoint</a>
+          <a class="toctree-l5" href="#endpoint_13">Endpoint</a>
         </li>
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#parameters_10">Parameters</a>
+          <a class="toctree-l5" href="#parameters_11">Parameters</a>
         </li>
     
       
@@ -781,17 +814,22 @@
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#endpoint_13">Endpoint</a>
+          <a class="toctree-l5" href="#endpoint_14">Endpoint</a>
         </li>
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#parameters_11">Parameters</a>
+          <a class="toctree-l5" href="#parameters_12">Parameters</a>
         </li>
     
       
         <li class="toctree-l4">
           <a class="toctree-l5" href="#example-request_14">Example request</a>
+        </li>
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#example-request-body_4">Example request body</a>
         </li>
     
       
@@ -821,12 +859,12 @@
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#endpoint_14">Endpoint</a>
+          <a class="toctree-l5" href="#endpoint_15">Endpoint</a>
         </li>
     
       
         <li class="toctree-l4">
-          <a class="toctree-l5" href="#parameters_12">Parameters</a>
+          <a class="toctree-l5" href="#parameters_13">Parameters</a>
         </li>
     
       
@@ -866,7 +904,7 @@
 
 
   <li class="navtree toctree-l1 inactive">
-    <a class="" href="../links/">Links</a>
+    <a class="" href="../contact/">Contact Us</a>
   </li>
     
   </ul>
@@ -906,13 +944,14 @@
 <p>The Policy Machine REST API exposes a standard set of administrative NGAC commands.  This API also acts as a Policy Enforcement Point (PEP) by ensuring any calling user has permission to carry out a command before any action is taken. Exposing the PEP allows users to create web-based, NGAC aware applications.</p>
 <h2 id="important-notes">Important Notes</h2>
 <ol>
+<li><strong>Namespaces</strong> - Node's can belong to namespaces which allow for multiple nodes of the same type to have the same name.  Nodes that have the same name but different type are allowed in the same namesapce. If a node is created with out specifying the namespace, it will be put in the 'default' namespace.</li>
 <li><strong>Super user metadata</strong> - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
 <img alt="alt text" src="../images/super.png" title="super" /></li>
 <li><strong>Creating a Policy Class</strong> - When creating a Policy Class we check if the requesting user has the permission "create a Policy Class" on the super object.</li>
 <li><strong>Policy Class assignments</strong> - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
 <img alt="alt text" src="../images/pc.png" title="creating a policy class" /></li>
 </ol>
-<h2 id="deployment">Deployment</h2>
+<h2 id="getting-started">Getting Started</h2>
 <h3 id="run-docker-compose">Run Docker Compose</h3>
 <ol>
 <li>Build the war file by running <code>mvn clean package install</code> from the project root. This will create <code>pm.war</code> in the project's <code>/target/</code> directory.</li>
@@ -963,6 +1002,12 @@ to
 </ul>
 </li>
 </ol>
+<h3 id="connecting-to-a-database">Connecting to a Database</h3>
+<p>Upon starting the server for the first time, you must provide the database connection details to your desired database. Navigate to <code>/pm/config.jsp</code>, choose either Neo4j or Mysql and provide the connection parameters.  Once the connection is set, the details will be saved locally on the server and used anytime the server restarts.</p>
+<h4 id="notes-on-neo4j">Notes on Neo4j</h4>
+<p>If using docker-compose to run the Policy Machine server, the web application will recognize the neo4j service by the name <code>neo4j</code>.  Therefore, when setting the connection to the database, the host name should be <code>neo4j</code>.  Also, the bolt protocol is used so the port should be <code>7687</code>.</p>
+<h4 id="notes-on-mysql">Notes on MySQL</h4>
+<p>The MySQL schema can be found at <code>pmsql.sql</code>.</p>
 <h2 id="how-to-use-the-api">How to Use the API</h2>
 <h3 id="requests">Requests</h3>
 <p>The exposed web services act as an administrative Policy Enforcement Point (PEP).  When a request comes in the PEP forwards the request to the PDP, which ensures the requesting user is allowed to carry out the action. This means the PEP always needs to know which user is sending a request.  This is tracked using session IDs that represent users who have authenticated successfully with the server.  Every endpoint requires this session ID to determine the user.  The only API that does not require a session ID is the Sessions API.  This API is used to authenticate users and provides the session IDs that will be used in subsequent requests to the Policy Machine.</p>
@@ -993,7 +1038,253 @@ Content-Type:application/json
 }
 </code></pre>
 
-<h3 id="response-codes">Response codes</h3>
+<h2 id="response-codes">Response codes</h2>
+<table>
+<thead>
+<tr>
+<th>code</th>
+<th>type</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9000</td>
+<td>success</td>
+<td>the request was successful</td>
+</tr>
+<tr>
+<td>6001</td>
+<td>error</td>
+<td>assignment does not exist</td>
+</tr>
+<tr>
+<td>6002</td>
+<td>error</td>
+<td>prohibition name already exists</td>
+</tr>
+<tr>
+<td>6003</td>
+<td>error</td>
+<td>node is already assigned to the prohibition</td>
+</tr>
+<tr>
+<td>6004</td>
+<td>error</td>
+<td>an ID was expected but none was provided</td>
+</tr>
+<tr>
+<td>6005</td>
+<td>error</td>
+<td>assignment already exists</td>
+</tr>
+<tr>
+<td>6006</td>
+<td>error</td>
+<td>not a valid property</td>
+</tr>
+<tr>
+<td>6007</td>
+<td>error</td>
+<td>invalid prohibition subject type</td>
+</tr>
+<tr>
+<td>6008</td>
+<td>error</td>
+<td>node not found</td>
+</tr>
+<tr>
+<td>6009</td>
+<td>error</td>
+<td>no user provided</td>
+</tr>
+<tr>
+<td>6010</td>
+<td>error</td>
+<td>association does not exist</td>
+</tr>
+<tr>
+<td>6011</td>
+<td>error</td>
+<td>null name</td>
+</tr>
+<tr>
+<td>6012</td>
+<td>error</td>
+<td>node in prohibition does not exist</td>
+</tr>
+<tr>
+<td>6013</td>
+<td>error</td>
+<td>no subject was provided</td>
+</tr>
+<tr>
+<td>6014</td>
+<td>error</td>
+<td>configuration error</td>
+</tr>
+<tr>
+<td>6015</td>
+<td>error</td>
+<td>property not found</td>
+</tr>
+<tr>
+<td>6016</td>
+<td>error</td>
+<td>node name not in namespace</td>
+</tr>
+<tr>
+<td>6017</td>
+<td>error</td>
+<td>a node already exists with the provided name</td>
+</tr>
+<tr>
+<td>6018</td>
+<td>error</td>
+<td>invalid node type</td>
+</tr>
+<tr>
+<td>6019</td>
+<td>error</td>
+<td>the subject of the prohibition does not exist</td>
+</tr>
+<tr>
+<td>6020</td>
+<td>error</td>
+<td>null type</td>
+</tr>
+<tr>
+<td>6021</td>
+<td>error</td>
+<td>a node already exists with the name in the namesapce</td>
+</tr>
+<tr>
+<td>6022</td>
+<td>error</td>
+<td>prohibition does not exist</td>
+</tr>
+<tr>
+<td>6023</td>
+<td>error</td>
+<td>session does not exist</td>
+</tr>
+<tr>
+<td>6024</td>
+<td>error</td>
+<td>access denied</td>
+</tr>
+<tr>
+<td>6025</td>
+<td>error</td>
+<td>a node with the given ID already exists</td>
+</tr>
+<tr>
+<td>6026</td>
+<td>error</td>
+<td>association already exists</td>
+</tr>
+<tr>
+<td>6027</td>
+<td>error</td>
+<td>missing permissions</td>
+</tr>
+<tr>
+<td>6028</td>
+<td>error</td>
+<td>session user not found</td>
+</tr>
+<tr>
+<td>6029</td>
+<td>error</td>
+<td>unexpected number of nodes returned</td>
+</tr>
+<tr>
+<td>6030</td>
+<td>error</td>
+<td>invalid assignment</td>
+</tr>
+<tr>
+<td>6031</td>
+<td>error</td>
+<td>no base ID</td>
+</tr>
+<tr>
+<td>6032</td>
+<td>error</td>
+<td>no process ID</td>
+</tr>
+<tr>
+<td>6034</td>
+<td>error</td>
+<td>invalid association</td>
+</tr>
+<tr>
+<td>6035</td>
+<td>error</td>
+<td>node exists</td>
+</tr>
+<tr>
+<td>6036</td>
+<td>error</td>
+<td>a policy name with the given name already exists</td>
+</tr>
+<tr>
+<td>6037</td>
+<td>error</td>
+<td>invalid credentials</td>
+</tr>
+<tr>
+<td>6038</td>
+<td>error</td>
+<td>loading exception</td>
+</tr>
+<tr>
+<td>6039</td>
+<td>error</td>
+<td>null node context provided</td>
+</tr>
+<tr>
+<td>6041</td>
+<td>error</td>
+<td>not implemented</td>
+</tr>
+<tr>
+<td>6042</td>
+<td>error</td>
+<td>error loading database configuration</td>
+</tr>
+<tr>
+<td>6043</td>
+<td>error</td>
+<td>error hashing user password</td>
+</tr>
+<tr>
+<td>6044</td>
+<td>error</td>
+<td>null operations</td>
+</tr>
+<tr>
+<td>6045</td>
+<td>error</td>
+<td>authentication error</td>
+</tr>
+<tr>
+<td>6046</td>
+<td>error</td>
+<td>null session ID</td>
+</tr>
+<tr>
+<td>6047</td>
+<td>error</td>
+<td>policy class has no rep node</td>
+</tr>
+<tr>
+<td>7000</td>
+<td>error</td>
+<td>database error</td>
+</tr>
+</tbody>
+</table>
 <h2 id="sessions-api">Sessions API</h2>
 <h3 id="create-session">Create session</h3>
 <p>Authenticate the provided credentials and return a session ID if successfully authenticated.</p>
@@ -1055,8 +1346,8 @@ Content-Type:application/json
 <h6 id="example-response_1">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;success&quot;,
-  &quot;entity&quot;: &quot;session deleted&quot;
+  &quot;message&quot;: &quot;session deleted&quot;,
+  &quot;entity&quot;: &quot;null&quot;
 }
 </code></pre>
 
@@ -1315,7 +1606,7 @@ Content-Type:application/json
 <pre><code class="json">{
   &quot;name&quot;: &quot;updated_name&quot;,
   &quot;properties&quot;: {
-  &quot;key3&quot;: &quot;value3&quot;,
+    &quot;key3&quot;: &quot;value3&quot;
   }
 }
 </code></pre>
@@ -1323,7 +1614,7 @@ Content-Type:application/json
 <h6 id="example-response_6">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;Node was successfully updated&quot;,
+  &quot;message&quot;: &quot;node updated&quot;,
   &quot;entity&quot;: null
 }
 </code></pre>
@@ -1364,7 +1655,7 @@ Content-Type:application/json
 <h6 id="example-response_7">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;Node successfully deleted&quot;,
+  &quot;message&quot;: &quot;node deleted&quot;,
   &quot;entity&quot;: null
 }
 </code></pre>
@@ -1511,37 +1802,38 @@ Content-Type:application/json
 <td>u</td>
 <td>UA</td>
 </tr>
+</tbody>
+</table>
+<h6 id="endpoint_10">Endpoint</h6>
+<p><code>POST /pm/api/graph/{child}/assignments/{parent}</code></p>
+<h6 id="parameters_8">Parameters</h6>
+<table>
+<thead>
 <tr>
-<td>###### Endpoint</td>
-<td></td>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
 </tr>
-<tr>
-<td><code>POST /pm/api/graph/{child}/assignments/{parent}</code></td>
-<td></td>
-</tr>
-<tr>
-<td>###### Parameters</td>
-<td></td>
-</tr>
-<tr>
-<td>Parameter</td>
-<td>Required</td>
-</tr>
-<tr>
-<td>---</td>
-<td>---</td>
-</tr>
+</thead>
+<tbody>
 <tr>
 <td>session</td>
 <td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
 </tr>
 <tr>
 <td>child</td>
 <td>true</td>
+<td>path</td>
+<td>The ID of the child node and a matrix parameter for the type.</td>
 </tr>
 <tr>
 <td>parent</td>
 <td>true</td>
+<td>path</td>
+<td>The ID of the parent node and a matrix parameter for the type.</td>
 </tr>
 </tbody>
 </table>
@@ -1552,21 +1844,46 @@ Content-Type:application/json
 <h6 id="example-response_10">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;Assignment successfully created&quot;,
+  &quot;message&quot;: &quot;assignment created&quot;,
   &quot;entity&quot;: null
 }
 </code></pre>
 
 <h3 id="delete-assignment">Delete assignment</h3>
 <p>Delete an assignment between two nodes, as long as the calling user has permissions to do so. If an assignment does not exist between the two nodes, nothing will happen and a success code will be returned.</p>
-<h6 id="endpoint_10">Endpoint</h6>
+<h6 id="endpoint_11">Endpoint</h6>
 <p><code>DELETE /pm/api/graph/{childID}/assignments/{parentID}</code></p>
-<h6 id="parameters_8">Parameters</h6>
-<p>Parameter | Required | Location | Description | Example
----|---|---|---
-session | true | query | The ID of the current session. |
-child | true | body | The ID of the child node and a martix parameter for the type. | child;id=1234;type=OA
-parent | true | body | The ID of the parent node and a matrix parameter for the type. | parent;id=4321;type=OA</p>
+<h6 id="parameters_9">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>child</td>
+<td>true</td>
+<td>body</td>
+<td>The ID of the child node and a martix parameter for the type.</td>
+</tr>
+<tr>
+<td>parent</td>
+<td>true</td>
+<td>body</td>
+<td>The ID of the parent node and a matrix parameter for the type.</td>
+</tr>
+</tbody>
+</table>
 <h6 id="example-request_11">Example request</h6>
 <pre><code class="curl">$ curl -X DELETE {host}:{port}/pm/api/graph/child;id=1234;type=OA/assignments/parent;id=4321;type=OA?session={sessionID}
 </code></pre>
@@ -1574,16 +1891,16 @@ parent | true | body | The ID of the parent node and a matrix parameter for the 
 <h6 id="example-response_11">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;Assignment successfully deleted&quot;,
+  &quot;message&quot;: &quot;assignment deleted&quot;,
   &quot;entity&quot;: null
 }
 </code></pre>
 
 <h3 id="get-associations">Get associations</h3>
 <p>Get the associations the given node is apart of.  The node must exist in the graph. The query parameter <code>type</code> is required and denotes which type of associations to retrieve for the node.  Accepted values are <code>source</code> and <code>target</code>. Source will get the associations the given node is the source of.  Target will get the associations the given node is a target of.</p>
-<h6 id="endpoint_11">Endpoint</h6>
+<h6 id="endpoint_12">Endpoint</h6>
 <p><code>GET /pm/api/graph/{nodeID}/associations</code></p>
-<h6 id="parameters_9">Parameters</h6>
+<h6 id="parameters_10">Parameters</h6>
 <table>
 <thead>
 <tr>
@@ -1632,9 +1949,9 @@ parent | true | body | The ID of the parent node and a matrix parameter for the 
 
 <h3 id="create-association">Create association</h3>
 <p>Create an association between a user attribute and a target node.  The user attribute and target nodes need to already exist in the graph. The target node can be another user attribute or an object attribute. The target segment of the request url must contain the ID and type of the intended target node.</p>
-<h6 id="endpoint_12">Endpoint</h6>
+<h6 id="endpoint_13">Endpoint</h6>
 <p><code>POST /pm/api/graph/{uaID}/associations/{target}</code></p>
-<h6 id="parameters_10">Parameters</h6>
+<h6 id="parameters_11">Parameters</h6>
 <table>
 <thead>
 <tr>
@@ -1678,8 +1995,8 @@ parent | true | body | The ID of the parent node and a matrix parameter for the 
 <h6 id="example-request-body_3">Example request body</h6>
 <pre><code class="json">{
   &quot;operations&quot;: [
-  &quot;read&quot;,
-  &quot;write&quot;
+    &quot;read&quot;,
+    &quot;write&quot;
   ]
 }
 </code></pre>
@@ -1687,41 +2004,16 @@ parent | true | body | The ID of the parent node and a matrix parameter for the 
 <h6 id="example-response_13">Example response</h6>
 <pre><code class="json">{
   &quot;code&quot;: 9000,
-  &quot;message&quot;: &quot;Association successfully created&quot;,
+  &quot;message&quot;: &quot;association created&quot;,
   &quot;entity&quot;: null
 }
 </code></pre>
 
 <h3 id="update-association">Update association</h3>
-<h6 id="endpoint_13">Endpoint</h6>
-<p><code>GET /pm/api/graph/nodes</code></p>
-<h6 id="parameters_11">Parameters</h6>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Required</th>
-<th>Location</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>session</td>
-<td>true</td>
-<td>query</td>
-<td>The ID of the current session.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="example-request_14">Example request</h6>
-<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
-</code></pre>
-
-<h6 id="example-response_14">Example response</h6>
-<h3 id="delete-association">Delete association</h3>
+<p>Update an association between a user attribute and a target node. The existing operations will be overwritten by the operations provided in the request.
+If an association does not exist between the two nodes, one will be created.</p>
 <h6 id="endpoint_14">Endpoint</h6>
-<p><code>GET /pm/api/graph/nodes</code></p>
+<p><code>PUT /pm/api/graph/{uaID}/associations/{target}</code></p>
 <h6 id="parameters_12">Parameters</h6>
 <table>
 <thead>
@@ -1739,13 +2031,92 @@ parent | true | body | The ID of the parent node and a matrix parameter for the 
 <td>query</td>
 <td>The ID of the current session.</td>
 </tr>
+<tr>
+<td>uaID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the User Attribute.</td>
+</tr>
+<tr>
+<td>target</td>
+<td>true</td>
+<td>path</td>
+<td>The target of the association.  The ID and Type are <strong>required</strong> matrix parameters.</td>
+</tr>
+<tr>
+<td>operations</td>
+<td>false</td>
+<td>body</td>
+<td>The set of operations to give the association.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="example-request_14">Example request</h6>
+<pre><code class="curl">$ curl -X PUT {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?session={sessionID}
+</code></pre>
+
+<h6 id="example-request-body_4">Example request body</h6>
+<pre><code class="json">{
+  &quot;operations&quot;: [
+    &quot;read&quot;
+  ]
+}
+</code></pre>
+
+<h6 id="example-response_14">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;association updated&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
+
+<h3 id="delete-association">Delete association</h3>
+<p>Delete an association between two nodes. If one does not exist, nothing will happen, and a success code will be returned.</p>
+<h6 id="endpoint_15">Endpoint</h6>
+<p><code>DELETE /pm/api/graph/{uaID}/associations/{target}</code></p>
+<h6 id="parameters_13">Parameters</h6>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Location</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>session</td>
+<td>true</td>
+<td>query</td>
+<td>The ID of the current session.</td>
+</tr>
+<tr>
+<td>uaID</td>
+<td>true</td>
+<td>path</td>
+<td>The ID of the User Attribute.</td>
+</tr>
+<tr>
+<td>target</td>
+<td>true</td>
+<td>path</td>
+<td>The target of the association.  The ID and Type are <strong>required</strong> matrix parameters.</td>
+</tr>
 </tbody>
 </table>
 <h6 id="example-request_15">Example request</h6>
-<pre><code class="curl">$ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}
+<pre><code class="curl">$ curl -X DELETE {host}:{port}/pm/api/graph/1234/associations/target;id=4321;type=OA?session={sessionID}
 </code></pre>
 
-<h4 id="example-response_15">Example response</h4>
+<h6 id="example-response_15">Example response</h6>
+<pre><code class="json">{
+  &quot;code&quot;: 9000,
+  &quot;message&quot;: &quot;association deleted&quot;,
+  &quot;entity&quot;: null
+}
+</code></pre>
               
             </div>
           </div>

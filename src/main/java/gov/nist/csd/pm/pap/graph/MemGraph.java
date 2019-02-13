@@ -89,6 +89,7 @@ public class MemGraph implements Graph, Serializable {
      * @throws PMException When the provided node has an ID of 0.
      * @throws PMException When the provided node has a null or empty name.
      * @throws PMException When the provided node has a null type.
+     * @throws PMException When the provided node name and type already exist in the namespace specified in the properties.
      */
     @Override
     public long createNode(NodeContext node) throws PMException {
@@ -101,6 +102,13 @@ public class MemGraph implements Graph, Serializable {
             throw new PMException(Errors.ERR_NULL_NAME, "no name was provided when creating a node in the in-memory graph");
         } else if(node.getType() == null) {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided to the in memory graph when creating a node");
+        }
+
+        // check that the node namespace, name, and type do not already exist
+        if(namespaceNames.get(nodeToNamespace(node)) != null) {
+            throw new PMException(Errors.ERR_NODE_NAME_EXISTS_IN_NAMESPACE,
+                    String.format("a node with the name %s and type %s already exists in the name space %s",
+                            node.getName(), node.getType(), node.getProperties().get(NAMESPACE_PROPERTY)));
         }
 
         //if the node being created is a PC, add it to the graph and list of policies
@@ -121,29 +129,71 @@ public class MemGraph implements Graph, Serializable {
         return node.getID();
     }
 
+    /**
+     * Add a node to the namespace map.  Store the namespace:name:type and point to the node ID.
+     * @param node
+     */
     private void addNamespaceName(NodeContext node) {
+        this.namespaceNames.put(nodeToNamespace(node), node.getID());
+    }
+
+    private String nodeToNamespace(NodeContext node) {
         String namespace = node.getProperties().get(NAMESPACE_PROPERTY);
         String name = node.getName();
         NodeType type = node.getType();
-        long id = node.getID();
         if(namespace == null) {
             namespace = DEFAULT_NAMESPACE;
         }
-        this.namespaceNames.put(namespace + ":" + name + ":" + type, id);
+        return namespace + ":" + name + ":" + type;
     }
 
-    private void removeNamespaceName(String namespace, String name, String type) {
-        if(namespace == null) {
-            namespace = "";
-        }
-        this.namespaceNames.remove(namespace + ":" + name + ":" + type);
+    private void removeNamespaceName(NodeContext node) {
+        this.namespaceNames.remove(nodeToNamespace(node));
     }
 
+    /**
+     * Update a node with the given node context. Only the name and properties can be updated. If the name of the context
+     * is null, then the name will not be updated.  The properties provided in the context will overwrite any existing
+     * properties.  If the properties are null, they will be skipped. However, if the properties are an empty map, the
+     * empty map will be set as the node's new properties.
+     *
+     * The ID must be present in order to identify which node to update.
+     *
+     * @param node The node to update. This includes the id, name, and properties.
+     * @throws PMException if the given node ID does not exist in the graph.
+     */
     @Override
-    public void updateNode(NodeContext node) {
-        nodes.put(node.getID(), node);
+    public void updateNode(NodeContext node) throws PMException {
+        NodeContext existingNode = nodes.get(node.getID());
+        if(existingNode == null) {
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with the ID %d could not be found to update", node.getID()));
+        }
+
+        // update name if present
+        if(node.getName() != null && !node.getName().isEmpty()) {
+            existingNode.name(node.getName());
+        }
+
+        // update the properties
+        if(node.getProperties() != null) {
+            existingNode.properties(node.getProperties());
+        }
+
+        // update the node information
+        nodes.put(existingNode.getID(), existingNode);
+
+        // update the namespace tuple
+        // remove the tuple
+        removeNamespaceName(node);
+        // re add the tuple
+        addNamespaceName(node);
     }
 
+    /**
+     * Delete the node with the given ID from the graph.  If the nodeID is 0 or does not already exist in the graph,
+     * no errors will occur.
+     * @param nodeID the ID of the node to delete.
+     */
     @Override
     public void deleteNode(long nodeID) {
         NodeContext node = nodes.get(nodeID);
@@ -154,7 +204,7 @@ public class MemGraph implements Graph, Serializable {
         //remove the node from the map
         nodes.remove(nodeID);
         //remove name from namespace
-        removeNamespaceName(node.getProperties().get(NAMESPACE_PROPERTY), node.getName(), node.getType().toString());
+        removeNamespaceName(node);
     }
 
     @Override
@@ -223,12 +273,18 @@ public class MemGraph implements Graph, Serializable {
      *
      * @param childCtx The context information for the child in the assignment.  The ID and type are required.
      * @param parentCtx The context information for the parent in the assignment The ID and type are required.
+     * @throws PMException If the child node context is null.
+     * @throws PMException If the parent node context is null.
      * @throws PMException If the child node does not exist in the graph.
      * @throws PMException If the parent node does not exist in the graph.
      */
     @Override
     public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
-        if(!exists(childCtx.getID())) {
+        if(childCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "child node context was null");
+        } else if (parentCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "parent node context was null");
+        } else if(!exists(childCtx.getID())) {
             throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", childCtx));
         } else if(!exists(parentCtx.getID())) {
             throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", parentCtx));
@@ -237,8 +293,21 @@ public class MemGraph implements Graph, Serializable {
         graph.addEdge(childCtx.getID(), parentCtx.getID(), new Assignment(childCtx.getID(), parentCtx.getID()));
     }
 
+    /**
+     * Deassign the child node from the parent node.
+     *
+     * @param childCtx The context information for the child of the assignment.
+     * @param parentCtx The context information for the parent of the assignment.
+     * @throws PMException If the child node context is null.
+     * @throws PMException If the parent node context is null.
+     */
     @Override
-    public void deassign(NodeContext childCtx, NodeContext parentCtx) {
+    public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMException {
+        if(childCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "child node context was null");
+        } else if (parentCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "parent node context was null");
+        }
         graph.removeEdge(childCtx.getID(), parentCtx.getID());
     }
 
@@ -248,12 +317,18 @@ public class MemGraph implements Graph, Serializable {
      * @param uaCtx The information for the User Attribute in the association.
      * @param targetCtx The context information for the target of the association.
      * @param operations A Set of operations to add to the association.
+     * @throws PMException If the User Attribute node context is null.
+     * @throws PMException If the target node context is null.
      * @throws PMException If the User Attribute node does not exist in the graph.
      * @throws PMException If the target node does not exist in the graph.
      */
     @Override
     public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMException {
-        if(!exists(uaCtx.getID())) {
+        if(uaCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "user attribute node context was null");
+        } else if (targetCtx == null) {
+            throw new PMException(Errors.ERR_NULL_NODE_CTX, "target node context was null");
+        } else if(!exists(uaCtx.getID())) {
             throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", uaCtx.getID()));
         } else if(!exists(targetCtx.getID())) {
             throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", targetCtx.getID()));
@@ -268,13 +343,29 @@ public class MemGraph implements Graph, Serializable {
         }
     }
 
+    /**
+     * Dissociate the User Attribute node from the target node.  If an association does not exist, nothing happens.
+     * @param uaCtx The context information for the User Attribute of the association.
+     * @param targetCtx The context information for the target of the association.
+     */
     @Override
     public void dissociate(NodeContext uaCtx, NodeContext targetCtx) {
         graph.removeEdge(uaCtx.getID(), targetCtx.getID());
     }
 
+    /**
+     * Get the associations that the given node is the source of.
+     *
+     * @param sourceID The ID of the source node.
+     * @return A map of the target nodes to the operations for each association that the given node is the source of.
+     * @throws PMException If the given ID does not exist in the graph.
+     */
     @Override
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) {
+    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws PMException {
+        if(!exists(sourceID)) {
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", sourceID));
+        }
+
         HashMap<Long, HashSet<String>> assocs = new HashMap<>();
         Set<Relationship> rels = graph.outgoingEdgesOf(sourceID);
         for(Relationship rel : rels){
@@ -286,8 +377,19 @@ public class MemGraph implements Graph, Serializable {
         return assocs;
     }
 
+    /**
+     * Get the associations that the given node is the target of.
+     *
+     * @param targetID the ID of the target node.
+     * @return A map of the source nodes to the operations for each association that the given node is the target of.
+     * @throws PMException If the given ID does not exist in the graph.
+     */
     @Override
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) {
+    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws PMException {
+        if(!exists(targetID)) {
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node %s does not exist in the graph", targetID));
+        }
+
         HashMap<Long, HashSet<String>> assocs = new HashMap<>();
         Set<Relationship> rels = graph.incomingEdgesOf(targetID);
         for(Relationship rel : rels){

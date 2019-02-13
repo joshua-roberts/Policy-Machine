@@ -28,16 +28,10 @@ public class Neo4jSearch implements Search {
      */
     protected Neo4jConnection neo4j;
 
-    /**
-     * Create a new Search with the given Neo4j connection context.
-     */
     public Neo4jSearch(DatabaseContext ctx) throws PMException {
         this.neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
-    /**
-     * Create a new Search with the given Neo4j connection.
-     */
     public Neo4jSearch(Neo4jConnection neo4j) {
         this.neo4j = neo4j;
     }
@@ -81,10 +75,7 @@ public class Neo4jSearch implements Search {
         }
     }
 
-    /**
-     * Build the cypher query according to the given parameters.
-     */
-    protected static String getSearchCypher(String name, String type, Map<String,String> properties) {
+    private static String getSearchCypher(String name, String type, Map<String,String> properties) {
         String propsStr = "";
         if (name != null && !name.isEmpty()){
             propsStr = String.format("name: \"%s\"", name);

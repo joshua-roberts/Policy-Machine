@@ -71,7 +71,7 @@ public class StandaloneExample {
             System.out.println(operations);
 
             // run the example with a neo4j graph
-            graph = new Neo4jGraph(new DatabaseContext("localhost", 7687, "neo4j", "root", null));
+            graph = new Neo4jGraph(new DatabaseContext("localhost", 7687, DatabaseContext.NEO4J, "root", null));
             operations = runExample(graph);
             System.out.println(operations);
         }

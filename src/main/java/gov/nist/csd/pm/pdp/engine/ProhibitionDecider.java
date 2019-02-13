@@ -11,6 +11,7 @@ public interface ProhibitionDecider {
      * @param subjectID The ID of the subject, either a user or a process.
      * @param targetID The ID of the target to get the prohibited permissions on.
      * @return The set of permissions that are denied for the subject on the target.
+     * @throws PMException If there is an error listing the prohibited permissions on the target.
      */
     HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws PMException;
 }
