@@ -5,7 +5,7 @@ nav:
   - Javadoc: /Policy-Machine-Dev/javadoc/
   - REST API: api.md
   - Examples: examples.md
-  - Links: links.md
+  - Contact Us: contact.md
 theme:
   name: 'rtd-dropdown'
 extra_css:
