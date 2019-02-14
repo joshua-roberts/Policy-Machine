@@ -12,38 +12,40 @@ The REST API provides tools to create NGAC aware applications but requires a cer
 Examples can be found below and in [examples](/examples/#standalone-examples)
 
 ### Example
-This is an example of building a simple graph, with one of each type of node. We will use the `listPermissions` function to compute all the permissions `u1` has on `o1`.
+We want to grant user `u1` read permission on object `o1`.  The following code sample will accomplish this.
+
 ```
-// create a new in memory graph
+// 1. Create a new graph.  For this example, we'll use the in-memory implementation of the 'Graph' interface.
 Graph graph = new MemGraph();
 
-// create a node for each type
-long pc1ID = graph.createNode(new NodeContext(1, "pc1", PC, NodeUtils.toProperties("key1", "value1")));
-long oa1ID = graph.createNode(new NodeContext(2, "oa1", OA, NodeUtils.toProperties("key1", "value1")));
-long o1ID = graph.createNode(new NodeContext(3, "o1", O, NodeUtils.toProperties("key1", "value1")));
-long ua1ID = graph.createNode(new NodeContext(4, "ua1", UA, NodeUtils.toProperties("key1", "value1")));
-long u1ID = graph.createNode(new NodeContext(5, "u1", U, NodeUtils.toProperties("key1", "value1")));
+// 2. Create the user and object nodes.
+// create a user with name u1, ID 5, and the properties key1=value1
+long u1ID = graph.createNode(new NodeContext(5, "u1", NodeType.U, NodeUtils.toProperties("key1", "value1")));
+// create an object with name o1, ID 3, and the properties key1=value1
+long o1ID = graph.createNode(new NodeContext(3, "o1", NodeType.O, NodeUtils.toProperties("key1", "value1")));
 
-// create assignments
-graph.assign(new NodeContext(o1ID, O), new NodeContext(oa1ID, OA));
-graph.assign(new NodeContext(oaID1, OA), new NodeContext(pc1ID, PC));
-graph.assign(new NodeContext(u1ID, U), new NodeContext(ua1ID, UA));
-graph.assign(new NodeContext(ua1ID, UA), new NodeContext(pc1ID, PC));
+// 3. Create a user attribute 'ua1' and assign 'u1' to it.
+long ua1ID = graph.createNode(new NodeContext(4, "ua1", NodeType.UA, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new NodeContext(u1ID, NodeType.U), new NodeContext(ua1ID, NodeType.UA));
 
-// create an association
-graph.associate(new NodeContext(ua1ID, UA), new NodeContext(oa1ID, OA), new HashSet<>(Arrays.asList("read", "write")));
+// 4. Create an object attribute 'oa1' and assign 'o1' to it.
+long oa1ID = graph.createNode(new NodeContext(2, "oa1", NodeType.OA, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new NodeContext(o1ID, NodeType.O), new NodeContext(oa1ID, NodeType.OA));
 
-// create a prohibition for u1 on oa1
-Prohibition prohibition = new Prohibition();
-prohibition.setName("test_deny");
-prohibition.setSubject(new ProhibitionSubject(u1, ProhibitionSubjectType.U));
-prohibition.setIntersection(false);
-prohibition.setOperations(new HashSet<>(Arrays.asList("read")));
-prohibition.addNode(new ProhibitionNode(oa1, false));
+// 5. Create a policy class and assign the user and object attributes to it.
+long pc1ID = graph.createNode(new NodeContext(1, "pc1", NodeType.PC, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new NodeContext(ua1ID, NodeType.UA), new NodeContext(pc1ID, NodeType.PC));
+graph.assign(new NodeContext(oa1ID, NodeType.OA), new NodeContext(pc1ID, NodeType.PC));
 
-// create a new policy decider with the in memory graph and a list of prohibitions
-Decider decider = new PReviewDecider(graph, Arrays.asList(prohibition));
+// 6. associate 'ua1' and 'oa1' to give 'u1' read permissions on 'o1'
+graph.associate(new NodeContext(ua1ID, NodeType.UA), new NodeContext(oa1ID, NodeType.OA), new HashSet<>(Arrays.asList("read")));
 
-// print the list of permissions that u1 has on o1
-System.out.println(decider.listPermissions(u1, NO_PROCESS, o1));// print ["read", "write"]
+// test the configuration is correct
+// create a new policy decider with the in memory graph
+// the second parameter is a list of prohibitions, but since they aren't used in this example, null is fine
+Decider decider = new PReviewDecider(graph, null);
+
+// use the listPermissions method to list the permissions 'u1' has on 'o1'
+HashSet<String> permissions = decider.listPermissions(u1ID, 0, o1ID);
+assertTrue(permissions.contains("read"));
 ```
