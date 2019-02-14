@@ -63,9 +63,6 @@ Upon starting the server for the first time, you must provide the database conne
 #### Notes on Neo4j
 If using docker-compose to run the Policy Machine server, the web application will recognize the neo4j service by the name `neo4j`.  Therefore, when setting the connection to the database, the host name should be `neo4j`.  Also, the bolt protocol is used so the port should be `7687`.
 
-#### Notes on MySQL
-The MySQL schema can be found at `pmsql.sql`.
-
 ## How to Use the API
 
 ### Requests
