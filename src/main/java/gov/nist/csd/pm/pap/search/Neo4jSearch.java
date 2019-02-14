@@ -36,6 +36,15 @@ public class Neo4jSearch implements Search {
         this.neo4j = neo4j;
     }
 
+    /**
+     * Search the neo4j database for nodes based on name, type, and properties. This implementation does not support
+     * wildcard searching.
+     * @param name The name of the nodes to search for.
+     * @param type The type of the nodes to search for.
+     * @param properties The properties of the nodes to search for.
+     * @return The set of nodes that match the search parameters.
+     * @throws PMException If there is an error retrieving the nodes from the database.
+     */
     @Override
     public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException {
         // get the cypher query

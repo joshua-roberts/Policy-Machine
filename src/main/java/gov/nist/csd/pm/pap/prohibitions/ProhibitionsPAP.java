@@ -6,7 +6,6 @@ import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.loader.prohibitions.Neo4jProhibitionsLoader;
 import gov.nist.csd.pm.pap.loader.prohibitions.ProhibitionsLoader;
-import gov.nist.csd.pm.pap.loader.prohibitions.SQLProhibitionsLoader;
 
 import java.util.List;
 
@@ -15,14 +14,8 @@ public class ProhibitionsPAP implements ProhibitionsDAO {
     private MemProhibitionsDAO memProhibitions;
 
     public ProhibitionsPAP(DatabaseContext ctx) throws PMException {
-        ProhibitionsLoader loader;
-        if(ctx.getDatabase().equals(DatabaseContext.NEO4J)) {
-            dbProhibitions = new Neo4jProhibitionsDAO(ctx);
-            loader = new Neo4jProhibitionsLoader(ctx);
-        } else {
-            dbProhibitions = new SQLProhibitionsDAO(ctx);
-            loader = new SQLProhibitionsLoader(ctx);
-        }
+        dbProhibitions = new Neo4jProhibitionsDAO(ctx);
+        ProhibitionsLoader loader = new Neo4jProhibitionsLoader(ctx);
         memProhibitions = new MemProhibitionsDAO(loader);
     }
 

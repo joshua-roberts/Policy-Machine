@@ -7,7 +7,6 @@ import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.loader.graph.GraphLoader;
 import gov.nist.csd.pm.pap.loader.graph.Neo4jGraphLoader;
-import gov.nist.csd.pm.pap.loader.graph.SQLGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
 
 import java.util.HashMap;
@@ -20,14 +19,8 @@ public class GraphPAP implements Graph, Search {
     private MemGraph memGraph;
 
     public GraphPAP(DatabaseContext ctx) throws PMException {
-        GraphLoader loader;
-        if(ctx.getDatabase().equals(DatabaseContext.NEO4J)) {
-            dbGraph = new Neo4jGraph(ctx);
-            loader = new Neo4jGraphLoader(ctx);
-        } else {
-            dbGraph = new SQLGraph(ctx);
-            loader = new SQLGraphLoader(ctx);
-        }
+        dbGraph = new Neo4jGraph(ctx);
+        GraphLoader loader = new Neo4jGraphLoader(ctx);
         memGraph = new MemGraph(loader);
     }
 

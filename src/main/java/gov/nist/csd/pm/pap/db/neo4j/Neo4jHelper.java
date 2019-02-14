@@ -1,5 +1,6 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
+import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
@@ -54,15 +55,31 @@ public class Neo4jHelper {
     }
 
     /**
-     * Given a map of properties representing a Node, return a Node object.
+     * Given a map of properties representing a Node, return a Node object.  If the given map is null, then return null.
      * @param map The map to convert into a NodeContext
-     * @return A NodeContext representation of the provided map.
+     * @return A NodeContext representation of the provided map, or null if the map provided was null.
      */
-    public static NodeContext mapToNode(Map map) {
+    public static NodeContext mapToNode(Map map) throws PMException {
+        if(map == null) {
+            return null;
+        }
+
         // first, convert the json to a map
         long id = (long) map.get("id");
+        if(id == 0) {
+            throw new PMException(Errors.ERR_NO_ID, "encountered an ID of 0 when converting a map to a node");
+        }
+
         String name = (String)map.get("name");
+        if(name == null || name.isEmpty()) {
+            throw new PMException(Errors.ERR_NULL_NAME, String.format("the node with the ID %d has a null or empty name", id));
+        }
+
         NodeType type = NodeType.toNodeType((String) map.get("type"));
+        if(type == null) {
+            throw new PMException(Errors.ERR_NULL_TYPE, String.format("the node with the ID %d has a null type", id));
+        }
+
         HashMap<String, String> properties = new HashMap<>();
         for (Object o : map.keySet()) {
             String key = (String)o;

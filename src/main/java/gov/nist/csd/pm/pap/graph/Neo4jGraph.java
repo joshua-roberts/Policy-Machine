@@ -65,9 +65,6 @@ public class Neo4jGraph implements Graph {
      * @param node The context of the node to create.  This includes the id, name, type, and properties.
      * @return The ID of the created node.
      * @throws PMException If the provided node is null.
-     * @throws PMException If the provided node name is null.
-     * @throws PMException If the provided node type is null.
-     * @throws PMException If there is an error in Neo4j.
      */
     @Override
     public long createNode(NodeContext node) throws PMException {
@@ -79,7 +76,14 @@ public class Neo4jGraph implements Graph {
             throw new PMException(Errors.ERR_NULL_TYPE, "a null type was provided when creating a new node");
         }
 
+        // if the node properties are null, initialize to an empty map
+        if(node.getProperties() == null) {
+            node.properties(new HashMap<>());
+        }
+
+        // generate a random ID
         long id = new Random().nextLong();
+
         String cypher = String.format("create(n:NODE:%s{id: %d, name: '%s', type: '%s'})",
                 node.getType(), id, node.getName(), node.getType());
 
@@ -229,6 +233,10 @@ public class Neo4jGraph implements Graph {
             while (rs.next()) {
                 HashMap map = (HashMap) rs.getObject(1);
                 NodeContext node = mapToNode(map);
+                if(node == null) {
+                    throw new PMException(Errors.ERR_NULL_NODE_CTX, "received a null node from neo4j");
+                }
+
                 nodes.add(node);
             }
             return nodes;
