@@ -77,15 +77,11 @@ public class PAP {
             interval = Integer.parseInt(inter);
         }
 
-        setup(database, host, port, schema, username, password);
+        setup(database, new DatabaseContext(host, port, username, password, schema));
     }
 
-    private PAP(String database, String host, int port, String username, String password, String schema, int interval) throws PMException {
-        if(interval > 0) {
-            this.interval = interval;
-        }
-
-        setup(database, host, port, schema, username, password);
+    private PAP(String database, DatabaseContext ctx) throws PMException {
+        setup(database, ctx);
     }
 
     /**
@@ -94,15 +90,9 @@ public class PAP {
      * user.
      *
      * @param database The database to use.  Neo4j or MySQL.
-     * @param host The name of the database host machine.
-     * @param port The port the database is running on.
-     * @param schema The database schema if applicable.
-     * @param username The username of the database user.
-     * @param password The password of the database user
+     * @param ctx The database connection information.
      */
-    private void setup(String database, String host, int port, String schema, String username, String password) throws PMException {
-        DatabaseContext ctx = new DatabaseContext(database, host, port, username, password, schema);
-
+    private void setup(String database, DatabaseContext ctx) throws PMException {
         graphPAP = new GraphPAP(ctx);
         prohibitionsPAP = new ProhibitionsPAP(ctx);
         sessionManager = new SessionManager();
@@ -287,9 +277,9 @@ public class PAP {
         return PAP;
     }
 
-    public static synchronized PAP getPAP(boolean init, String database, String host, int port, String username, String password, String schema, int interval) throws PMException {
+    public static synchronized PAP getPAP(boolean init, String database, DatabaseContext ctx) throws PMException {
         if(PAP == null || init) {
-            PAP = new PAP(database, host, port, username, password, schema, interval);
+            PAP = new PAP(database, ctx);
         }
         return PAP;
     }
@@ -319,7 +309,7 @@ public class PAP {
         saveProperties(props);
 
         //instantiate the PAP
-        PAP = new PAP(database, host, port, username, password, schema, interval);
+        PAP = new PAP(database, new DatabaseContext(host, port, username, password, schema));
     }
 
     /**

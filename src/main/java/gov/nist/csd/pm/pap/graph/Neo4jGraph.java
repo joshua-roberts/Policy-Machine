@@ -254,8 +254,20 @@ public class Neo4jGraph implements Graph {
      */
     @Override
     public HashSet<Long> getPolicies() throws PMException {
-        // Use a Neo4j graph loader using the given database connection to get the policies.
-        return new Neo4jGraphLoader(dbCtx).getPolicies();
+        String cypher = "match(n) where n:PC return n.id";
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            HashSet<Long> nodeIDs = new HashSet<>();
+            while (rs.next()) {
+                nodeIDs.add(rs.getLong(1));
+            }
+            return nodeIDs;
+        } catch (SQLException e) {
+            throw new PMException(ERR_DB, e.getMessage());
+        }
     }
 
     /**

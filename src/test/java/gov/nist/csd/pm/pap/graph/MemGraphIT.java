@@ -3,20 +3,70 @@ package gov.nist.csd.pm.pap.graph;
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
+import gov.nist.csd.pm.pap.db.DatabaseContext;
+import gov.nist.csd.pm.pap.loader.graph.Neo4jGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
-import org.junit.Test;
+import gov.nist.csd.pm.pap.search.Neo4jSearch;
+import gov.nist.csd.pm.utils.TestUtils;
+import org.junit.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.UUID;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.PC;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MemGraphTest {
+public class MemGraphIT {
+
+    private static Graph loadedGraph;
+    private static String testID;
+    private static long pc1ID;
+    private static long oa1ID;
+    private static long ua1ID;
+    private static long o1ID;
+    private static long u1ID;
+
+    @BeforeClass
+    public static void setUp() throws PMException, IOException {
+        // set up neo4j graph
+        Neo4jGraph neoGraph = new Neo4jGraph(TestUtils.getDatabaseContext());
+        testID = UUID.randomUUID().toString();
+
+        u1ID = neoGraph.createNode(new NodeContext(5, "u1", NodeType.U, NodeUtils.toProperties("namespace", testID)));
+        o1ID = neoGraph.createNode(new NodeContext(3, "o1", NodeType.O, NodeUtils.toProperties("namespace", testID)));
+
+        ua1ID = neoGraph.createNode(new NodeContext(4, "ua1", NodeType.UA, NodeUtils.toProperties("namespace", testID)));
+        neoGraph.assign(new NodeContext(u1ID, NodeType.U), new NodeContext(ua1ID, NodeType.UA));
+
+        oa1ID = neoGraph.createNode(new NodeContext(2, "oa1", NodeType.OA, NodeUtils.toProperties("namespace", testID)));
+        neoGraph.assign(new NodeContext(o1ID, NodeType.O), new NodeContext(oa1ID, NodeType.OA));
+
+        pc1ID = neoGraph.createNode(new NodeContext(1, "pc1", NodeType.PC, NodeUtils.toProperties("namespace", testID)));
+        neoGraph.assign(new NodeContext(ua1ID, NodeType.UA), new NodeContext(pc1ID, NodeType.PC));
+        neoGraph.assign(new NodeContext(oa1ID, NodeType.OA), new NodeContext(pc1ID, NodeType.PC));
+
+        neoGraph.associate(new NodeContext(ua1ID, NodeType.UA), new NodeContext(oa1ID, NodeType.OA), new HashSet<>(Arrays.asList("read", "write")));
+
+        loadedGraph = new MemGraph(new Neo4jGraphLoader(TestUtils.getDatabaseContext()));
+    }
+
+    @AfterClass
+    public static void tearDown() throws PMException, IOException {
+        Neo4jGraph neoGraph = new Neo4jGraph(TestUtils.getDatabaseContext());
+        HashSet<NodeContext> nodes = new Neo4jSearch(TestUtils.getDatabaseContext()).search(null, null, NodeUtils.toProperties("namespace", testID));
+        for(NodeContext node : nodes) {
+            neoGraph.deleteNode(node.getID());
+        }
+    }
 
     @Test
     public void testCreateNode() throws PMException {
@@ -93,6 +143,13 @@ public class MemGraphTest {
         long id = graph.createNode(new NodeContext(123, "node", OA, null));
         assertTrue(graph.exists(id));
         assertFalse(graph.exists(1234));
+
+        // test the loaded graph
+        assertTrue(loadedGraph.exists(pc1ID));
+        assertTrue(loadedGraph.exists(oa1ID));
+        assertTrue(loadedGraph.exists(ua1ID));
+        assertTrue(loadedGraph.exists(u1ID));
+        assertTrue(loadedGraph.exists(o1ID));
     }
 
     @Test
@@ -106,6 +163,16 @@ public class MemGraphTest {
         graph.createNode(new NodeContext(1235, "node3", OA, null));
 
         assertEquals(3, graph.getNodes().size());
+
+        // laoded graph
+        HashSet<NodeContext> nodes = loadedGraph.getNodes();
+        assertTrue(nodes.containsAll(Arrays.asList(
+                new NodeContext().id(pc1ID),
+                new NodeContext().id(oa1ID),
+                new NodeContext().id(ua1ID),
+                new NodeContext().id(u1ID),
+                new NodeContext().id(o1ID)
+        )));
     }
 
     @Test
@@ -119,6 +186,9 @@ public class MemGraphTest {
         graph.createNode(new NodeContext(1235, "node3", PC, null));
 
         assertEquals(3, graph.getPolicies().size());
+
+        // loaded graph
+        assertTrue(loadedGraph.getPolicies().contains(pc1ID));
     }
 
     @Test
@@ -135,8 +205,23 @@ public class MemGraphTest {
         graph.assign(new NodeContext(child2ID, OA), new NodeContext(parentID, OA));
 
         HashSet<NodeContext> children = graph.getChildren(parentID);
-        assertTrue(children.contains(new NodeContext().id(child1ID)));
-        assertTrue(children.contains(new NodeContext().id(child2ID)));
+        assertTrue(children.containsAll(Arrays.asList(
+                new NodeContext().id(child1ID),
+                new NodeContext().id(child2ID)
+        )));
+
+        // loaded graph
+        children = loadedGraph.getChildren(pc1ID);
+        assertTrue(children.containsAll(Arrays.asList(
+                new NodeContext().id(oa1ID),
+                new NodeContext().id(ua1ID)
+        )));
+
+        children = loadedGraph.getChildren(oa1ID);
+        assertTrue(children.contains(new NodeContext().id(o1ID)));
+
+        children = loadedGraph.getChildren(ua1ID);
+        assertTrue(children.contains(new NodeContext().id(u1ID)));
     }
 
     @Test
@@ -152,9 +237,19 @@ public class MemGraphTest {
         graph.assign(new NodeContext(child1ID, OA), new NodeContext(parent1ID, OA));
         graph.assign(new NodeContext(child1ID, OA), new NodeContext(parent2ID, OA));
 
-        HashSet<NodeContext> children = graph.getParents(child1ID);
-        assertTrue(children.contains(new NodeContext().id(parent1ID)));
-        assertTrue(children.contains(new NodeContext().id(parent2ID)));
+        HashSet<NodeContext> parents = graph.getParents(child1ID);
+        assertTrue(parents.contains(new NodeContext().id(parent1ID)));
+        assertTrue(parents.contains(new NodeContext().id(parent2ID)));
+
+        // loaded graph
+        parents = loadedGraph.getParents(oa1ID);
+        assertTrue(parents.contains(new NodeContext().id(pc1ID)));
+        parents = loadedGraph.getParents(ua1ID);
+        assertTrue(parents.contains(new NodeContext().id(pc1ID)));
+        parents = loadedGraph.getParents(o1ID);
+        assertTrue(parents.contains(new NodeContext().id(oa1ID)));
+        parents = loadedGraph.getParents(u1ID);
+        assertTrue(parents.contains(new NodeContext().id(ua1ID)));
     }
 
     @Test
@@ -237,12 +332,17 @@ public class MemGraphTest {
         long targetID = graph.createNode(new NodeContext(3, "target", OA, null));
 
         graph.associate(new NodeContext(uaID, UA), new NodeContext(targetID, OA), new HashSet<>(Arrays.asList("read", "write")));
-        graph.dissociate(new NodeContext(uaID, UA), new NodeContext(targetID, OA));
 
         HashMap<Long, HashSet<String>> associations = graph.getSourceAssociations(uaID);
-        assertFalse(associations.containsKey(targetID));
+        assertTrue(associations.containsKey(targetID));
+        assertTrue(associations.get(targetID).containsAll(Arrays.asList("read", "write")));
 
         assertThrows(PMException.class, () -> graph.getSourceAssociations(123));
+
+        // loaded graph
+        associations = loadedGraph.getSourceAssociations(ua1ID);
+        assertTrue(associations.containsKey(oa1ID));
+        assertTrue(associations.get(oa1ID).containsAll(Arrays.asList("read", "write")));
     }
 
     @Test
@@ -253,11 +353,16 @@ public class MemGraphTest {
         long targetID = graph.createNode(new NodeContext(3, "target", OA, null));
 
         graph.associate(new NodeContext(uaID, UA), new NodeContext(targetID, OA), new HashSet<>(Arrays.asList("read", "write")));
-        graph.dissociate(new NodeContext(uaID, UA), new NodeContext(targetID, OA));
 
         HashMap<Long, HashSet<String>> associations = graph.getTargetAssociations(targetID);
-        assertFalse(associations.containsKey(uaID));
+        assertTrue(associations.containsKey(uaID));
+        assertTrue(associations.get(uaID).containsAll(Arrays.asList("read", "write")));
 
         assertThrows(PMException.class, () -> graph.getTargetAssociations(123));
+
+        // loaded graph
+        associations = loadedGraph.getTargetAssociations(oa1ID);
+        assertTrue(associations.containsKey(ua1ID));
+        assertTrue(associations.get(ua1ID).containsAll(Arrays.asList("read", "write")));
     }
 }

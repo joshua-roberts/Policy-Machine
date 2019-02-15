@@ -62,13 +62,13 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
         String nodesStr = "";
         for (ProhibitionNode pr : nodes) {
-            nodesStr += String.format("with p create(p)<-[:prohibition]-(pr:prohibition:%s{id:%d, complement:%b})", name, pr.getID(), pr.isComplement());
+            nodesStr += String.format(" with p create(p)<-[:prohibition]-(pn:prohibition_node:%s{id:%d, complement:%s})", name, pr.getID(), pr.isComplement());
         }
 
         String cypher =
-                String.format("create (:prohibition:%s{name: '%s', operations: %s, intersection: %b}) ", name, name, setToCypherArray(operations), intersection) +
-                        "with p" +
-                        String.format("create(p)<-[:prohibition]-(ps:prohibition:%s{subjectID:%d, subjectType:'%s'})", name, subject.getSubjectID(), subject.getSubjectType()) +
+                String.format("create (p:prohibition:%s{name: '%s', operations: %s, intersection: %b}) ", name, name, setToCypherArray(operations), intersection) +
+                        " with p " +
+                        String.format("create(p)<-[:prohibition]-(ps:prohibition_subject:%s{subjectID:%d, subjectType:'%s'})", name, subject.getSubjectID(), subject.getSubjectType()) +
                         nodesStr;
 
         try(
@@ -110,7 +110,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
                 //get subject
                 ProhibitionSubject subject = null;
-                cypher = "match(d:prohibition{name:'" + name + "'})<-[:prohibition]-(s) return s.subjectID, s.subjectType";
+                cypher = "match(d:prohibition{name:'" + name + "'})<-[:prohibition]-(s:prohibition_subject) return s.subjectID, s.subjectType";
                 try(
                         Connection subjectConn = neo4j.getConnection();
                         PreparedStatement subjectStmt = subjectConn.prepareStatement(cypher);
@@ -125,7 +125,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
                 //get nodes
                 List<ProhibitionNode> nodes = new ArrayList<>();
-                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.id, r.complement";
+                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s:prohibition_node) return s.id, r.complement";
                 try(
                         Connection resConn = neo4j.getConnection();
                         PreparedStatement resStmt = resConn.prepareStatement(cypher);
@@ -150,7 +150,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
     @Override
     public void deleteProhibition(String prohibitionName) throws PMException {
-        String cypher = "match(p:prohibition:" + prohibitionName + "}) detach delete n";
+        String cypher = "match(p:" + prohibitionName + ") detach delete p";
 
         try(
                 Connection conn = neo4j.getConnection();

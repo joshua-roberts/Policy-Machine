@@ -5,8 +5,10 @@ import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
@@ -16,6 +18,16 @@ import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
  * similar to an assignment, except an Association has a set of operations included.
  */
 public class Association extends Relationship implements Serializable {
+
+    private static HashMap<NodeType, NodeType[]> validAssociations = new HashMap<>();
+    {
+        validAssociations.put(PC, new NodeType[]{});
+        validAssociations.put(OA, new NodeType[]{});
+        validAssociations.put(O, new NodeType[]{});
+        validAssociations.put(UA, new NodeType[]{UA, OA});
+        validAssociations.put(U, new NodeType[]{});
+    }
+
     private HashSet<String> operations;
 
     public Association(long uaID, long targetID, HashSet<String> operations) {
@@ -29,15 +41,6 @@ public class Association extends Relationship implements Serializable {
 
     public void setOperations(HashSet<String> operations) {
         this.operations = operations;
-    }
-
-    private static HashMap<NodeType, NodeType[]> validAssociations = new HashMap<>();
-    {
-        validAssociations.put(PC, new NodeType[]{});
-        validAssociations.put(OA, new NodeType[]{});
-        validAssociations.put(O, new NodeType[]{});
-        validAssociations.put(UA, new NodeType[]{UA, OA});
-        validAssociations.put(U, new NodeType[]{});
     }
 
     /**
@@ -59,7 +62,27 @@ public class Association extends Relationship implements Serializable {
                 String.format("cannot assign a node of type %s to a node of type %s", uaType, targetType));
     }
 
-    public static class Context {
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof Association)) {
+            return false;
+        }
 
+        Association association = (Association)o;
+        return this.sourceID == association.sourceID &&
+                this.targetID == association.targetID &&
+                this.operations.equals(association.operations);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sourceID, targetID, operations);
+    }
+
+
+    public static void main(String[] args) {
+        HashSet<String> s1 = new HashSet<>(Arrays.asList("read", "write"));
+        HashSet<String> s2 = new HashSet<>(Arrays.asList("read", "write"));
+        System.out.println(s1.equals(s2));
     }
 }

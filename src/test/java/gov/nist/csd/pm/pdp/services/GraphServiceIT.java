@@ -10,11 +10,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.*;
 
 import static gov.nist.csd.pm.common.constants.Operations.*;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
+import static gov.nist.csd.pm.utils.TestUtils.getDatabaseContext;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GraphServiceIT {
@@ -28,8 +30,8 @@ public class GraphServiceIT {
     private static String       testID;
 
     @Before
-    public void setup() throws PMException {
-        getPAP(true, DatabaseContext.NEO4J, "localhost", 7687, DatabaseContext.NEO4J, "root", null, 0);
+    public void setup() throws PMException, IOException {
+        getPAP(true, DatabaseContext.NEO4J, getDatabaseContext());
         superUserID = getPAP().getSuperU().getID();
         testID = UUID.randomUUID().toString();
 

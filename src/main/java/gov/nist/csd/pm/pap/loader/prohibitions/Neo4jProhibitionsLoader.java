@@ -60,7 +60,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
 
                 //get subject
                 ProhibitionSubject subject = null;
-                cypher = "match(d:prohibition{name:'" + name + "'})<-[:prohibition]-(s) return s.subjectID, s.subjectType";
+                cypher = "match(d:prohibition{name:'" + name + "'})<-[:prohibition]-(s:prohibition_subject) return s.subjectID, s.subjectType";
                 try(
                         Connection subjectConn = neo4j.getConnection();
                         PreparedStatement subjectStmt = subjectConn.prepareStatement(cypher);
@@ -75,7 +75,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
 
                 //get nodes
                 List<ProhibitionNode> nodes = new ArrayList<>();
-                cypher = "match(d:prohibition{name:'" + name + "'})-[r:prohibition]->(s) return s.id, r.complement";
+                cypher = "match(d:prohibition{name:'" + name + "'})<-[r:prohibition]-(s:prohibition_node) return s.id, r.complement";
                 try(
                         Connection resConn = neo4j.getConnection();
                         PreparedStatement resStmt = resConn.prepareStatement(cypher);

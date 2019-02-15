@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Object representing a Prohibition.
@@ -45,6 +46,8 @@ public class Prohibition  implements Serializable {
         this.subject = subject;
         if(nodes == null){
             this.nodes = new ArrayList<>();
+        } else {
+            this.nodes = nodes;
         }
         this.name = name;
         this.operations = operations;
@@ -98,5 +101,18 @@ public class Prohibition  implements Serializable {
 
     public void setIntersection(boolean intersection) {
         this.intersection = intersection;
+    }
+
+    public boolean equals(Object o) {
+        if(!(o instanceof Prohibition)) {
+            return false;
+        }
+
+        Prohibition p = (Prohibition)o;
+        return this.getName().equals(p.getName());
+    }
+
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

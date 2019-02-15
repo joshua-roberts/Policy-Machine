@@ -7,11 +7,13 @@ import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
 import gov.nist.csd.pm.pap.search.Neo4jSearch;
+import gov.nist.csd.pm.utils.TestUtils;
 import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.*;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
@@ -25,20 +27,17 @@ public class Neo4jGraphIT {
     private Neo4jGraph graph;
     private Neo4jSearch search;
     private String testID;
-    private DatabaseContext dbCtx;
-
 
     @BeforeEach
-    public void setUp() throws PMException {
-        dbCtx = new DatabaseContext("localhost", 7687, "neo4j", "root", null);
-        graph = new Neo4jGraph(dbCtx);
-        search = new Neo4jSearch(dbCtx);
+    public void setUp() throws PMException, IOException {
+        graph = new Neo4jGraph(TestUtils.getDatabaseContext());
+        search = new Neo4jSearch(TestUtils.getDatabaseContext());
         testID = UUID.randomUUID().toString();
     }
 
     @AfterEach
-    public void tearDown() throws PMException {
-        HashSet<NodeContext> nodes = new Neo4jSearch(dbCtx).search(null, null, NodeUtils.toProperties("namespace", testID));
+    public void tearDown() throws PMException, IOException {
+        HashSet<NodeContext> nodes = new Neo4jSearch(TestUtils.getDatabaseContext()).search(null, null, NodeUtils.toProperties("namespace", testID));
         for(NodeContext node : nodes) {
             graph.deleteNode(node.getID());
         }

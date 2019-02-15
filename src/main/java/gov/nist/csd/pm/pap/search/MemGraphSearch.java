@@ -1,5 +1,7 @@
 package gov.nist.csd.pm.pap.search;
 
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
@@ -26,8 +28,18 @@ public class MemGraphSearch implements Search {
         this.memGraph = graph;
     }
 
+    /**
+     * Search for nodes in the in-memory graph that match the given parameters.  This implementation does support the
+     * use of wildcards when searching for nodes with specific property keys with any value.
+     *
+     * @param name The name of the nodes to search for.
+     * @param type The type of the nodes to search for.
+     * @param properties The properties of the nodes to search for.
+     * @return The set of nodes that match the given parameters.
+     * @throws PMException If there is an error getting a node from the data structure.
+     */
     @Override
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) {
+    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException {
         if(properties == null) {
             properties = new HashMap<>();
         }
@@ -80,8 +92,20 @@ public class MemGraphSearch implements Search {
         return results;
     }
 
+    /**
+     * Retrieve the node with the given ID.
+     *
+     * @param id the ID of the node to get.
+     * @return THe node with the given ID.
+     * @throws PMException If a node with the given ID does not exist.
+     */
     @Override
-    public NodeContext getNode(long id) {
-        return memGraph.getNodesMap().get(id);
+    public NodeContext getNode(long id) throws PMException {
+        NodeContext node = memGraph.getNodesMap().get(id);
+        if(node == null) {
+            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("a node with the id %d does not exist", id));
+        }
+
+        return node;
     }
 }

@@ -35,15 +35,17 @@ public class MemGraph implements Graph, Serializable {
         graph = new DirectedMultigraph<>(Relationship.class);
         nodes = new HashMap<>();
         namespaceNames = new HashMap<>();
-
-        //load the policies
-        pcs = graphLoader.getPolicies();
+        pcs = new HashSet<>();
 
         //load the graph using the graphLoader
         //load the nodes
         HashSet<NodeContext> nodes = graphLoader.getNodes();
         for(NodeContext node : nodes) {
-            this.createNode(node);
+            long id = createNode(node);
+            // if the node is a policy class, add it to the pc set
+            if(node.getType().equals(NodeType.PC)) {
+                pcs.add(id);
+            }
         }
 
         //load the assignments

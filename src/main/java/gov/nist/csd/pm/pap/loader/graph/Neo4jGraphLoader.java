@@ -37,26 +37,8 @@ public class Neo4jGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Long> getPolicies() throws PMException {
-        String cypher = "match(n) where n:PC return n.id";
-        try(
-                Connection conn = neo4j.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(cypher);
-                ResultSet rs = stmt.executeQuery()
-        ) {
-            HashSet<Long> nodeIDs = new HashSet<>();
-            while (rs.next()) {
-                nodeIDs.add(rs.getLong(1));
-            }
-            return nodeIDs;
-        } catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
-        }
-    }
-
-    @Override
     public HashSet<NodeContext> getNodes() throws PMException {
-        String cypher = "match(n) where n:PC or n:OA or n:O or n:UA or n:U return n";
+        String cypher = "match(n) where n:NODE return n";
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);

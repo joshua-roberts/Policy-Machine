@@ -6,6 +6,7 @@ import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Objects;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 
@@ -44,7 +45,19 @@ public class Assignment extends Relationship implements Serializable {
                 String.format("cannot assign a node of type %s to a node of type %s", childType, parentType));
     }
 
-    public static class Context {
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof Assignment)) {
+            return false;
+        }
 
+        Assignment assignment = (Assignment)o;
+        return this.sourceID == assignment.sourceID &&
+                this.targetID == assignment.targetID;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sourceID, targetID);
     }
 }

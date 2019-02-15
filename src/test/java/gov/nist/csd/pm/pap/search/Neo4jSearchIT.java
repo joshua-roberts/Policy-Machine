@@ -5,10 +5,12 @@ import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.Neo4jGraph;
+import gov.nist.csd.pm.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -23,10 +25,9 @@ public class Neo4jSearchIT {
     private String testID;
 
     @BeforeEach
-    public void setUp() throws PMException {
-        DatabaseContext dbCtx = new DatabaseContext("localhost", 7687, "neo4j", "root", null);
-        graph = new Neo4jGraph(dbCtx);
-        search = new Neo4jSearch(dbCtx);
+    public void setUp() throws PMException, IOException {
+        graph = new Neo4jGraph(TestUtils.getDatabaseContext());
+        search = new Neo4jSearch(TestUtils.getDatabaseContext());
         testID = UUID.randomUUID().toString();
     }
 
@@ -66,6 +67,5 @@ public class Neo4jSearchIT {
         assertEquals("oa1", node.getName());
         assertEquals(OA, node.getType());
         assertEquals(NodeUtils.toProperties("namespace", testID), node.getProperties());
-
     }
 }

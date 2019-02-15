@@ -11,13 +11,6 @@ import java.util.HashSet;
  * This interface provides methods needed to load a graph into memory from a database.
  */
 public interface GraphLoader {
-    
-    /**
-     * Get all of the Policy Classes in the graph.
-     * @return A set of all the Policy Classes in the graph.
-     * @throws PMException When there is an error loading the Policy Classes.
-     */
-    HashSet<Long> getPolicies() throws PMException;
 
     /**
      * Get all of the nodes in the graph.
