@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pap.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMDBException;
+import gov.nist.csd.pm.common.exceptions.PMProhibitionException;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.loader.prohibitions.ProhibitionsLoader;
 
 import java.util.List;
@@ -19,16 +19,17 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
 
     /**
      * Create a new in-memory prohibitions DAO.  The provided loader will load ny prohibitions from a database.
-     * @param loader The ProhibitionsLoader to load any existing prohibitions form a database into memory.
-     * @throws PMException If there is an error loading the Prohibitions into memory.
+     * @param loader the ProhibitionsLoader to load any existing prohibitions form a database into memory.
+     * @throws PMDBException if there is an error retrieving the prohibitions from the database.
+     * @throws PMProhibitionException if there is an error representing the data in the database as a Prohibition object.
      */
-    public MemProhibitionsDAO(ProhibitionsLoader loader) throws PMException {
+    public MemProhibitionsDAO(ProhibitionsLoader loader) throws PMProhibitionException, PMDBException {
         prohibitions = loader.loadProhibitions();
     }
 
     /**
      * Add the provided prohibition to the list of prohibitions.
-     * @param prohibition The prohibition to be created.
+     * @param prohibition the prohibition to be created.
      */
     @Override
     public void createProhibition(Prohibition prohibition) {
@@ -36,7 +37,7 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
     }
 
     /**
-     * @return The list of prohibition objects.
+     * @return the list of prohibition objects.
      */
     @Override
     public List<Prohibition> getProhibitions() {
@@ -44,8 +45,8 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
     }
 
     /**
-     * @param prohibitionName The name of the Prohibition to retrieve.
-     * @return The prohibition with the given name.  If one does not exist, return null.
+     * @param prohibitionName the name of the Prohibition to retrieve.
+     * @return the prohibition with the given name.  If one does not exist, return null.
      */
     @Override
     public Prohibition getProhibition(String prohibitionName) {
@@ -59,7 +60,7 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
 
     /**
      * Update an existing prohibition with the same name as the provided prohibition.
-     * @param prohibition The prohibition to update.
+     * @param prohibition the prohibition to update.
      */
     @Override
     public void updateProhibition(Prohibition prohibition) {
@@ -73,7 +74,7 @@ public class MemProhibitionsDAO implements ProhibitionsDAO {
 
     /**
      * Remove the prohibition with the given name from the list.
-     * @param prohibitionName The name of the prohibition to delete.
+     * @param prohibitionName the name of the prohibition to delete.
      */
     @Override
     public void deleteProhibition(String prohibitionName) {

@@ -108,7 +108,7 @@ public class NodeContext implements Serializable {
     /**
      * Two nodes are equal if their IDs are the same.
      * @param o The object to check for equality.
-     * @return True if the two objects are the same, false otherwise.
+     * @return true if the two objects are the same, false otherwise.
      */
     public boolean equals(Object o){
         if(o instanceof NodeContext){

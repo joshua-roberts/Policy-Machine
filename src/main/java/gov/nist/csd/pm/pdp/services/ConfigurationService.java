@@ -30,10 +30,10 @@ public class ConfigurationService extends Service {
     /**
      * Return a json string representation of the entire graph.  The json object will have 3 fields: nodes, assignments,
      * and associations.
-     * @return The json string representation of the graph.
+     * @return the json string representation of the graph.
      * @throws PMException If there is an error reading the graph information from the database and saving it to json.
      */
-    public String save() throws PMException {
+    public String save() throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         HashSet<NodeContext> nodes = getGraphPAP().getNodes();
@@ -66,7 +66,7 @@ public class ConfigurationService extends Service {
      * @param config The json string containing the nodes, assignments, and associations
      * @throws PMException If the configuration is malformed or if the contents of the configuration are not consistent.
      */
-    public void load(String config) throws PMException {
+    public void load(String config) throws PMGraphException, PMConfigurationException, PMDBException, PMAuthorizationException, PMProhibitionException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
         HashSet<NodeContext> nodes = graph.getNodes();
@@ -83,7 +83,7 @@ public class ConfigurationService extends Service {
                     properties.put(PASSWORD_PROPERTY, generatePasswordHash(properties.get(PASSWORD_PROPERTY)));
                 }
                 catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                    throw new PMException(Errors.ERR_HASHING_USER_PSWD, e.getMessage());
+                    throw new PMGraphException(e.getMessage());
                 }
             }
 
@@ -95,10 +95,6 @@ public class ConfigurationService extends Service {
         for(JsonAssignment assignment : assignments) {
             NodeContext childCtx = nodesMap.get(assignment.getChild());
             NodeContext parentCtx = nodesMap.get(assignment.getParent());
-            System.out.println("{" +
-                    assignment.getChild() + "=" + childCtx.getName() + ":" + childCtx.getType() +
-                    assignment.getParent() + "=" + parentCtx.getName() + ":" + parentCtx.getType() +
-                    "}");
             getGraphPAP().assign(childCtx, parentCtx);
         }
 

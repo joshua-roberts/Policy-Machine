@@ -1,6 +1,8 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
+import gov.nist.csd.pm.common.exceptions.PMDBException;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
 import gov.nist.csd.pm.common.model.graph.relationships.Association;
@@ -14,22 +16,23 @@ public interface GraphLoader {
 
     /**
      * Get all of the nodes in the graph.
-     * @return The set of all nodes in the graph.
-     * @throws PMException When there is an error loading the nodes.
+     * @return the set of all nodes in the graph.
+     * @throws PMDBException if there is an error getting the nodes from the database.
+     * @throws PMGraphException if there is an exception converting the data in the database to nodes.
      */
-    HashSet<NodeContext> getNodes() throws PMException;
+    HashSet<NodeContext> getNodes() throws PMDBException, PMGraphException;
 
     /**
      * Get all of the assignments in the graph.
-     * @return A set of all the assignments in the graph.
-     * @throws PMException When there is an error loading the assignments.
+     * @return a set of all the assignments in the graph.
+     * @throws PMDBException if there is an error loading the assignments.
      */
-    HashSet<Assignment> getAssignments() throws PMException;
+    HashSet<Assignment> getAssignments() throws PMDBException;
 
     /**
      * Get all of the associations in the graph.
-     * @return A set of all the associations in the graph.
-     * @throws PMException When there is an error loading the associations.
+     * @return a set of all the associations in the graph.
+     * @throws PMDBException if there is an error loading the associations.
      */
-    HashSet<Association> getAssociations() throws PMException;
+    HashSet<Association> getAssociations() throws PMDBException;
 }

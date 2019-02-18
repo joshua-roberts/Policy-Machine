@@ -1,14 +1,10 @@
 package gov.nist.csd.pm.pap.graph;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
-import gov.nist.csd.pm.pap.search.MemGraphSearch;
 import gov.nist.csd.pm.pap.search.Neo4jSearch;
 import gov.nist.csd.pm.utils.TestUtils;
-import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +15,6 @@ import java.util.*;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.PC;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
-import static gov.nist.csd.pm.pap.PAP.getPAP;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class Neo4jGraphIT {
@@ -45,10 +40,10 @@ public class Neo4jGraphIT {
 
     @Test
     public void testCreateNode() throws PMException {
-        assertAll(() -> assertThrows(PMException.class, () -> graph.createNode(null)),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext(null, OA, null))),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext("", OA, null))),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext("name", null, null)))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext(null, OA, null))),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext("", OA, null))),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext("name", null, null)))
         );
 
         // add pc
@@ -68,12 +63,13 @@ public class Neo4jGraphIT {
     public void testUpdateNode() throws PMException {
         NodeContext node = new NodeContext("node", OA, NodeUtils.toProperties("namespace", testID));
         long nodeID = graph.createNode(node);
+        node.id(nodeID);
 
         // node not found
-        assertThrows(PMException.class, () -> graph.updateNode(new NodeContext("newNodeName", null, null)));
+        assertThrows(PMException.class, () -> graph.updateNode(new NodeContext(new Random().nextLong(), "newNodeName", null, null)));
 
         // update name
-        graph.updateNode(node.name("updated name").id(nodeID));
+        graph.updateNode(node.name("updated name"));
         assertEquals(search.getNode(nodeID).getName(), "updated name");
 
         // update properties
@@ -154,10 +150,10 @@ public class Neo4jGraphIT {
         long parent1ID = graph.createNode(new NodeContext("parent1", OA, NodeUtils.toProperties("namespace", testID)));
         long child1ID = graph.createNode(new NodeContext("child1", OA, NodeUtils.toProperties("namespace", testID)));
 
-        assertAll(() -> assertThrows(PMException.class, () -> graph.assign(null, null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext(), null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext().id(new Random().nextLong()), null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext().id(child1ID), new NodeContext().id(new Random().nextLong())))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.assign(null, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext(), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext().id(new Random().nextLong()), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext().id(child1ID), new NodeContext().id(new Random().nextLong())))
         );
 
         graph.assign(new NodeContext(child1ID, OA), new NodeContext(parent1ID, OA));
@@ -168,8 +164,8 @@ public class Neo4jGraphIT {
 
     @Test
     public void testDeassign() throws PMException {
-        assertAll(() -> assertThrows(PMException.class, () -> graph.assign(null, null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext(), null))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.assign(null, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext(), null))
         );
 
         long parent1ID = graph.createNode(new NodeContext("parent1", OA, NodeUtils.toProperties("namespace", testID)));

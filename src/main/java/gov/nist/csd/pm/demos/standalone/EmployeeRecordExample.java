@@ -1,14 +1,12 @@
 package gov.nist.csd.pm.demos.standalone;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.pap.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
-import gov.nist.csd.pm.pap.graph.Neo4jGraph;
 import gov.nist.csd.pm.pdp.engine.Decider;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,13 +14,14 @@ import java.util.Random;
 
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.*;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
-public class EmployeeRecordExample {
+class EmployeeRecordExample {
 
     private Random rand = new Random();
 
     @Test
-    public void TestEmployeeRecordExample() throws PMException {
+    void TestEmployeeRecordExample() throws PMException {
         Graph graph = new MemGraph();
 
         // create nodes
@@ -66,7 +65,6 @@ public class EmployeeRecordExample {
 
         // policy class
         long pcID = graph.createNode(new NodeContext(rand.nextLong(), "Employee Records", PC, null));
-
 
         // assignments
         // assign users to user attributes
@@ -144,15 +142,15 @@ public class EmployeeRecordExample {
         // expected: [r, w]
         // actual: [r, w]
         HashSet<String> permissions = decider.listPermissions(bobID, 0, bobSSNID);
-        assertTrue(permissions.contains("r"));
-        assertTrue(permissions.contains("w"));
+        assertEquals(permissions, new HashSet<>(Arrays.asList("r", "w")));
+
 
         // user: bob
         // target: 'bob ssn'
         // expected: [r]
         // actual: [r]
         permissions = decider.listPermissions(bobID, 0, bobSalaryID);
-        assertTrue(permissions.contains("r"));
+        assertEquals(permissions, new HashSet<>(Arrays.asList("r")));
 
         // user: bob
         // target: 'alice ssn'
@@ -173,15 +171,14 @@ public class EmployeeRecordExample {
         // expected: [r, w]
         // actual: [r, w]
         permissions = decider.listPermissions(aliceID, 0, aliceSSNID);
-        assertTrue(permissions.contains("r"));
-        assertTrue(permissions.contains("w"));
+        assertEquals(permissions, new HashSet<>(Arrays.asList("r", "w")));
+
 
         // user: charlie
         // target: 'alice salary'
         // expected: [r, w]
         // actual: [r, w]
         permissions = decider.listPermissions(charlieID, 0, aliceSalaryID);
-        assertTrue(permissions.contains("r"));
-        assertTrue(permissions.contains("w"));
+        assertEquals(permissions, new HashSet<>(Arrays.asList("r", "w")));
     }
 }

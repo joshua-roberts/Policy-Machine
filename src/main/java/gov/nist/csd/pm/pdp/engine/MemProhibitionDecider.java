@@ -1,7 +1,8 @@
 package gov.nist.csd.pm.pdp.engine;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.common.exceptions.PMDBException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
+import gov.nist.csd.pm.pap.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
@@ -27,7 +28,7 @@ public class MemProhibitionDecider implements ProhibitionDecider {
     }
 
     @Override
-    public HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws PMException {
+    public HashSet<String> listProhibitedPermissions(long subjectID, long targetID) throws PMDBException, PMGraphException {
         HashSet<String> prohibitedOps = new HashSet<>();
 
         //if the subject ID or target ID are 0, return an empty set
@@ -104,7 +105,7 @@ public class MemProhibitionDecider implements ProhibitionDecider {
         return prohibitedOps;
     }
 
-    private HashSet<Long> getSubGraph(long id) throws PMException {
+    private HashSet<Long> getSubGraph(long id) throws PMGraphException, PMDBException {
         HashSet<Long> nodes = new HashSet<>();
         HashSet<NodeContext> children = graph.getChildren(id);
         if(children.isEmpty()){

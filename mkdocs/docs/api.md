@@ -6,10 +6,10 @@ The Policy Machine REST API exposes a standard set of administrative NGAC comman
 ## Important Notes
 
 1. **Namespaces** - Node's can belong to namespaces which allow for multiple nodes of the same type to have the same name.  Nodes that have the same name but different type are allowed in the same namesapce. If a node is created with out specifying the namespace, it will be put in the 'default' namespace.
-1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
+1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 user attributes super_ua1 and super_ua2. These two attributes are assigned to a policy class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the policy class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
 ![alt text](images/super.png "super")
-2. **Creating a Policy Class** - When creating a Policy Class we check if the requesting user has the permission "create a Policy Class" on the super object.
-3. **Policy Class assignments** - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
+2. **Creating a policy class** - When creating a policy class we check if the requesting user has the permission "create a policy class" on the super object.
+3. **policy class assignments** - When a policy class is created, an Object Attribute that will represent the policy class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the policy class.  This allows us to control who can perform these actions since policy classes them selves cannot be assigned or associated to any other nodes.
 ![alt text](images/pc.png "creating a policy class")
 
 ## Getting Started
@@ -263,7 +263,7 @@ $ curl {host}:{port}/pm/api/graph/nodes?session={sessionID}&type=OA
 ```
 
 ### Create node
-Create a new node in the NGAC graph with the provided name, type, and properties. When creating a Policy Class, leave the baseID parameter empty, as it will be ignored.  For all other node type, a base ID is required in order to connect the node to the graph and ensure the calling user (identified by the provided session ID) has the permission to create a node in the base node (check that the user can assign to the base node).
+Create a new node in the NGAC graph with the provided name, type, and properties. When creating a policy class, leave the baseID parameter empty, as it will be ignored.  For all other node type, a base ID is required in order to connect the node to the graph and ensure the calling user (identified by the provided session ID) has the permission to create a node in the base node (check that the user can assign to the base node).
 
 ###### Endpoint
 `POST /pm/api/graph/nodes`
@@ -562,7 +562,7 @@ Create an association between a user attribute and a target node.  The user attr
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
-uaID | true | path | The ID of the User Attribute.
+uaID | true | path | The ID of the user attribute.
 target | true | path | The target of the association.  The ID and Type are **required** matrix parameters.
 operations | false | body | The set of operations to give the association.
 
@@ -597,7 +597,7 @@ If an association does not exist between the two nodes, one will be created.
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
-uaID | true | path | The ID of the User Attribute.
+uaID | true | path | The ID of the user attribute.
 target | true | path | The target of the association.  The ID and Type are **required** matrix parameters.
 operations | false | body | The set of operations to give the association.
 
@@ -630,7 +630,7 @@ Delete an association between two nodes. If one does not exist, nothing will hap
 Parameter | Required | Location | Description
 ---|---|---|---
 session | true | query | The ID of the current session.
-uaID | true | path | The ID of the User Attribute.
+uaID | true | path | The ID of the user attribute.
 target | true | path | The target of the association.  The ID and Type are **required** matrix parameters.
 
 ###### Example request

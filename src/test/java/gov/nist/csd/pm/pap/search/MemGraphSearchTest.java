@@ -1,8 +1,6 @@
 package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.pap.graph.MemGraph;

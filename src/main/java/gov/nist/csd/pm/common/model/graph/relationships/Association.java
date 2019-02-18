@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.common.model.graph.relationships;
 
-import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import java.io.Serializable;
@@ -47,10 +47,10 @@ public class Association extends Relationship implements Serializable {
      * Check if the provided types create a valid association.
      * @param uaType The type of the source node in the association. This should always be a user Attribute,
      *               so an InvalidAssociationException will be thrown if it's not.
-     * @param targetType The type of the target node. This can be either an Object Attribute or a User Attribute.
+     * @param targetType The type of the target node. This can be either an Object Attribute or a user attribute.
      * @throws PMException When the provided types do not make a valid Association under NGAC
      */
-    public static void checkAssociation(NodeType uaType, NodeType targetType) throws PMException {
+    public static void checkAssociation(NodeType uaType, NodeType targetType) throws PMGraphException {
         NodeType[] check = validAssociations.get(uaType);
         for(NodeType nt : check) {
             if(nt.equals(targetType)) {
@@ -58,8 +58,7 @@ public class Association extends Relationship implements Serializable {
             }
         }
 
-        throw new PMException(Errors.ERR_INVALID_ASSIGNMENT,
-                String.format("cannot assign a node of type %s to a node of type %s", uaType, targetType));
+        throw new PMGraphException(String.format("cannot assign a node of type %s to a node of type %s", uaType, targetType));
     }
 
     @Override

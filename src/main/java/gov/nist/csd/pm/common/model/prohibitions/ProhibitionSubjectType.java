@@ -3,13 +3,14 @@ package gov.nist.csd.pm.common.model.prohibitions;
 
 import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMProhibitionException;
 
 import java.io.Serializable;
 
 /**
  * The allowed types of subjects for a prohibition.
  *
- * UA = User Attribute
+ * UA = user attribute
  * U = User
  * P = Process
  */
@@ -29,13 +30,13 @@ public enum ProhibitionSubjectType  implements Serializable {
     /**
      * Convert a string to a ProhibitionSubjectType.
      * @param subjectType The string to convert.
-     * @return The ProhibitionSubjectType that is equivalent to the provided String.
-     * @throws PMException If the provided subject type is null.
-     * @throws PMException If the provided subject type is invalid.
+     * @return the ProhibitionSubjectType that is equivalent to the provided String.
+     * @throws PMProhibitionException if the provided subject type is null.
+     * @throws PMProhibitionException if the provided subject type is invalid.
      */
-    public static ProhibitionSubjectType toType(String subjectType) throws PMException {
+    public static ProhibitionSubjectType toType(String subjectType) throws PMProhibitionException {
         if(subjectType == null){
-            throw new PMException(Errors.ERR_INVALID_PROHIBITION_SUBJECT_TYPE, "null is an invalid Prohibition subject type");
+            throw new PMProhibitionException("null is an invalid Prohibition subject type");
         }
         switch (subjectType.toUpperCase()){
             case "UA":
@@ -45,7 +46,7 @@ public enum ProhibitionSubjectType  implements Serializable {
             case "P":
                 return ProhibitionSubjectType.P;
             default:
-                throw new PMException(Errors.ERR_INVALID_PROHIBITION_SUBJECT_TYPE, String.format("%s is an invalid Prohibition subject type", subjectType));
+                throw new PMProhibitionException(String.format("%s is an invalid Prohibition subject type", subjectType));
         }
     }
 }

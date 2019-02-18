@@ -61,7 +61,7 @@ user_attribute:
   properties:
   func_...:
 ```
-Specifies a User Attribute with the given name and properties. If multiple User Attributes share a name, then this element will represent all of those User Attributes at processing time.  Use the properties field to differentiate User Attributes with the same name. A function can be used to specify a user_attribute so long as the function returns a user attribute or a set of user attributes.
+Specifies a user attribute with the given name and properties. If multiple user attributes share a name, then this element will represent all of those user attributes at processing time.  Use the properties field to differentiate user attributes with the same name. A function can be used to specify a user_attribute so long as the function returns a user attribute or a set of user attributes.
 
 _Example:_
 ```yaml
@@ -149,7 +149,7 @@ process:
   func_current_process: 
 ```
 
-### Policy Class
+### policy class
 ```yaml
 policy_class:
   name:

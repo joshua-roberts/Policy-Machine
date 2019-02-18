@@ -17,10 +17,10 @@ public class ResetServlet extends HttpServlet {
             ConfigurationService service = new ConfigurationService();
             service.reset();
 
-            request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Data+reset+successfully").forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=success&message=Data+reset+successfully").forward(request, response);
         }
         catch (PMException e) {
-            request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }
 }

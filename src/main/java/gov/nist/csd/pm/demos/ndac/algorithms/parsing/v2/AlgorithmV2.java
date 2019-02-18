@@ -1,12 +1,9 @@
 package gov.nist.csd.pm.demos.ndac.algorithms.parsing.v2;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.pap.db.sql.SQLConnection;
 import gov.nist.csd.pm.pdp.engine.Decider;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import net.sf.jsqlparser.JSQLParserException;
@@ -36,7 +33,7 @@ public abstract class AlgorithmV2 {
 
     public abstract String run() throws SQLException, IOException, PMException, JSQLParserException, ClassNotFoundException;
 
-    protected List<String> getKeys(String tableName) throws PMException {
+    protected List<String> getKeys(String tableName) throws {
         HashMap<String, String> props = new HashMap<>();
         props.put(NAMESPACE_PROPERTY, tableName);
         props.put("pk", "true");
@@ -111,7 +108,7 @@ public abstract class AlgorithmV2 {
     }
 
 
-    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws PMException {
+    public boolean checkColumn(long columnPmId, long rowPmId, String perm) throws {
         //check if the row has already been checked
         HashSet<NodeContext> children = cachedChildren.get(rowPmId);
         if(children == null) {
@@ -123,7 +120,7 @@ public abstract class AlgorithmV2 {
         return children.contains(intersection);
     }
 
-    public NodeContext getIntersection(long columnPmId, long rowPmId) throws PMException {
+    public NodeContext getIntersection(long columnPmId, long rowPmId) throws {
         HashSet<NodeContext> columnChildren = ctx.getGraph().getChildren(columnPmId);
         HashSet<NodeContext> rowChildren = ctx.getGraph().getChildren(rowPmId);
         columnChildren.retainAll(rowChildren);
@@ -134,12 +131,12 @@ public abstract class AlgorithmV2 {
         }
     }
 
-    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PMException {
+    public boolean checkColumnAccess(String columnName, String tableName, String ... perms) throws PMGraphExceptionException {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         HashSet<NodeContext> nodes = ctx.getSearch().search(columnName, NodeType.OA.toString(), properties);
         if(nodes.size() != 1) {
-            throw new PMException(Errors.ERR_NODE_NOT_FOUND, "Could not find column object attribute for " + tableName);
+            throw new PMGraphException("Could not find column object attribute for " + tableName);
         }
         NodeContext node = nodes.iterator().next();
 
@@ -147,7 +144,7 @@ public abstract class AlgorithmV2 {
         return decider.hasPermissions(ctx.getUserID(), ctx.getProcessID(), node.getID(), perms);
     }
 
-    public boolean checkRowAccess(String tableName, String ... perms) throws PMException {
+    public boolean checkRowAccess(String tableName, String ... perms) throws {
         Map<String, String> properties = new HashMap<>();
         properties.put(NAMESPACE_PROPERTY, tableName);
         HashSet<NodeContext> nodes = ctx.getSearch().search("Rows", NodeType.OA.toString(), properties);

@@ -44,10 +44,10 @@ public class LoadConfigurationScriptServlet extends HttpServlet {
                     service.load(config);
                 }
             }
-            request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=success&message=Configuration+loaded+successfully").forward(request, response);
         }
         catch ( FileUploadException | PMException e) {
-            request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }
 }

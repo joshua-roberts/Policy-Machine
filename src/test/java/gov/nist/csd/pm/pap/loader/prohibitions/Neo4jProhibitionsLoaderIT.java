@@ -2,11 +2,9 @@ package gov.nist.csd.pm.pap.loader.prohibitions;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.prohibitions.*;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.prohibitions.Neo4jProhibitionsDAO;
+import gov.nist.csd.pm.pap.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.utils.TestUtils;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

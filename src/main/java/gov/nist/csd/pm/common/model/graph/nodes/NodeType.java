@@ -6,10 +6,10 @@ import java.io.Serializable;
  * Allowed types of nodes in an NGAC Graph
  *
  * OA = Object Attribute
- * UA = User Attribute
+ * UA = user attribute
  * U = User
  * O = Object
- * PC = Policy Class
+ * PC = policy class
  * OS = Operation Set
  */
 public enum NodeType implements Serializable {
@@ -32,7 +32,7 @@ public enum NodeType implements Serializable {
      * Given a string, return the matching NodeType. If the type is null or not one of the types listed above,
      * null will be returned
      * @param type The String type to convert to a NodeType.
-     * @return The equivalent NodeType of the given String, or null if an invalid type or null is passed.
+     * @return the equivalent NodeType of the given String, or null if an invalid type or null is passed.
      */
     public static NodeType toNodeType(String type) {
         if(type == null){

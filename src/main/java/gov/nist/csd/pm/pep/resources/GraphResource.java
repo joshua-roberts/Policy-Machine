@@ -168,11 +168,6 @@ public class GraphResource {
         long parentID = Long.valueOf(parentParams.getFirst("id"));
         NodeType parentType = NodeType.toNodeType(parentParams.getFirst("type"));
 
-        //if either of the types are null throw an exception
-        if(childType == null || parentType == null) {
-            throw new PMException(Errors.ERR_NULL_TYPE, "the types of the child and parent node are required when creating an assignment");
-        }
-
         //tell pdp to assign the child node to the parent
         graphService.assign(new NodeContext(childID, childType), new NodeContext(parentID, parentType));
 
@@ -197,11 +192,6 @@ public class GraphResource {
         MultivaluedMap<String, String> parentParams = parentPs.getMatrixParameters();
         long parentID = Long.valueOf(parentParams.getFirst("id"));
         NodeType parentType = NodeType.toNodeType(parentParams.getFirst("type"));
-
-        //if either of the types are null throw an exception
-        if(childType == null || parentType == null) {
-            throw new PMException(Errors.ERR_NULL_TYPE, "the types of the child and parent node are required when deleting an assignment");
-        }
 
         //delete assignment
         graphService.deassign(new NodeContext(childID, childType),

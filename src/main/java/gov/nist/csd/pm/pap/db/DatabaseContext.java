@@ -6,10 +6,23 @@ package gov.nist.csd.pm.pap.db;
  */
 public class DatabaseContext {
 
-    public static final String NEO4J = "neo4j";
-    public static final String MYSQL = "mysql";
+    public static enum DATABASES {
+        NEO4J,
+        MYSQL
+    }
 
-    String database;
+    public static DATABASES toEnum(String database) {
+        switch (database.toUpperCase()) {
+            case "NEO4J":
+                return DATABASES.NEO4J;
+            case "MYSQL":
+                return DATABASES.MYSQL;
+            default:
+                return null;
+        }
+    }
+
+    DATABASES database;
     private String host;
     private int port;
     private String username;
@@ -24,7 +37,7 @@ public class DatabaseContext {
         this.schema = schema;
     }
 
-    public DatabaseContext(String database, String host, int port, String username, String password, String schema) {
+    public DatabaseContext(DATABASES database, String host, int port, String username, String password, String schema) {
         this.database = database;
         this.host = host;
         this.port = port;
@@ -33,7 +46,7 @@ public class DatabaseContext {
         this.schema = schema;
     }
 
-    public String getDatabase() {
+    public DATABASES getDatabase() {
         return database;
     }
 

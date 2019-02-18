@@ -1,18 +1,14 @@
 package gov.nist.csd.pm.pap.graph;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.loader.graph.Neo4jGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
 import gov.nist.csd.pm.pap.search.Neo4jSearch;
 import gov.nist.csd.pm.utils.TestUtils;
 import org.junit.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -71,11 +67,11 @@ public class MemGraphIT {
     @Test
     public void testCreateNode() throws PMException {
         MemGraph graph = new MemGraph();
-        assertAll(() -> assertThrows(PMException.class, () -> graph.createNode(null)),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext())),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext(123, null, OA, null))),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext(123, "", OA, null))),
-                () -> assertThrows(PMException.class, () -> graph.createNode(new NodeContext(123, "name", null, null)))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext(123, null, OA, null))),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext(123, "", OA, null))),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.createNode(new NodeContext(123, "name", null, null)))
         );
 
         // add pc
@@ -259,10 +255,10 @@ public class MemGraphIT {
         long parent1ID = graph.createNode(new NodeContext(1, "parent1", OA, null));
         long child1ID = graph.createNode(new NodeContext(3, "child1", OA, null));
 
-        assertAll(() -> assertThrows(PMException.class, () -> graph.assign(null, null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext(), null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext().id(123), null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext().id(1), new NodeContext().id(123)))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.assign(null, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext(), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext().id(123), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext().id(1), new NodeContext().id(123)))
         );
 
         graph.assign(new NodeContext(child1ID, OA), new NodeContext(parent1ID, OA));
@@ -275,8 +271,8 @@ public class MemGraphIT {
     public void testDeassign() throws PMException {
         Graph graph = new MemGraph();
 
-        assertAll(() -> assertThrows(PMException.class, () -> graph.assign(null, null)),
-                () -> assertThrows(PMException.class, () -> graph.assign(new NodeContext(), null))
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> graph.assign(null, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> graph.assign(new NodeContext(), null))
         );
 
         long parent1ID = graph.createNode(new NodeContext(1, "parent1", OA, null));

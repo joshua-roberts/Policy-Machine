@@ -116,7 +116,7 @@
             <form action="Reset" method="post">
                 <fieldset>
                     <legend>Reset</legend>
-                    <p class="text-danger">This will delete any existing data in the PM, including Policy Classes.</p>
+                    <p class="text-danger">This will delete any existing data in the PM, including policy classes.</p>
                     <div class="row">
                         <div class="form-group col-lg-3">
                             <button type="submit" class="btn btn-primary">Reset</button>

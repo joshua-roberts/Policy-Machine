@@ -1,6 +1,8 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
+import gov.nist.csd.pm.common.exceptions.PMDBException;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
 import gov.nist.csd.pm.common.model.graph.relationships.Association;
@@ -29,15 +31,15 @@ public class Neo4jGraphLoader implements GraphLoader {
 
     /**
      * Create a new GraphLoader from Neo4j, using the provided database connection parameters.
-     * @param ctx The parameters to connect to the database
-     * @throws PMException If a connection cannot be made to the database.
+     * @param ctx the parameters to connect to the database
+     * @throws PMDBException if a connection cannot be made to the database.
      */
-    public Neo4jGraphLoader(DatabaseContext ctx) throws PMException {
+    public Neo4jGraphLoader(DatabaseContext ctx) throws PMDBException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     @Override
-    public HashSet<NodeContext> getNodes() throws PMException {
+    public HashSet<NodeContext> getNodes() throws PMDBException, PMGraphException {
         String cypher = "match(n) where n:NODE return n";
         try(
                 Connection conn = neo4j.getConnection();
@@ -46,12 +48,12 @@ public class Neo4jGraphLoader implements GraphLoader {
         ) {
             return Neo4jHelper.getNodesFromResultSet(rs);
         } catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Assignment> getAssignments() throws PMException {
+    public HashSet<Assignment> getAssignments() throws PMDBException {
         String cypher = "match(n)-[r:assigned_to]->(m) return n.id, m.id";
         try(
                 Connection conn = neo4j.getConnection();
@@ -64,12 +66,12 @@ public class Neo4jGraphLoader implements GraphLoader {
             }
             return assignments;
         } catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 
     @Override
-    public HashSet<Association> getAssociations() throws PMException {
+    public HashSet<Association> getAssociations() throws PMDBException {
         String cypher = "match(ua:UA)-[a:associated_with]->(target:NODE) return ua.id,target.id,a.operations";
         try(
                 Connection conn = neo4j.getConnection();
@@ -83,7 +85,7 @@ public class Neo4jGraphLoader implements GraphLoader {
             }
             return associations;
         }  catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 }

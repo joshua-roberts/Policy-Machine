@@ -1,13 +1,11 @@
 package gov.nist.csd.pm.pdp.services;
 
-import gov.nist.csd.pm.common.exceptions.Errors;
-import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -24,17 +22,17 @@ public class SessionsService extends Service {
      *
      * @param username The name of the user to create a session for.
      * @param password  The password the user provided, to be checked against the password stored for the user.
-     * @return The ID of the new session.
+     * @return the ID of the new session.
      *
-     * @throws PMException If a node with the user's name does not exist.
-     * @throws PMException If the provided password does not match the stored password.
-     * @throws PMException If there is an error hashing the provided password.
+     * @throws PMGraphException If a node with the user's name does not exist.
+     * @throws PMAuthenticationException If the provided password does not match the stored password.
+     * @throws PMGraphException If there is an error hashing the provided user password.
      */
-    public String createSession(String username, String password) throws PMException {
+    public String createSession(String username, String password) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMAuthenticationException, PMProhibitionException {
         //get the user node
         HashSet<NodeContext> nodes = getGraphPAP().search(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
-            throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with name %s could not be found", username));
+            throw new PMGraphException(String.format("node with name %s could not be found", username));
         }
 
         NodeContext userNode = nodes.iterator().next();
@@ -43,11 +41,11 @@ public class SessionsService extends Service {
         String storedPass = userNode.getProperties().get(PASSWORD_PROPERTY);
         try {
             if (!checkPasswordHash(storedPass, password)) {
-                throw new PMException(Errors.ERR_INVALID_CREDENTIALS, "username or password did not match");
+                throw new PMAuthenticationException("username or password did not match");
             }
         }
         catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new PMException(Errors.ERR_HASHING_USER_PSWD, e.getMessage());
+            throw new PMGraphException(e.getMessage());
         }
 
         //create session id
@@ -59,16 +57,19 @@ public class SessionsService extends Service {
         return sessionID;
     }
 
-    public long getSessionUserID(String sessionID) throws PMException {
+    public long getSessionUserID(String sessionID) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
         return getSessionManager().getSessionUserID(sessionID);
     }
 
     /**
      * Delete the session with the given ID.
      * @param sessionID The ID of the session to delete.
-     * @throws PMException If there is an error deleting the session in the session manager
+     * @throws PMConfigurationException if there is an error with the PAP configuration.
+     * @throws PMAuthorizationException if the current user is not permitted to perform an action.
+     * @throws PMDBException if there is an error accessing the database.
+     * @throws PMGraphException if there is an error accessing the graph.
      */
-    public void deleteSession(String sessionID) throws PMException {
+    public void deleteSession(String sessionID) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
         getSessionManager().deleteSession(sessionID);
     }
 }

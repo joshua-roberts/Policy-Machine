@@ -15,7 +15,7 @@ public class NodeUtils {
     /**
      * Utility method to hash a password of a user. This will be used by the session and node service classes.
      * @param password The plaintext password to hash.
-     * @return The hash of the password;
+     * @return the hash of the password;
      * @throws InvalidKeySpecException If there is an error with the KeySpec
      * @throws NoSuchAlgorithmException If there is no such algorithm exists when hashing the password.
      */
@@ -36,7 +36,7 @@ public class NodeUtils {
      * Utility method to check that a plain text password matches a hashed password.
      * @param stored The hash of the password.
      * @param toCheck The plaintext password to check against the hashed.
-     * @return True if the passwords match, false otherwise.
+     * @return true if the passwords match, false otherwise.
      * @throws InvalidKeySpecException If there is an error with the KeySpec
      * @throws NoSuchAlgorithmException If there is no such algorithm exists when hashing the password.
      */
@@ -93,7 +93,7 @@ public class NodeUtils {
      * IllegalArgumentException will be thrown if any value is null or there is an odd number of values, as this will
      * lead to errors in processing the parameters.
      * @param pairs Array of string values to convert to a HashMap
-     * @return A HashMap of the given pairs
+     * @return a HashMap of the given pairs
      */
     public static HashMap<String, String> toProperties(String ... pairs) {
         HashMap<String, String> props = new HashMap<>();

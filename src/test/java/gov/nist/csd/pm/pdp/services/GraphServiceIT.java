@@ -5,10 +5,7 @@ import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,7 +16,7 @@ import static gov.nist.csd.pm.pap.PAP.getPAP;
 import static gov.nist.csd.pm.utils.TestUtils.getDatabaseContext;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GraphServiceIT {
+class GraphServiceIT {
 
     private static long         superUserID;
     private static long         testUserID;
@@ -29,9 +26,9 @@ public class GraphServiceIT {
     private static long         testOID;
     private static String       testID;
 
-    @Before
-    public void setup() throws PMException, IOException {
-        getPAP(true, DatabaseContext.NEO4J, getDatabaseContext());
+    @BeforeEach
+    void setup() throws PMException, IOException {
+        getPAP(getDatabaseContext());
         superUserID = getPAP().getSuperU().getID();
         testID = UUID.randomUUID().toString();
 
@@ -58,8 +55,8 @@ public class GraphServiceIT {
         getPAP().getGraphPAP().associate(new NodeContext(ua1, UA), new NodeContext(oa1, NodeType.OA), new HashSet<>(Arrays.asList(DISASSOCIATE, ASSOCIATE, ASSIGN, ASSIGN_TO, UPDATE_NODE, DELETE_NODE, DEASSIGN_FROM, DEASSIGN)));
     }
 
-    @After
-    public void teardown() throws PMException {
+    @AfterEach
+    void teardown() throws PMException {
         HashSet<NodeContext> nodes = getPAP().getGraphPAP().search(null, null, NodeUtils.toProperties("namespace", testID));
         for(NodeContext node : nodes) {
             getPAP().getGraphPAP().deleteNode(node.getID());
@@ -67,12 +64,12 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestCreateNode() throws PMException {
+    void TestCreateNode() throws PMException {
         // check exceptions are thrown
         final GraphService service1 = new GraphService(superUserID, 0);
-        assertAll(() -> assertThrows(PMException.class, () -> service1.createNode(null)),
-                () -> assertThrows(PMException.class, () -> service1.createNode(new NodeContext(null, OA, null))),
-                () -> assertThrows(PMException.class, () -> service1.createNode(new NodeContext("test_node", null, null))),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service1.createNode(null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> service1.createNode(new NodeContext(null, OA, null))),
+                () -> assertThrows(IllegalArgumentException.class, () -> service1.createNode(new NodeContext("test_node", null, null))),
                 () -> assertThrows(PMException.class, () -> service1.createNode(new NodeContext("oa1", NodeType.OA, NodeUtils.toProperties("namespace", testID)))));
 
         // create a policy class
@@ -112,14 +109,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestUpdateNode() throws PMException {
+    void TestUpdateNode() throws PMException {
         // check exceptions are thrown
         final GraphService service1 = new GraphService(superUserID, 0);
 
         service1.updateNode(new NodeContext().id(testOAID).properties(NodeUtils.toProperties("test", "updated namespace")));
 
-        assertAll(() -> assertThrows(PMException.class, () -> service1.updateNode(null)),
-                () -> assertThrows(PMException.class, () -> service1.updateNode(new NodeContext("update_node_no_id", null, null))),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service1.updateNode(null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> service1.updateNode(new NodeContext("update_node_no_id", null, null))),
                 () -> assertThrows(PMException.class, () -> service1.updateNode(
                         new NodeContext().id(new Random().nextLong()).name("updated_name").properties(NodeUtils.toProperties("updatedKey", "updatedValue")))));
         // user can update node
@@ -135,7 +132,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestDeleteNode() throws PMException {
+    void TestDeleteNode() throws PMException {
         // test user tries to delete super o
         GraphService service = new GraphService(testUserID, 0);
         assertThrows(PMException.class, () -> service.deleteNode(getPAP().getSuperO().getID()));
@@ -151,14 +148,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestExists() throws PMException {
+    void TestExists() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         assertTrue(service.exists(testPCID));
         assertFalse(service.exists(new Random().nextLong()));
     }
 
     @Test
-    public void TestGetNodes() throws PMException {
+    void TestGetNodes() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         HashSet<NodeContext> nodes = service.getNodes();
         assertTrue(nodes.size() >= 7, "the super user should have access to at least 7 nodes");
@@ -168,7 +165,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestGetPolicies() throws PMException {
+    void TestGetPolicies() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         HashSet<Long> policies = service.getPolicies();
         assertAll(() -> assertTrue(policies.contains(testPCID)),
@@ -176,7 +173,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestGetChildren() throws PMException {
+    void TestGetChildren() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getChildren(new Random().nextLong()));
 
@@ -186,7 +183,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestGetParents() throws PMException {
+    void TestGetParents() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getParents(new Random().nextLong()));
 
@@ -196,14 +193,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestAssign() throws PMException {
+    void TestAssign() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
-        assertAll(() -> assertThrows(PMException.class, () -> service.assign(null, new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext(), null)),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext(), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext().id(123))),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service.assign(null, new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext(), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext(), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext().id(123))),
                 () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA))),
                 () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA))),
 
@@ -227,14 +224,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestDeassign() throws PMException {
+    void TestDeassign() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
-        assertAll(() -> assertThrows(PMException.class, () -> service.deassign(null, new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext(), null)),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext(), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext())),
-                () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext().id(123))),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service.deassign(null, new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext(), null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext(), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.assign(new NodeContext().id(123).type(OA), new NodeContext().id(123))),
                 () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA))),
                 () -> assertThrows(PMException.class, () -> service.assign(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA)))
         );
@@ -249,14 +246,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestAssociate() throws PMException {
+    void TestAssociate() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
-        assertAll(() -> assertThrows(PMException.class, () -> service.associate(null, new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext(), null, new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext(), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext().id(123), new HashSet<>())),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service.associate(null, new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext(), null, new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext(), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext().id(123), new HashSet<>())),
                 () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA), new HashSet<>())),
                 () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA), new HashSet<>())),
 
@@ -279,14 +276,14 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestDissociate() throws PMException {
+    void TestDissociate() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
-        assertAll(() -> assertThrows(PMException.class, () -> service.associate(null, new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext(), null, new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext(), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext(), new HashSet<>())),
-                () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext().id(123), new HashSet<>())),
+        assertAll(() -> assertThrows(IllegalArgumentException.class, () -> service.associate(null, new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext(), null, new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext(), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext(), new HashSet<>())),
+                () -> assertThrows(IllegalArgumentException.class, () -> service.associate(new NodeContext().id(123).type(OA), new NodeContext().id(123), new HashSet<>())),
                 () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA), new HashSet<>())),
                 () -> assertThrows(PMException.class, () -> service.associate(new NodeContext().id(new Random().nextLong()).type(OA), new NodeContext().id(new Random().nextLong()).type(OA), new HashSet<>()))
         );
@@ -302,7 +299,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestGetSourceAssociations() throws PMException {
+    void TestGetSourceAssociations() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getSourceAssociations(new Random().nextLong()));
 
@@ -316,7 +313,7 @@ public class GraphServiceIT {
     }
 
     @Test
-    public void TestGetTargetAssociations() throws PMException {
+    void TestGetTargetAssociations() throws PMException {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getTargetAssociations(new Random().nextLong()));
 

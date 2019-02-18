@@ -42,7 +42,7 @@ public class SelectAlgorithmV2 extends AlgorithmV2 {
     private              CompositeTable     compositeTable;
     private              List<CompositeRow> compositeRows;
 
-    public SelectAlgorithmV2(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws PMException {
+    public SelectAlgorithmV2(Select select, long userID, long processID, DatabaseContext ctx, Graph graph, Search search, List<Prohibition> prohibitions) throws {
         super(new Context(SQLConnection.fromCtx(ctx), graph, search, prohibitions, userID, processID));
         this.select = select;
         compositeTable = new CompositeTable();

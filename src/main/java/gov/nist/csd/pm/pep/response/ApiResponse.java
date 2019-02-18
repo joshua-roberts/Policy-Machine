@@ -41,7 +41,7 @@ public class ApiResponse {
 
         /**
          * This method returns a Builder that has the success response code and message.
-         * @return A Builder with success response code and default message.
+         * @return a Builder with success response code and default message.
          */
         public static Builder success() {
             Builder builder = new Builder(SUCCESS_CODE);
@@ -53,7 +53,7 @@ public class ApiResponse {
          * This method returns a Builder that has the given error response code and message.
          * @param e The exception that represents the error.  The exception's error code and message will be
          *          added to the Builder.
-         * @return A Builder with an error response code and default message.
+         * @return a Builder with an error response code and default message.
          */
         public static Builder error(PMException e) {
             Builder res = new Builder(e.getError().getCode());
@@ -66,7 +66,7 @@ public class ApiResponse {
          * Initialize a new Builder with an error code and message.
          * @param code The error code.
          * @param message The error message.
-         * @return A new Builder instance.
+         * @return a new Builder instance.
          */
         public static Builder error(int code, String message) {
             return new Builder(code).message(message);
@@ -75,7 +75,7 @@ public class ApiResponse {
         /**
          * Builder method to set the message of a Builder
          * @param message the message to give this Builder
-         * @return The current Builder object with the given message
+         * @return the current Builder object with the given message
          */
         public Builder message(String message) {
             this.message = message;
@@ -85,7 +85,7 @@ public class ApiResponse {
         /**
          * Builder method to set the code of a Builder
          * @param code the code to give this Builder
-         * @return The current Builder object with the given code
+         * @return the current Builder object with the given code
          */
         public Builder code(int code) {
             this.code = code;
@@ -95,7 +95,7 @@ public class ApiResponse {
         /**
          * Builder method to set the entity of this Builder to the given Object
          * @param o The Object to set as this Builder's entity
-         * @return The current Builder with the given Object as the entity
+         * @return the current Builder with the given Object as the entity
          */
         public Builder entity(Object o) {
             this.entity = o;
@@ -104,7 +104,7 @@ public class ApiResponse {
 
         /**
          * Build a new JAX-RS response from the current builder.
-         * @return The JAX-RS response constructed from the builder.
+         * @return the JAX-RS response constructed from the builder.
          */
         public Response build() {
             ApiResponse response = new ApiResponse();

@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.exceptions.PMDBException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
@@ -15,9 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_NODE_NOT_FOUND;
-
 /**
  * Neo4j extension of the Search class.
  */
@@ -28,7 +25,7 @@ public class Neo4jSearch implements Search {
      */
     protected Neo4jConnection neo4j;
 
-    public Neo4jSearch(DatabaseContext ctx) throws PMException {
+    public Neo4jSearch(DatabaseContext ctx) throws PMDBException {
         this.neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
@@ -39,14 +36,15 @@ public class Neo4jSearch implements Search {
     /**
      * Search the neo4j database for nodes based on name, type, and properties. This implementation does not support
      * wildcard searching.
-     * @param name The name of the nodes to search for.
-     * @param type The type of the nodes to search for.
-     * @param properties The properties of the nodes to search for.
-     * @return The set of nodes that match the search parameters.
-     * @throws PMException If there is an error retrieving the nodes from the database.
+     * @param name the name of the nodes to search for.
+     * @param type the type of the nodes to search for.
+     * @param properties the properties of the nodes to search for.
+     * @return the set of nodes that match the search parameters.
+     * @throws PMDBException if there is an error retrieving the nodes from the database.
+     * @throws PMGraphException if there is an error converting the ResultSet to a set of nodes.
      */
     @Override
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMException {
+    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
         // get the cypher query
         String cypher = getSearchCypher(name, type, properties);
         // query neo4j for the nodes
@@ -56,14 +54,20 @@ public class Neo4jSearch implements Search {
                 ResultSet rs = stmt.executeQuery()
         ) {
             return Neo4jHelper.getNodesFromResultSet(rs);
-        }
-        catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+        } catch (SQLException e) {
+            throw new PMDBException(e.getMessage());
         }
     }
 
+    /**
+     * Get the node from the graph with the given ID.
+     * @param id the ID of the node to get.
+     * @return a NodeContext with the information of the node with the given ID.
+     * @throws PMDBException if there is an error retrieving the node from the database.
+     * @throws PMGraphException if there is an error converting the data returned from the database into a node.
+     */
     @Override
-    public NodeContext getNode(long id) throws PMException {
+    public NodeContext getNode(long id) throws PMDBException, PMGraphException {
         // get the cypher query
         String cypher = String.format("match(n{id:%d}) return n", id);
         // query neo4j for the nodes
@@ -76,11 +80,10 @@ public class Neo4jSearch implements Search {
                 HashMap map = (HashMap) rs.getObject(1);
                 return Neo4jHelper.mapToNode(map);
             }
-
-            throw new PMException(ERR_NODE_NOT_FOUND, String.format("node with ID %d does not exist", id));
+            throw new PMGraphException(String.format("node with ID %d does not exist", id));
         }
         catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 

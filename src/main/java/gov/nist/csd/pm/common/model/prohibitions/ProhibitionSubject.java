@@ -3,7 +3,7 @@ package gov.nist.csd.pm.common.model.prohibitions;
 import java.io.Serializable;
 
 /**
- * The subject of a prohibition.  The subject can be a User, User Attribute, or process (ProhibitionSubjectType) with an ID.
+ * The subject of a prohibition.  The subject can be a User, user attribute, or process (ProhibitionSubjectType) with an ID.
  */
 public class ProhibitionSubject  implements Serializable {
     long                   subjectID;

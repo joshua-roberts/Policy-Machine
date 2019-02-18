@@ -945,10 +945,10 @@
 <h2 id="important-notes">Important Notes</h2>
 <ol>
 <li><strong>Namespaces</strong> - Node's can belong to namespaces which allow for multiple nodes of the same type to have the same name.  Nodes that have the same name but different type are allowed in the same namesapce. If a node is created with out specifying the namespace, it will be put in the 'default' namespace.</li>
-<li><strong>Super user metadata</strong> - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 User Attributes super_ua1 and super_ua2. These two attributes are assigned to a Policy Class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the Policy Class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
+<li><strong>Super user metadata</strong> - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 user attributes super_ua1 and super_ua2. These two attributes are assigned to a policy class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the policy class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
 <img alt="alt text" src="../images/super.png" title="super" /></li>
-<li><strong>Creating a Policy Class</strong> - When creating a Policy Class we check if the requesting user has the permission "create a Policy Class" on the super object.</li>
-<li><strong>Policy Class assignments</strong> - When a Policy Class is created, an Object Attribute that will represent the Policy Class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the Policy Class.  This allows us to control who can perform these actions since Policy Classes them selves cannot be assigned or associated to any other nodes.
+<li><strong>Creating a policy class</strong> - When creating a policy class we check if the requesting user has the permission "create a policy class" on the super object.</li>
+<li><strong>policy class assignments</strong> - When a policy class is created, an Object Attribute that will represent the policy class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the policy class.  This allows us to control who can perform these actions since policy classes them selves cannot be assigned or associated to any other nodes.
 <img alt="alt text" src="../images/pc.png" title="creating a policy class" /></li>
 </ol>
 <h2 id="getting-started">Getting Started</h2>
@@ -1439,7 +1439,7 @@ Content-Type:application/json
 </code></pre>
 
 <h3 id="create-node">Create node</h3>
-<p>Create a new node in the NGAC graph with the provided name, type, and properties. When creating a Policy Class, leave the baseID parameter empty, as it will be ignored.  For all other node type, a base ID is required in order to connect the node to the graph and ensure the calling user (identified by the provided session ID) has the permission to create a node in the base node (check that the user can assign to the base node).</p>
+<p>Create a new node in the NGAC graph with the provided name, type, and properties. When creating a policy class, leave the baseID parameter empty, as it will be ignored.  For all other node type, a base ID is required in order to connect the node to the graph and ensure the calling user (identified by the provided session ID) has the permission to create a node in the base node (check that the user can assign to the base node).</p>
 <h6 id="endpoint_4">Endpoint</h6>
 <p><code>POST /pm/api/graph/nodes</code></p>
 <h6 id="parameters_2">Parameters</h6>
@@ -1972,7 +1972,7 @@ Content-Type:application/json
 <td>uaID</td>
 <td>true</td>
 <td>path</td>
-<td>The ID of the User Attribute.</td>
+<td>The ID of the user attribute.</td>
 </tr>
 <tr>
 <td>target</td>
@@ -2035,7 +2035,7 @@ If an association does not exist between the two nodes, one will be created.</p>
 <td>uaID</td>
 <td>true</td>
 <td>path</td>
-<td>The ID of the User Attribute.</td>
+<td>The ID of the user attribute.</td>
 </tr>
 <tr>
 <td>target</td>
@@ -2096,7 +2096,7 @@ If an association does not exist between the two nodes, one will be created.</p>
 <td>uaID</td>
 <td>true</td>
 <td>path</td>
-<td>The ID of the User Attribute.</td>
+<td>The ID of the user attribute.</td>
 </tr>
 <tr>
 <td>target</td>

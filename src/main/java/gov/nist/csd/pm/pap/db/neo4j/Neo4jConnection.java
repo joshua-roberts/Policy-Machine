@@ -1,5 +1,6 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
+import gov.nist.csd.pm.common.exceptions.PMDBException;
 import gov.nist.csd.pm.common.exceptions.PMException;
 
 import java.sql.Connection;
@@ -21,13 +22,13 @@ public class Neo4jConnection {
 
     /**
      * Establishes a new connection to a Neo4j database.
-     * @param host The hostname of the Neo4j instance.
-     * @param port The port the Neo4j instance is running on.
-     * @param username The name of the Neo4j user.
-     * @param password The password of the Neo4j user.
+     * @param host the hostname of the Neo4j instance.
+     * @param port the port the Neo4j instance is running on.
+     * @param username the name of the Neo4j user.
+     * @param password the password of the Neo4j user.
      * @throws PMException When there's ann error connecting to the Neo4j instance.
      */
-    public Neo4jConnection(String host, int port, String username, String password) throws PMException {
+    public Neo4jConnection(String host, int port, String username, String password) throws PMDBException {
         this.host = host;
         this.port = port;
         this.username = username;
@@ -37,20 +38,20 @@ public class Neo4jConnection {
             Driver driver = new org.neo4j.jdbc.Driver();
             DriverManager.registerDriver(driver);
         } catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 
     /**
-     * @return The connection to the Neo4j instance.
-     * @throws PMException If there is an error establishing the connection.
+     * @return the connection to the Neo4j instance.
+     * @throws PMException if there is an error establishing the connection.
      */
-    public Connection getConnection() throws PMException {
+    public Connection getConnection() throws PMDBException {
         try {
             return DriverManager.getConnection("jdbc:neo4j:bolt://" + host + ":" + port + "", username, password);
         }
         catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 }

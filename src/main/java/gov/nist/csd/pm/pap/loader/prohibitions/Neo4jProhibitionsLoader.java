@@ -1,6 +1,8 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
+import gov.nist.csd.pm.common.exceptions.PMDBException;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMProhibitionException;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
@@ -31,20 +33,21 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
 
     /**
      * Create a new ProhibitionsLoader from Neo4j, using the provided database connection parameters.
-     * @param ctx The parameters to connect to the database
-     * @throws PMException If a connection cannot be made to the database
+     * @param ctx the parameters to connect to the database
+     * @throws PMDBException if a connection cannot be made to the database
      */
-    public Neo4jProhibitionsLoader(DatabaseContext ctx) throws PMException {
+    public Neo4jProhibitionsLoader(DatabaseContext ctx) throws PMDBException {
         neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
 
     /**
      * Load all of the  prohibitions in the database into a memory structure.
-     * @return The list of all prohibitions.
-     * @throws PMException If there is an error getting a prohibition form the database.
+     * @return the list of all prohibitions.
+     * @throws PMDBException if there is an error getting a prohibition form the database.
+     * @throws PMProhibitionException if there is an error constructing the prohibition objects.
      */
     @Override
-    public List<Prohibition> loadProhibitions() throws PMException {
+    public List<Prohibition> loadProhibitions() throws PMDBException, PMProhibitionException {
         List<Prohibition> prohibitions = new ArrayList<>();
 
         String cypher = "match(p:prohibition) return p.name, p.operations, p.intersection";
@@ -92,7 +95,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
             }
         }
         catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
 
         return prohibitions;

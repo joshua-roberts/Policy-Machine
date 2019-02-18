@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.common.model.graph.relationships;
 
-import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import java.io.Serializable;
@@ -33,7 +33,7 @@ public class Assignment extends Relationship implements Serializable {
      * @param parentType The type of the parent.
      * @throws PMException When the child type is not allowed to be assigned to the parent type.
      */
-    public static void checkAssignment(NodeType childType, NodeType parentType) throws PMException {
+    public static void checkAssignment(NodeType childType, NodeType parentType) throws PMGraphException {
         NodeType[] check = validAssignments.get(childType);
         for(NodeType nt : check) {
             if(nt.equals(parentType)) {
@@ -41,8 +41,7 @@ public class Assignment extends Relationship implements Serializable {
             }
         }
 
-        throw new PMException(Errors.ERR_INVALID_ASSIGNMENT,
-                String.format("cannot assign a node of type %s to a node of type %s", childType, parentType));
+        throw new PMGraphException(String.format("cannot assign a node of type %s to a node of type %s", childType, parentType));
     }
 
     @Override

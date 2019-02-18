@@ -3,6 +3,7 @@ package gov.nist.csd.pm.pdp.services;
 import gov.nist.csd.pm.common.constants.Operations;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.prohibitions.*;
+import gov.nist.csd.pm.pap.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pdp.engine.Decider;
 
 import java.util.List;
@@ -10,27 +11,26 @@ import java.util.List;
 import static gov.nist.csd.pm.common.constants.Operations.CREATE_PROHIBITION;
 import static gov.nist.csd.pm.common.constants.Operations.PROHIBIT_SUBJECT;
 
-public class ProhibitionsService extends Service implements ProhibitionsDAO {
+public class ProhibitionsService extends Service {
 
-    public ProhibitionsService(long userID, long processID) throws PMException {
+    public ProhibitionsService(long userID, long processID) throws PMGraphException {
         super(userID, processID);
     }
 
-    @Override
-    public void createProhibition(Prohibition prohibition) throws PMException {
+    public void createProhibition(Prohibition prohibition) throws PMProhibitionException, PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException {
         String name = prohibition.getName();
         ProhibitionSubject subject = prohibition.getSubject();
         List<ProhibitionNode> nodes = prohibition.getNodes();
 
         //check that the prohibition name is not null or empty
         if(name == null || name.isEmpty()) {
-            throw new PMException(Errors.ERR_NULL_NAME, "a null name was provided when creating a prohibition");
+            throw new IllegalArgumentException("a null name was provided when creating a prohibition");
         }
 
         //check the prohibitions doesn't already exist
         for(Prohibition p : getProhibitions()) {
             if(p.getName().equals(name)) {
-                throw new PMException(Errors.ERR_PROHIBITION_NAME_EXISTS, String.format("a prohibition with the name %s already exists", name));
+                throw new PMProhibitionException(String.format("a prohibition with the name %s already exists", name));
             }
         }
 
@@ -39,16 +39,16 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         if(subject.getSubjectType().equals(ProhibitionSubjectType.U) || subject.getSubjectType().equals(ProhibitionSubjectType.UA)) {
             // first check that the subject exists
             if(!getGraphPAP().exists(subject.getSubjectID())) {
-                throw new PMException(Errors.ERR_NODE_NOT_FOUND, String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
+                throw new PMGraphException(String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
             }
             if(!decider.hasPermissions(getUserID(), getProcessID(), subject.getSubjectID(), CREATE_PROHIBITION)) {
-                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", subject.getSubjectID(), PROHIBIT_SUBJECT));
+                throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", subject.getSubjectID(), PROHIBIT_SUBJECT));
             }
         }
 
         for(ProhibitionNode node : nodes) {
             if(!decider.hasPermissions(getUserID(), getProcessID(), node.getID(), CREATE_PROHIBITION)) {
-                throw new PMException(Errors.ERR_MISSING_PERMISSIONS, String.format("Missing permissions on %d: %s", node.getID(), Operations.PROHIBIT_RESOURCE));
+                throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", node.getID(), Operations.PROHIBIT_RESOURCE));
             }
         }
 
@@ -56,23 +56,49 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         getProhibitionsPAP().createProhibition(prohibition);
     }
 
-    @Override
-    public List<Prohibition> getProhibitions() throws PMException {
+    public List<Prohibition> getProhibitions() throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
         return getProhibitionsPAP().getProhibitions();
     }
 
-    @Override
-    public Prohibition getProhibition(String prohibitionName) throws PMException {
+    /**
+     * Get the prohibition with the given node from the PAP. An exception will be thrown if one does not exist.
+     *
+     * @param prohibitionName The name of the Prohibition to retrieve.
+     * @return the prohibition with the given node.
+     * @throws PMConfigurationException if there is an error with the PAP configuration.
+     * @throws PMAuthorizationException if the current user is not authorized to carry out the action.
+     * @throws PMDBException if the PAP accesses the database and an error occurs.
+     * @throws PMGraphException if there is an error with the graph.
+     * @throws PMProhibitionException if a prohibition with the given name does not exist.
+     */
+    public Prohibition getProhibition(String prohibitionName) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
         Prohibition prohibition = getProhibitionsPAP().getProhibition(prohibitionName);
         if(prohibition == null) {
-            throw new PMException(Errors.ERR_PROHIBITION_DOES_NOT_EXIST, String.format("prohibition with the name %s does not exist", prohibitionName));
+            throw new PMProhibitionException(String.format("prohibition with the name %s does not exist", prohibitionName));
         }
 
         return prohibition;
     }
 
-    @Override
-    public void updateProhibition(Prohibition prohibition) throws PMException {
+    /**
+     * Update the prohibition.  The prohibition is identified by the name.
+     *
+     * @param prohibition The prohibition to update.
+     * @throws IllegalArgumentException if the given prohibition is null.
+     * @throws IllegalArgumentException if the given prohibition's name is null.
+     * @throws PMConfigurationException if there is an error with the PAP configuration.
+     * @throws PMAuthorizationException if the current user is not authorized to carry out the action.
+     * @throws PMDBException if the PAP accesses the database and an error occurs.
+     * @throws PMGraphException if there is an error with the graph.
+     * @throws PMProhibitionException if a prohibition with the given name does not exist.
+     */
+    public void updateProhibition(Prohibition prohibition) throws PMGraphException, PMAuthorizationException, PMDBException, PMProhibitionException, PMConfigurationException {
+        if(prohibition == null) {
+            throw new IllegalArgumentException("the prohibition to update was null");
+        } else if(prohibition.getName() == null || prohibition.getName().isEmpty()) {
+            throw new IllegalArgumentException("cannot update a prohibition with a null name");
+        }
+
         // TODO need to check if the user has permission to update the prohibition.
         // delete the prohibition
         deleteProhibition(prohibition.getName());
@@ -81,8 +107,7 @@ public class ProhibitionsService extends Service implements ProhibitionsDAO {
         createProhibition(prohibition);
     }
 
-    @Override
-    public void deleteProhibition(String prohibitionName) throws PMException {
+    public void deleteProhibition(String prohibitionName) throws PMAuthorizationException, PMDBException, PMProhibitionException, PMGraphException, PMConfigurationException {
         //check that the prohibition exists
         getProhibition(prohibitionName);
 

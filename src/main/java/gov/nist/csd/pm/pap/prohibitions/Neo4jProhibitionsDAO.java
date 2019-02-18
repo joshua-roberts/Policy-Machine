@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pap.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.PMDBException;
+import gov.nist.csd.pm.common.exceptions.PMProhibitionException;
 import gov.nist.csd.pm.common.model.prohibitions.*;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 import static gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper.setToCypherArray;
 
 /**
@@ -28,10 +28,10 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
     /**
      * Create a new Neo4jProhibitionsDAO with the given database context information.
-     * @param ctx The database connection information.
-     * @throws PMException If there is an error establishing a connection to the Neo4j instance.
+     * @param ctx the database connection information.
+     * @throws PMDBException if there is an error establishing a connection to the Neo4j instance.
      */
-    public Neo4jProhibitionsDAO(DatabaseContext ctx) throws PMException {
+    public Neo4jProhibitionsDAO(DatabaseContext ctx) throws PMDBException {
         this.ctx = ctx;
         this.neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
     }
@@ -49,11 +49,11 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
      *
      * Prohibitions are tagged with 'prohibition' and are stored separately from the rest of the graph.
      *
-     * @param prohibition The prohibition to be created.
-     * @throws PMException If there is an error creating in the prohibition in the database.
+     * @param prohibition the prohibition to be created.
+     * @throws PMDBException if there is an error creating in the prohibition in the database.
      */
     @Override
-    public void createProhibition(Prohibition prohibition) throws PMException {
+    public void createProhibition(Prohibition prohibition) throws PMDBException {
         String name = prohibition.getName();
         ProhibitionSubject subject = prohibition.getSubject();
         HashSet<String> operations = prohibition.getOperations();
@@ -77,7 +77,7 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
         ) {
             stmt.executeQuery();
         }catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 
@@ -85,16 +85,17 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
      * Get all prohibitions from the database. Pass the current database context information to a Prohibitions loader
      * to do the loading.
      *
-     * @return A List of the prohibitions from the database.
-     * @throws PMException If there is an error retrieving the prohibitions from the database.
+     * @return a List of the prohibitions from the database.
+     * @throws PMDBException if there is an error retrieving the prohibitions from the database.
+     * @throws PMProhibitionException if there is an error converting the data n the database to a Prohibition object.
      */
     @Override
-    public List<Prohibition> getProhibitions() throws PMException {
+    public List<Prohibition> getProhibitions() throws PMDBException, PMProhibitionException {
         return new Neo4jProhibitionsLoader(ctx).loadProhibitions();
     }
 
     @Override
-    public Prohibition getProhibition(String prohibitionName) throws PMException {
+    public Prohibition getProhibition(String prohibitionName) throws PMDBException, PMProhibitionException {
         Prohibition prohibition = null;
 
         String cypher = "match(p:prohibition{name: " + prohibitionName + "}) return p.name, p.operations, p.intersection";
@@ -142,14 +143,14 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
             }
         }
         catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
 
         return prohibition;
     }
 
     @Override
-    public void deleteProhibition(String prohibitionName) throws PMException {
+    public void deleteProhibition(String prohibitionName) throws PMDBException {
         String cypher = "match(p:" + prohibitionName + ") detach delete p";
 
         try(
@@ -160,12 +161,12 @@ public class Neo4jProhibitionsDAO implements ProhibitionsDAO {
 
 
         }catch (SQLException e) {
-            throw new PMException(ERR_DB, e.getMessage());
+            throw new PMDBException(e.getMessage());
         }
     }
 
     @Override
-    public void updateProhibition(Prohibition prohibition) throws PMException {
+    public void updateProhibition(Prohibition prohibition) throws PMDBException {
         deleteProhibition(prohibition.getName());
         createProhibition(prohibition);
     }

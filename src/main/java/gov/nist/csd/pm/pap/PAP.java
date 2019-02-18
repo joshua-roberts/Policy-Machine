@@ -1,13 +1,9 @@
 package gov.nist.csd.pm.pap;
 
-import gov.nist.csd.pm.common.exceptions.Errors;
-import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.Search;
+import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.GraphPAP;
 import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
@@ -22,22 +18,22 @@ import java.util.HashSet;
 import java.util.Properties;
 
 import static gov.nist.csd.pm.common.constants.Operations.ALL_OPERATIONS;
-import static gov.nist.csd.pm.common.constants.Properties.NAMESPACE_PROPERTY;
-import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.constants.Properties.REP_PROPERTY;
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_HASHING_USER_PSWD;
+import static gov.nist.csd.pm.common.constants.Properties.*;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
 import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.generatePasswordHash;
 
 /**
  * PAP is the Policy Access Point. The purpose of the PAP is to expose the underlying policy data to the PDP and EPP.
- * It initializes the NGAC backend using the connection properties set through SetConnectionServlet.  This servlet can
- * be access via ../config.jsp upon starting the server.The PAP also stores the in memory graph that will be used for
+ * It initializes the backend using the connection properties set through SetConnectionServlet.  This servlet can
+ * be access via ../index.jsp upon starting the server.The PAP also stores the in memory graph that will be used for
  * decision making.
  */
 public class PAP {
 
-    private int      interval = 30;
+    /**
+     * A static instance of the PAP to be used by the PDP.
+     */
+    private static PAP PAP;
 
     private GraphPAP        graphPAP;
     private ProhibitionsPAP prohibitionsPAP;
@@ -51,7 +47,51 @@ public class PAP {
     private NodeContext superOA;
     private NodeContext superO;
 
-    private PAP() throws PMException {
+    /**
+     * Initialize a the static PAP variable if not already initialized.
+     * @return a PAP instance.
+     * @throws PMGraphException if there is an error checking the metadata in the graph.
+     * @throws PMDBException if there is an error connecting to the database.
+     * @throws PMConfigurationException if there is an error with the configuration of the PAP.
+     * @throws PMAuthorizationException if the current user cannot carryout an action.
+     */
+    public static synchronized PAP getPAP() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+        if(PAP == null) {
+            PAP = new PAP();
+        }
+        return PAP;
+    }
+
+    /**
+     * Reinitialize the PAP with the given database context information.
+     *
+     * @param ctx The database context to reinitialize the PAP with.
+     * @return a PAP instance
+     * @throws PMGraphException if there is an error checking the metadata in the graph.
+     * @throws PMDBException if there is an error connecting to the database.
+     * @throws PMConfigurationException if there is an error with the configuration of the PAP.
+     * @throws PMAuthorizationException if the current user cannot carryout an action.
+     */
+    public static synchronized PAP getPAP(DatabaseContext ctx) throws PMGraphException, PMDBException, PMAuthorizationException, PMConfigurationException, PMProhibitionException {
+        PAP = new PAP(ctx);
+        return PAP;
+    }
+
+    /**
+     * Save the configuration properties in a file, to be read upon server startup.
+     * @param props A properties object containing the server configuration settings.
+     */
+    private static void saveProperties(Properties props) {
+        try (FileOutputStream fos = new FileOutputStream("pm.conf");
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(props);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private PAP() throws PMConfigurationException, PMDBException, PMGraphException, PMAuthorizationException, PMProhibitionException {
         // deserialize the configuration properties
         FileInputStream fis;
         Properties props;
@@ -62,7 +102,7 @@ public class PAP {
             }
         }
         catch (IOException | ClassNotFoundException e) {
-            throw new PMException(Errors.ERR_LOADING_DB_CONFIG_PROPS, e.getMessage());
+            throw new PMConfigurationException(e.getMessage());
         }
 
         // extract the properties
@@ -72,16 +112,12 @@ public class PAP {
         String schema = props.getProperty("schema");
         String username = props.getProperty("username");
         String password = props.getProperty("password");
-        String inter = props.getProperty("interval");
-        if(inter != null) {
-            interval = Integer.parseInt(inter);
-        }
 
-        setup(database, new DatabaseContext(host, port, username, password, schema));
+        init(new DatabaseContext(DatabaseContext.toEnum(database), host, port, username, password, schema));
     }
 
-    private PAP(String database, DatabaseContext ctx) throws PMException {
-        setup(database, ctx);
+    private PAP(DatabaseContext ctx) throws PMDBException, PMGraphException, PMAuthorizationException, PMConfigurationException, PMProhibitionException {
+        init(ctx);
     }
 
     /**
@@ -89,10 +125,9 @@ public class PAP {
      * and policy class exist, if not, add them to the graph.  This is done because there must always be a super or root
      * user.
      *
-     * @param database The database to use.  Neo4j or MySQL.
-     * @param ctx The database connection information.
+     * @param ctx the database connection information.
      */
-    private void setup(String database, DatabaseContext ctx) throws PMException {
+    private void init(DatabaseContext ctx) throws PMGraphException, PMDBException, PMAuthorizationException, PMConfigurationException, PMProhibitionException {
         graphPAP = new GraphPAP(ctx);
         prohibitionsPAP = new ProhibitionsPAP(ctx);
         sessionManager = new SessionManager();
@@ -105,7 +140,7 @@ public class PAP {
      * Check that all of the super meta data is in the graph.  Create any nodes, assignments, or associations that do not
      * exist but should
      */
-    private void checkMetadata() throws PMException {
+    private void checkMetadata() throws PMGraphException, PMDBException, PMAuthorizationException, PMConfigurationException {
         HashMap<String, String> props = NodeUtils.toProperties(NAMESPACE_PROPERTY, "super");
 
         HashSet<NodeContext> nodes = getGraphPAP().search("super_ua1", UA.toString(), props);
@@ -128,7 +163,7 @@ public class PAP {
                 props.put(PASSWORD_PROPERTY, generatePasswordHash("super"));
             }
             catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                throw new PMException(ERR_HASHING_USER_PSWD, e.getMessage());
+                throw new PMGraphException(e.getMessage());
             }
             long uID = getGraphPAP().createNode(new NodeContext("super", NodeType.U, props));
             superU = getGraphPAP().getNode(uID);
@@ -259,70 +294,8 @@ public class PAP {
      * Reinitialize the PAP.  Set up the NGAC backend.  This is primarily used when loading a configuration.  Loading
      * a configuration makes changes to the database but not the in memory graph.  So, the in-memory graph needs to get
      * the updated graph from the database.
-     *
-     * @throws PMException If there is an error initializing the PAP.
      */
-    public void reinitialize() throws PMException {
+    public void reinitialize() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         PAP = new PAP();
-    }
-
-    /**
-     * A static instance of the PAP to be used by the PDP.
-     */
-    private static PAP PAP;
-    public static synchronized PAP getPAP() throws PMException {
-        if(PAP == null) {
-            PAP = new PAP();
-        }
-        return PAP;
-    }
-
-    public static synchronized PAP getPAP(boolean init, String database, DatabaseContext ctx) throws PMException {
-        if(PAP == null || init) {
-            PAP = new PAP(database, ctx);
-        }
-        return PAP;
-    }
-
-
-
-    /**
-     * Initialize the PAP with the given properties
-     * @param props The server properties to initalize the PAP with.
-     * @throws PMException If there is an error initializing the PAP with the new properties.
-     */
-    public static void init(Properties props) throws PMException {
-        //get properties
-        String database = props.getProperty("database");
-        String host = props.getProperty("host");
-        int port = Integer.parseInt(props.getProperty("port"));
-        String schema = props.getProperty("schema");
-        String username = props.getProperty("username");
-        String password = props.getProperty("password");
-        String inter = props.getProperty("interval");
-        int interval = -1;
-        if(inter != null) {
-            interval = Integer.parseInt(inter);
-        }
-
-        //serialize thr properties
-        saveProperties(props);
-
-        //instantiate the PAP
-        PAP = new PAP(database, new DatabaseContext(host, port, username, password, schema));
-    }
-
-    /**
-     * Save the configuration properties in a file, to be read upon server startup.
-     * @param props A properties object containing the server configuration settings.
-     */
-    private static void saveProperties(Properties props) {
-        try (FileOutputStream fos = new FileOutputStream("pm.conf");
-             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            oos.writeObject(props);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

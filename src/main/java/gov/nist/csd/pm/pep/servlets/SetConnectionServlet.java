@@ -2,6 +2,7 @@ package gov.nist.csd.pm.pep.servlets;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.pap.PAP;
+import gov.nist.csd.pm.pap.db.DatabaseContext;
 
 
 import java.io.IOException;
@@ -22,21 +23,13 @@ public class SetConnectionServlet extends HttpServlet {
         String password = request.getParameter("password");
         String schema = request.getParameter("schema");
 
-        Properties props = new Properties();
-        props.put("database", database);
-        props.put("host", host);
-        props.put("port", String.valueOf(port));
-        props.put("username", username);
-        props.put("password", password);
-        props.put("schema", schema == null ? "" : schema);
-
         try {
-            PAP.init(props);
+            PAP.getPAP(new DatabaseContext(DatabaseContext.toEnum(database), host, Integer.valueOf(port), username, password, schema));
 
-            request.getRequestDispatcher("/config.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
         }
         catch (PMException e) {
-            request.getRequestDispatcher("/config.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
+            request.getRequestDispatcher("/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
         }
     }
 }

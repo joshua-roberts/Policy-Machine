@@ -1,16 +1,14 @@
 package gov.nist.csd.pm.demos.standalone;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.pap.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
 import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
 import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubjectType;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.graph.MemGraph;
-import gov.nist.csd.pm.pap.graph.Neo4jGraph;
 import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 import gov.nist.csd.pm.pdp.engine.Decider;
 
@@ -25,6 +23,9 @@ public class StandaloneExample {
      * Create a simple graph in memory
      */
     public static HashSet<String> runExample(Graph graph) {
+        MemGraph g = new MemGraph();
+        g.getNodes();
+
         try {
             // create a node for each type
             long pc1 = graph.createNode(new NodeContext(1, "pc1", PC, NodeUtils.toProperties("key1", "value1")));
@@ -59,24 +60,6 @@ public class StandaloneExample {
         catch (PMException e) {
             e.printStackTrace();
             return null;
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            // run the example with an in memory graph
-            Graph graph = new MemGraph();
-
-            HashSet<String> operations = runExample(graph);
-            System.out.println(operations);
-
-            // run the example with a neo4j graph
-            graph = new Neo4jGraph(new DatabaseContext("localhost", 7687, DatabaseContext.NEO4J, "root", null));
-            operations = runExample(graph);
-            System.out.println(operations);
-        }
-        catch (PMException e) {
-            e.printStackTrace();
         }
     }
 }

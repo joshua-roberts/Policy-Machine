@@ -1,9 +1,6 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Graph;
-import gov.nist.csd.pm.common.model.graph.Search;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.pap.graph.GraphPAP;
 import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
 import gov.nist.csd.pm.pap.sessions.SessionManager;
@@ -29,13 +26,13 @@ public class Service {
 
     /**
      * Create a new Service with a sessionID and processID from the request context.
-     * @param userID The ID of the user.
-     * @param processID The ID of the current process. This can be 0.
-     * @throws IllegalArgumentException If the user ID provided is 0.
+     * @param userID the ID of the user.
+     * @param processID the ID of the current process. This can be 0.
+     * @throws IllegalArgumentException if the user ID provided is 0.
      */
-    public Service(long userID, long processID) throws PMException {
+    public Service(long userID, long processID) throws PMGraphException {
         if(userID == 0) {
-            throw new PMException(Errors.ERR_NO_USER_PARAMETER, "no user or a user ID of 0 was provided to the PDP service");
+            throw new PMGraphException("no user or a user ID of 0 was provided to the PDP service");
         }
 
         this.userID = userID;
@@ -46,7 +43,7 @@ public class Service {
 
     /**
      * Get the ID of the current session.
-     * @return The current session's ID.
+     * @return the current session's ID.
      */
     protected long getUserID() {
         return userID;
@@ -61,19 +58,19 @@ public class Service {
         return processID;
     }
 
-    protected GraphPAP getGraphPAP() throws PMException {
+    GraphPAP getGraphPAP() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return getPAP().getGraphPAP();
     }
 
-    protected ProhibitionsPAP getProhibitionsPAP() throws PMException {
+    ProhibitionsPAP getProhibitionsPAP() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return getPAP().getProhibitionsPAP();
     }
 
-    SessionManager getSessionManager() throws PMException {
+    SessionManager getSessionManager() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return getPAP().getSessionManager();
     }
 
-    public Decider getDecider() throws PMException {
+    public Decider getDecider() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return new PReviewDecider(getGraphPAP(), getProhibitionsPAP().getProhibitions());
     }
 }

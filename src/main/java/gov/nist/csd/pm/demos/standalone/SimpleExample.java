@@ -1,7 +1,7 @@
 package gov.nist.csd.pm.demos.standalone;
 
 import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.Graph;
+import gov.nist.csd.pm.pap.graph.Graph;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;

@@ -1,12 +1,10 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.Search;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
 
 import gov.nist.csd.pm.pdp.engine.Decider;
-import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
 import java.util.*;
 
@@ -15,17 +13,19 @@ import java.util.*;
  */
 public class AnalyticsService extends Service {
 
-    public AnalyticsService(long userID, long processID) throws PMException {
+    public AnalyticsService(long userID, long processID) throws PMGraphException {
         super(userID, processID);
     }
 
     /**
      * Given the ID of a target node, return the permissions the current user has on it.
-     * @param targetID The ID of the target node.
-     * @return The set of operations the current user has on the target node.
-     * @throws PMException If there is an exception thrown creating a Decider or listing the permissions.
+     * @param targetID the ID of the target node.
+     * @return the set of operations the current user has on the target node.
+     * @throws PMDBException if there is an error with the database
+     * @throws PMGraphException if there is an error accessing nodes in the graph.
+     * @throws PMConfigurationException if there is an error with the configuration of the PAP.
      */
-    public HashSet<String> getPermissions(long targetID) throws PMException {
+    public HashSet<String> getPermissions(long targetID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         Decider decider = getDecider();
         return decider.listPermissions(getUserID(), getProcessID(), targetID);
     }
@@ -34,10 +34,11 @@ public class AnalyticsService extends Service {
     /**
      * Get the Personal Object System for the user of the current session.  This method returns the first level of nodes
      * the user has direct access to.
-     * @return The set of nodes that the user has direct access.
-     * @throws PMException If there is an exception navigating the graph to calculate a user's POS
+     * @return the set of nodes that the user has direct access.
+     * @throws PMGraphException if there is an error accessing the graph.
+     * @throws PMDBException if there is an error accessing the database.
      */
-    public HashSet<NodeContext> getPos() throws PMException {
+    public HashSet<NodeContext> getPos() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         // Prepare the hashset to return.
         HashSet<Long> hsOa = new HashSet<>();
 
@@ -70,16 +71,15 @@ public class AnalyticsService extends Service {
         }
 
         HashSet<NodeContext> nodes = new HashSet<>();
-        Search search = getGraphPAP();
         for(Long id : hsOa) {
-            NodeContext node = search.getNode(id);
+            NodeContext node = getGraphPAP().getNode(id);
             nodes.add(node);
         }
 
         return nodes;
     }
 
-    private Hashtable findBorderOaPrivRestrictedInternal() throws PMException {
+    private Hashtable findBorderOaPrivRestrictedInternal() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
         // An oa is a key in this hashtable. The value is another hashtable that
         // represents a label of the oa. A label is a set of pairs {(op -> pcset)}, with
@@ -195,7 +195,7 @@ public class AnalyticsService extends Service {
         return htReachableOas;
     }
 
-    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws PMException {
+    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         HashSet<Long> reachable = new HashSet<>();
 
         // Init the queue, visited
@@ -234,11 +234,11 @@ public class AnalyticsService extends Service {
         return reachable;
     }
 
-    private boolean inMemUattrHasOpsets(NodeContext uaNode) throws PMException {
+    private boolean inMemUattrHasOpsets(NodeContext uaNode) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return !getGraphPAP().getSourceAssociations(uaNode.getID()).isEmpty();
     }
 
-    public Object explain(long userID, long targetID) throws PMException {
+    public Object explain(long userID, long targetID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         Decider decider = getDecider();
         return decider.listPermissions(userID, getProcessID(), targetID);
     }
