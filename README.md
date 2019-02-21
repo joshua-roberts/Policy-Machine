@@ -4,4 +4,4 @@ Provided is a Java library to model and query NGAC graphs and a RESTful API for 
 Enforcement Point (PEP). The API can be used to create web-based NGAC aware applications.
 
 # Full Documentation
-View the Policy Machine documentation [here](https://joshua-roberts.github.io/Policy-Machine-Dev/)
+View the Policy Machine documentation [here](https://pm-master.github.io/pm-master/policy-machine/)
