@@ -1,11 +1,12 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.decider.Decider;
+import gov.nist.csd.pm.decider.PReviewDecider;
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pap.graph.GraphPAP;
 import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
 import gov.nist.csd.pm.pap.sessions.SessionManager;
-import gov.nist.csd.pm.pdp.engine.Decider;
-import gov.nist.csd.pm.pdp.engine.PReviewDecider;
 
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
@@ -58,19 +59,19 @@ public class Service {
         return processID;
     }
 
-    GraphPAP getGraphPAP() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    GraphPAP getGraphPAP() throws PMException {
         return getPAP().getGraphPAP();
     }
 
-    ProhibitionsPAP getProhibitionsPAP() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    ProhibitionsPAP getProhibitionsPAP() throws PMException {
         return getPAP().getProhibitionsPAP();
     }
 
-    SessionManager getSessionManager() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    SessionManager getSessionManager() throws PMException {
         return getPAP().getSessionManager();
     }
 
-    public Decider getDecider() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
-        return new PReviewDecider(getGraphPAP(), getProhibitionsPAP().getProhibitions());
+    public Decider getDecider() throws PMException {
+        return new PReviewDecider(getGraphPAP());
     }
 }

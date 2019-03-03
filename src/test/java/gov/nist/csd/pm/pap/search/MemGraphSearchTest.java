@@ -1,14 +1,14 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.pap.graph.MemGraph;
+import gov.nist.csd.pm.common.util.NodeUtils;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.MemGraph;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
+import java.util.Set;
 
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
+import static gov.nist.csd.pm.graph.model.nodes.NodeType.OA;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MemGraphSearchTest {
@@ -18,12 +18,12 @@ class MemGraphSearchTest {
         MemGraph graph = new MemGraph();
         Search search = new MemGraphSearch(graph);
 
-        graph.createNode(new NodeContext(1, "oa1", OA, NodeUtils.toProperties("namespace", "test")));
-        graph.createNode(new NodeContext(2, "oa2", OA, NodeUtils.toProperties("key1", "value1")));
-        graph.createNode(new NodeContext(3, "oa3", OA, NodeUtils.toProperties("key1", "value1", "key2", "value2")));
+        graph.createNode(new Node(1, "oa1", OA, NodeUtils.toProperties("namespace", "test")));
+        graph.createNode(new Node(2, "oa2", OA, NodeUtils.toProperties("key1", "value1")));
+        graph.createNode(new Node(3, "oa3", OA, NodeUtils.toProperties("key1", "value1", "key2", "value2")));
 
         // name and type no properties
-        HashSet<NodeContext> nodes = search.search("oa1", OA.toString(), null);
+        Set<Node> nodes = search.search("oa1", OA.toString(), null);
         assertEquals(1, nodes.size());
 
         // one property
@@ -55,8 +55,8 @@ class MemGraphSearchTest {
 
         assertThrows(PMException.class, () -> search.getNode(123));
 
-        long id = graph.createNode(new NodeContext(123, "oa1", OA, null));
-        NodeContext node = search.getNode(id);
+        long id = graph.createNode(new Node(123, "oa1", OA, null));
+        Node node = search.getNode(id);
         assertEquals("oa1", node.getName());
         assertEquals(OA, node.getType());
     }

@@ -1,11 +1,11 @@
 package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 
-import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Search provides a method to search for nodes in an NAC graph.
@@ -24,7 +24,7 @@ public interface Search {
      * @throws PMDBException if a database is being used and there is an error searching for nodes.
      * @throws PMGraphException if there is an error interacting with the graph.
      */
-    HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException;
+    Set<Node> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException;
 
     /**
      * Retrieve the node with the given ID.
@@ -33,5 +33,5 @@ public interface Search {
      * @throws PMDBException if a database is being used and there is an error getting the node with the given ID.
      * @throws PMGraphException if there is an error interacting with the graph.
      */
-    NodeContext getNode(long id) throws PMDBException, PMGraphException;
+    Node getNode(long id) throws PMException;
 }

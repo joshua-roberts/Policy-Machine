@@ -3,23 +3,18 @@ package gov.nist.csd.pm.pdp.services;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 
 
-import javax.xml.soap.Node;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.generatePasswordHash;
+import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
+import static gov.nist.csd.pm.graph.model.nodes.NodeType.UA;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
@@ -33,23 +28,23 @@ public class ConfigurationService extends Service {
      * @return the json string representation of the graph.
      * @throws PMException If there is an error reading the graph information from the database and saving it to json.
      */
-    public String save() throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
+    public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        HashSet<NodeContext> nodes = getGraphPAP().getNodes();
-        HashSet<JsonAssignment> jsonAssignments = new HashSet<>();
-        HashSet<JsonAssociation> jsonAssociations = new HashSet<>();
-        for(NodeContext node : nodes) {
-            HashSet<NodeContext> parents = getGraphPAP().getParents(node.getID());
+        Collection<Node> nodes = getGraphPAP().getNodes();
+        Set<JsonAssignment> jsonAssignments = new HashSet<>();
+        Set<JsonAssociation> jsonAssociations = new HashSet<>();
+        for(Node node : nodes) {
+            Set<Long> parents = getGraphPAP().getParents(node.getID());
 
-            for (NodeContext parent : parents) {
-                jsonAssignments.add(new JsonAssignment(node.getID(), parent.getID()));
+            for (Long parent : parents) {
+                jsonAssignments.add(new JsonAssignment(node.getID(), parent));
             }
 
-            HashMap<Long, HashSet<String>> associations = getGraphPAP().getSourceAssociations(node.getID());
+            Map<Long, Set<String>> associations = getGraphPAP().getSourceAssociations(node.getID());
             for (long targetID : associations.keySet()) {
-                HashSet<String> ops = associations.get(targetID);
-                NodeContext targetNode = getGraphPAP().getNode(targetID);
+                Set<String> ops = associations.get(targetID);
+                Node targetNode = getGraphPAP().getNode(targetID);
 
                 jsonAssociations.add(new JsonAssociation(node.getID(), targetNode.getID(), ops));
             }
@@ -66,12 +61,12 @@ public class ConfigurationService extends Service {
      * @param config The json string containing the nodes, assignments, and associations
      * @throws PMException If the configuration is malformed or if the contents of the configuration are not consistent.
      */
-    public void load(String config) throws PMGraphException, PMConfigurationException, PMDBException, PMAuthorizationException, PMProhibitionException {
+    public void load(String config) throws PMException {
         JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
 
-        HashSet<NodeContext> nodes = graph.getNodes();
-        HashMap<Long, NodeContext> nodesMap = new HashMap<>();
-        for(NodeContext node : nodes) {
+        Collection<Node> nodes = graph.getNodes();
+        HashMap<Long, Node> nodesMap = new HashMap<>();
+        for(Node node : nodes) {
             Map<String, String> properties = node.getProperties();
 
             //if a password is present encrypt it.
@@ -91,20 +86,19 @@ public class ConfigurationService extends Service {
             nodesMap.put(node.getID(), node.id(newNodeID));
         }
 
-        HashSet<JsonAssignment> assignments = graph.getAssignments();
+        Set<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
-            NodeContext childCtx = nodesMap.get(assignment.getChild());
-            NodeContext parentCtx = nodesMap.get(assignment.getParent());
+            Node childCtx = nodesMap.get(assignment.getChild());
+            Node parentCtx = nodesMap.get(assignment.getParent());
             getGraphPAP().assign(childCtx, parentCtx);
         }
 
-        HashSet<JsonAssociation> associations = graph.getAssociations();
+        Set<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
-            System.out.println(association.getUa() + "-->" + association.getTarget() + association.getOps());
             long uaID = association.getUa();
             long targetID = association.getTarget();
-            NodeContext targetNode = nodesMap.get(targetID);
-            getGraphPAP().associate(new NodeContext(nodesMap.get(uaID).getID(), UA), new NodeContext(targetNode.getID(), targetNode.getType()), association.getOps());
+            Node targetNode = nodesMap.get(targetID);
+            getGraphPAP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
         }
     }
 
@@ -113,8 +107,8 @@ public class ConfigurationService extends Service {
      * @throws PMException If there is an error resetting the graph or reinitializing the PAP.
      */
     public void reset() throws PMException {
-        HashSet<NodeContext> nodes = getGraphPAP().getNodes();
-        for(NodeContext node : nodes) {
+        Collection<Node> nodes = getGraphPAP().getNodes();
+        for(Node node : nodes) {
             getGraphPAP().deleteNode(node.getID());
         }
 
@@ -143,9 +137,9 @@ public class ConfigurationService extends Service {
     class JsonAssociation {
         long            ua;
         long            target;
-        HashSet<String> ops;
+        Set<String> ops;
 
-        public JsonAssociation(long ua, long target, HashSet<String> ops) {
+        public JsonAssociation(long ua, long target, Set<String> ops) {
             this.ua = ua;
             this.target = target;
             this.ops = ops;
@@ -159,31 +153,31 @@ public class ConfigurationService extends Service {
             return target;
         }
 
-        public HashSet<String> getOps() {
+        public Set<String> getOps() {
             return ops;
         }
     }
 
     class JsonGraph {
-        HashSet<NodeContext>     nodes;
-        HashSet<JsonAssignment>  assignments;
-        HashSet<JsonAssociation> associations;
+        Collection<Node>     nodes;
+        Set<JsonAssignment>  assignments;
+        Set<JsonAssociation> associations;
 
-        public JsonGraph(HashSet<NodeContext> nodes, HashSet<JsonAssignment> assignments, HashSet<JsonAssociation> associations) {
+        public JsonGraph(Collection<Node> nodes, Set<JsonAssignment> assignments, Set<JsonAssociation> associations) {
             this.nodes = nodes;
             this.assignments = assignments;
             this.associations = associations;
         }
 
-        public HashSet<NodeContext> getNodes() {
+        public Collection<Node> getNodes() {
             return nodes;
         }
 
-        public HashSet<JsonAssignment> getAssignments() {
+        public Set<JsonAssignment> getAssignments() {
             return assignments;
         }
 
-        public HashSet<JsonAssociation> getAssociations() {
+        public Set<JsonAssociation> getAssociations() {
             return associations;
         }
     }

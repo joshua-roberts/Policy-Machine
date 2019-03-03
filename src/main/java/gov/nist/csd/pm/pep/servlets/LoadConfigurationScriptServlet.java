@@ -2,6 +2,7 @@ package gov.nist.csd.pm.pep.servlets;
 
 import gov.nist.csd.pm.common.exceptions.*;
 
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pdp.services.ConfigurationService;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;

@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
 import gov.nist.csd.pm.common.exceptions.PMDBException;
-import gov.nist.csd.pm.common.exceptions.PMException;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -26,7 +25,7 @@ public class Neo4jConnection {
      * @param port the port the Neo4j instance is running on.
      * @param username the name of the Neo4j user.
      * @param password the password of the Neo4j user.
-     * @throws PMException When there's ann error connecting to the Neo4j instance.
+     * @throws PMDBException When there's ann error connecting to the Neo4j instance.
      */
     public Neo4jConnection(String host, int port, String username, String password) throws PMDBException {
         this.host = host;
@@ -44,7 +43,7 @@ public class Neo4jConnection {
 
     /**
      * @return the connection to the Neo4j instance.
-     * @throws PMException if there is an error establishing the connection.
+     * @throws PMDBException if there is an error establishing the connection.
      */
     public Connection getConnection() throws PMDBException {
         try {

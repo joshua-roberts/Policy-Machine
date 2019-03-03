@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.pap.search;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.exceptions.PMGraphException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.pap.graph.MemGraph;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.MemGraph;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 
 import java.util.*;
 
@@ -35,30 +35,16 @@ public class MemGraphSearch implements Search {
      * @param type the type of the nodes to search for.
      * @param properties the properties of the nodes to search for.
      * @return the set of nodes that match the given parameters.
-     * @throws PMException if there is an error getting a node from the data structure.
      */
     @Override
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMGraphException {
+    public Set<Node> search(String name, String type, Map<String, String> properties) {
         if(properties == null) {
             properties = new HashMap<>();
         }
 
-        String namespace = properties.get(NAMESPACE_PROPERTY);
-        if((name != null && !name.isEmpty())
-                && (type != null && !type.isEmpty())
-                && (namespace != null && !namespace.isEmpty())) {
-            HashMap<String, Long> namespaceNames = memGraph.getNamespaceNames();
-            String namespaceStr = namespace + ":" + name + ":" + type;
-            Long id = namespaceNames.get(namespaceStr);
-            if(id != null) {
-                NodeContext node = getNode(id);
-                return new HashSet<>(Collections.singleton(node));
-            }
-        }
-
-        HashSet<NodeContext> results = new HashSet<>();
+        HashSet<Node> results = new HashSet<>();
         // iterate over the nodes to find ones that match the search parameters
-        for(NodeContext node : memGraph.getNodes()) {
+        for(Node node : memGraph.getNodes()) {
             // if the name parameter is not null and the current node name does not equal the name parameter, do not add
             if (name != null && !node.getName().equals(name)) {
                 continue;
@@ -99,8 +85,8 @@ public class MemGraphSearch implements Search {
      * @throws PMGraphException if a node with the given ID does not exist.
      */
     @Override
-    public NodeContext getNode(long id) throws PMGraphException {
-        NodeContext node = memGraph.getNodesMap().get(id);
+    public Node getNode(long id) throws PMException {
+        Node node = memGraph.getNode(id);
         if(node == null) {
             throw new PMGraphException(String.format("a node with the id %d does not exist", id));
         }

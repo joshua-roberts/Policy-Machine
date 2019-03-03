@@ -1,26 +1,23 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.pap.graph.Graph;
-import gov.nist.csd.pm.pap.search.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeUtils;
-import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
-import gov.nist.csd.pm.common.model.graph.relationships.Association;
-import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.common.util.NodeUtils;
+import gov.nist.csd.pm.decider.Decider;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
+import gov.nist.csd.pm.graph.model.relationships.Assignment;
+import gov.nist.csd.pm.graph.model.relationships.Association;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import static gov.nist.csd.pm.common.constants.Operations.*;
 import static gov.nist.csd.pm.common.constants.Properties.*;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.OA;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.PC;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.generatePasswordHash;
+import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
+import static gov.nist.csd.pm.graph.model.nodes.NodeType.OA;
+import static gov.nist.csd.pm.graph.model.nodes.NodeType.PC;
 import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 /**
@@ -47,16 +44,17 @@ public class GraphService extends Service {
      *
      * If the parent node is a policy class, check the permissions the current user has on the representative of the policy class.
      *
-     * @param ctx the context information for the node to create.  This includes the parentID, name, type, and properties.
+     * @param parentID the ID of the parent node if creating a non policy class node.
+     * @param ctx the context information for the node to create.  This includes the name, type, and properties.
      * @return the new node created with it's ID.
-     * @throws IllegalArgumentException if the NodeContext parameter is null.
-     * @throws IllegalArgumentException if the NodeContext's name field is null or empty.
-     * @throws IllegalArgumentException if the NodeContext's type field is null.
+     * @throws IllegalArgumentException if the Node parameter is null.
+     * @throws IllegalArgumentException if the Node's name field is null or empty.
+     * @throws IllegalArgumentException if the Node's type field is null.
      * @throws PMGraphException if a node already exists with the given name, type, and namespace property.
      * @throws PMAuthorizationException if the user does not have permission to create the node.
      * @throws PMConfigurationException if there is a configuration error in the PAP.
      */
-    public long createNode(NodeContext ctx) throws PMGraphException, PMConfigurationException, PMDBException, PMAuthorizationException, PMProhibitionException {
+    public long createNode(long parentID, Node ctx) throws PMException {
         if(ctx == null) {
             throw new IllegalArgumentException("a null request was provided when creating a node in the PDP");
         } else if (ctx.getName() == null || ctx.getName().isEmpty()) {
@@ -67,7 +65,7 @@ public class GraphService extends Service {
 
         // instantiate the properties map if it's null
         // if this node is a user, hash the password if present in the properties
-        HashMap<String, String> properties = ctx.getProperties();
+        Map<String, String> properties = ctx.getProperties();
         if(properties == null) {
             properties = new HashMap<>();
         }
@@ -86,11 +84,11 @@ public class GraphService extends Service {
         if(ctx.getType().equals(PC)) {
             return createPolicyClass(ctx);
         } else {
-            return createNonPolicyClass(ctx);
+            return createNonPolicyClass(parentID, ctx);
         }
     }
 
-    private void checkNamespace(String name, NodeType type, HashMap<String, String> properties) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    private void checkNamespace(String name, NodeType type, Map<String, String> properties) throws PMException {
         // check that the intended namespace does not already have the node name
         String namespace = properties.get(NAMESPACE_PROPERTY);
         if(namespace == null) {
@@ -98,7 +96,7 @@ public class GraphService extends Service {
         }
 
         // search the graph for any node with the same name, type, and namespace
-        HashSet<NodeContext> search = getGraphPAP().search(name, type.toString(),
+        Set<Node> search = getGraphPAP().search(name, type.toString(),
                 NodeUtils.toProperties(NAMESPACE_PROPERTY, namespace));
         if(!search.isEmpty()) {
             throw new PMGraphException(String.format("a node with the name \"%s\" and type %s already exists in the namespace \"%s\"",
@@ -106,17 +104,16 @@ public class GraphService extends Service {
         }
     }
 
-    private long createNonPolicyClass(NodeContext ctx) throws PMGraphException, PMConfigurationException, PMDBException, PMAuthorizationException, PMProhibitionException {
+    private long createNonPolicyClass(long parentID, Node ctx) throws PMException {
         //check that the parent node exists
-        if(!exists(ctx.getParentID())) {
-            throw new PMGraphException(String.format("the specified parent node with ID %d does not exist", ctx.getParentID()));
+        if(!exists(parentID)) {
+            throw new PMGraphException(String.format("the specified parent node with ID %d does not exist", parentID));
         }
 
         //get the parent node to make the assignment
-        NodeContext parentNodeCtx = getNode(ctx.getParentID());
+        Node parentNodeCtx = getNode(parentID);
 
         // check if the parent is a PC and get the rep if it is
-        long parentID = parentNodeCtx.getID();
         if(parentNodeCtx.getType().equals(PC)) {
             parentID = Long.parseLong(parentNodeCtx.getProperties().get(REP_PROPERTY));
         }
@@ -138,7 +135,7 @@ public class GraphService extends Service {
         return id;
     }
 
-    private long createPolicyClass(NodeContext ctx) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    private long createPolicyClass(Node ctx) throws PMException {
         // check that the user can create a policy class
         Decider decider = getDecider();
         if (!decider.hasPermissions(getUserID(), getProcessID(), getPAP().getSuperO().getID(), CREATE_POLICY_CLASS)) {
@@ -149,7 +146,7 @@ public class GraphService extends Service {
         // this way we can set permissions on this node to control who can (de)assign to the policy class node.
         HashMap<String, String> repProps = new HashMap<>();
         ctx.getProperties().forEach(repProps::putIfAbsent);
-        NodeContext repCtx = new NodeContext()
+        Node repCtx = new Node()
                 .name(ctx.getName() + " rep")
                 .type(OA)
                 .properties(repProps);
@@ -165,7 +162,7 @@ public class GraphService extends Service {
         ctx.id(id);
 
         // assign the rep object in the super pc
-        getGraphPAP().assign(repCtx, new NodeContext(getPAP().getSuperOA().getID(), OA));
+        getGraphPAP().assign(repCtx, new Node(getPAP().getSuperOA().getID(), OA));
 
         return id;
     }
@@ -179,7 +176,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is a configuration error in the PAP.
      * @throws PMAuthorizationException if the user is not authorized to update the node.
      */
-    public void updateNode(NodeContext node) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public void updateNode(Node node) throws PMException {
         if(node == null) {
             throw new IllegalArgumentException("a null node was provided when updating a node in the PDP");
         } else if(node.getID() == 0) {
@@ -209,8 +206,8 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException if the user is not authorized to delete the node.
      */
-    public void deleteNode(long nodeID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
-        NodeContext node = getGraphPAP().getNode(nodeID);
+    public void deleteNode(long nodeID) throws PMException {
+        Node node = getGraphPAP().getNode(nodeID);
 
         long repID = 0;
         long targetID = nodeID;
@@ -227,8 +224,9 @@ public class GraphService extends Service {
         }
 
         // check that the user can deassign from the node's parents
-        HashSet<NodeContext> parents = getGraphPAP().getParents(nodeID);
-        for(NodeContext parent : parents) {
+        Set<Long> parents = getGraphPAP().getParents(nodeID);
+        for(long parentID : parents) {
+            Node parent = getNode(parentID);
             // check the user can deassign from parent
             // if the parent is a policy class, get the rep oa
             if(parent.getType().equals(PC)) {
@@ -258,7 +256,7 @@ public class GraphService extends Service {
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
-    public boolean exists(long nodeID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public boolean exists(long nodeID) throws PMException {
         return getGraphPAP().exists(nodeID);
     }
 
@@ -270,9 +268,9 @@ public class GraphService extends Service {
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
-    public HashSet<NodeContext> getNodes() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    /*public Set<Node> getNodes() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
         return getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getNodes(), ANY_OPERATIONS);
-    }
+    }*/
 
     /**
      * Get the set of policy class IDs. This can be performed by the in-memory graph.
@@ -281,7 +279,7 @@ public class GraphService extends Service {
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
-    public HashSet<Long> getPolicies() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Set<Long> getPolicies() throws PMException {
         return getGraphPAP().getPolicies();
     }
 
@@ -289,43 +287,48 @@ public class GraphService extends Service {
      * Get the children of the node from the graph.  Get the children from the database to ensure all node information
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID the ID of the node to get the children of.
-     * @return a set of NodeContext objects, representing the children of the target node.
+     * @return a set of Node objects, representing the children of the target node.
      * @throws PMGraphException if the target node does not exist.
      * @throws PMGraphException if there is an error getting the children from the PAP.
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
 
      */
-    public HashSet<NodeContext> getChildren(long nodeID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Set<Node> getChildren(long nodeID) throws PMException {
         if(!exists(nodeID)) {
             throw new PMGraphException(String.format("node with ID %d could not be found", nodeID));
         }
 
-        //get the children from the db
-        HashSet<NodeContext> children = getGraphPAP().getChildren(nodeID);
         //filter any nodes that the user doesn't have any permissions on
-        return getDecider().filter(getUserID(), getProcessID(), children, ANY_OPERATIONS);
+        Collection<Long> children = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getChildren(nodeID), ANY_OPERATIONS);
+        Set<Node> retChildren = new HashSet<>();
+        for(long childID : children) {
+            retChildren.add(getNode(childID));
+        }
+        return retChildren;
     }
 
     /**
      * Get the parents of the node from the graph.  Get the parents from the database to ensure all node information
      * is present.  Before returning the set of nodes, filter out any nodes that the user has no permissions on.
      * @param nodeID the ID of the node to get the parents of.
-     * @return a set of NodeContext objects, representing the parents of the target node.
+     * @return a set of Node objects, representing the parents of the target node.
      * @throws PMGraphException if the target node does not exist.
      * @throws PMGraphException if there is an error getting the parents from the PAP.
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
-    public HashSet<NodeContext> getParents(long nodeID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Set<Node> getParents(long nodeID) throws PMException {
         if(!exists(nodeID)) {
             throw new PMGraphException(String.format("node with ID %d could not be found", nodeID));
         }
 
-        //get the children from the db
-        HashSet<NodeContext> children = getGraphPAP().getParents(nodeID);
-        //filter any nodes that the user doesn't have any permissions on
-        return getDecider().filter(getUserID(), getProcessID(), children, ANY_OPERATIONS);
+        Collection<Long> parents = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getParents(nodeID), ANY_OPERATIONS);
+        Set<Node> retParents = new HashSet<>();
+        for(long parentID : parents) {
+            retParents.add(getNode(parentID));
+        }
+        return retParents;
     }
 
     /**
@@ -343,7 +346,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException if the current user does not have permission to create the assignment.
      */
-    public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public void assign(Node childCtx, Node parentCtx) throws PMException {
         // check that the nodes are not null
         if(childCtx == null) {
             throw new IllegalArgumentException("child node was null");
@@ -377,7 +380,7 @@ public class GraphService extends Service {
         long targetID = parentCtx.getID();
         if(parentCtx.getType().equals(PC)) {
             // get the policy class node
-            NodeContext node = getGraphPAP().getNode(targetID);
+            Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
             // set the target of the permission check to the rep node
             targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
@@ -406,7 +409,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException if the current user does not have permission to delete the assignment.
      */
-    public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMGraphException, PMConfigurationException, PMDBException, PMAuthorizationException, PMProhibitionException {
+    public void deassign(Node childCtx, Node parentCtx) throws PMException {
         // check that the parameters are correct
         if(childCtx == null) {
             throw new IllegalArgumentException("child node was null when deassigning");
@@ -436,7 +439,7 @@ public class GraphService extends Service {
         long targetID = parentCtx.getID();
         if(parentCtx.getType().equals(PC)) {
             // get the policy class node
-            NodeContext node = getGraphPAP().getNode(targetID);
+            Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
             // set the target of the permission check to the rep node
             targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
@@ -468,7 +471,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to create the association.
      */
-    public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMException {
         if(uaCtx == null) {
             throw new IllegalArgumentException("user attribute node was null");
         } else if(targetCtx == null) {
@@ -485,8 +488,8 @@ public class GraphService extends Service {
             throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", targetCtx.getID()));
         }
 
-        NodeContext sourceNode = getNode(uaCtx.getID());
-        NodeContext targetNode = getNode(targetCtx.getID());
+        Node sourceNode = getNode(uaCtx.getID());
+        Node targetNode = getNode(targetCtx.getID());
 
         Association.checkAssociation(sourceNode.getType(), targetNode.getType());
 
@@ -518,7 +521,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to delete the association.
      */
-    public void dissociate(NodeContext uaCtx, NodeContext targetCtx) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public void dissociate(Node uaCtx, Node targetCtx) throws PMException {
         if(uaCtx == null) {
             throw new IllegalArgumentException("user attribute node was null");
         } else if(targetCtx == null) {
@@ -556,7 +559,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to get hte node's associations.
      */
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Map<Long, Set<String>> getSourceAssociations(long sourceID) throws PMException {
         if(!exists(sourceID)) {
             throw new PMGraphException(String.format("node with ID %d could not be found", sourceID));
         }
@@ -580,7 +583,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to get hte node's associations.
      */
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Map<Long, Set<String>> getTargetAssociations(long targetID) throws PMException {
         if(!exists(targetID)) {
             throw new PMGraphException(String.format("node with ID %d could not be found", targetID));
         }
@@ -609,11 +612,18 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to get hte node's associations.
      */
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
+    public Set<Node> search(String name, String type, Map<String, String> properties) throws PMException {
         // user the PIP searcher to search for the intended nodes
-        HashSet<NodeContext> nodes = getGraphPAP().search(name, type, properties);
-        //filter out any nodes the user doesn't have any permissions on
-        return getDecider().filter(getUserID(), getProcessID(), nodes);
+        Set<Node> nodes = getGraphPAP().search(name, type, properties);
+        nodes.removeIf(x -> {
+            try {
+                return !getDecider().hasPermissions(getUserID(), getProcessID(), x.getID(), ANY_OPERATIONS);
+            }
+            catch (PMException e) {
+                return true;
+            }
+        });
+        return nodes;
     }
 
     /**
@@ -627,12 +637,12 @@ public class GraphService extends Service {
      * @throws PMAuthorizationException if the current user is not authorized to access this node.
      * @throws PMDBException if the PAP accesses the database and there is an error.
      */
-    public NodeContext getNode(long id) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
+    public Node getNode(long id) throws PMException {
         if(!exists(id)) {
             throw new PMGraphException(String.format("node with ID %d could not be found", id));
         }
 
-        NodeContext node = getGraphPAP().getNode(id);
+        Node node = getGraphPAP().getNode(id);
         if(node.getType().equals(PC)) {
             id = Long.parseLong(node.getProperties().get(REP_PROPERTY));
             if(id == 0) {

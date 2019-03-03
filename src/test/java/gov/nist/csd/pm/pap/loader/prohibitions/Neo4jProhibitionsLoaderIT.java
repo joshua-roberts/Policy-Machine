@@ -1,9 +1,9 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
-import gov.nist.csd.pm.common.model.prohibitions.*;
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pap.prohibitions.Neo4jProhibitionsDAO;
-import gov.nist.csd.pm.pap.prohibitions.ProhibitionsDAO;
+import gov.nist.csd.pm.prohibitions.ProhibitionsDAO;
+import gov.nist.csd.pm.prohibitions.model.Prohibition;
 import gov.nist.csd.pm.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +24,8 @@ class Neo4jProhibitionsLoaderIT {
         prohibition.setName("deny");
         prohibition.setIntersection(false);
         prohibition.setOperations(new HashSet<>(Arrays.asList("read", "write")));
-        prohibition.setSubject(new ProhibitionSubject(123, ProhibitionSubjectType.U));
-        prohibition.addNode(new ProhibitionNode(1234, false));
+        prohibition.setSubject(new Prohibition.Subject(123, Prohibition.Subject.Type.USER));
+        prohibition.addNode(new Prohibition.Node(1234, false));
         dao.createProhibition(prohibition);
 
         ProhibitionsLoader loader = new Neo4jProhibitionsLoader(TestUtils.getDatabaseContext());
@@ -41,7 +41,7 @@ class Neo4jProhibitionsLoaderIT {
         assertEquals("deny", prohibition.getName());
         assertFalse(prohibition.isIntersection());
         assertEquals(123, prohibition.getSubject().getSubjectID());
-        assertEquals(prohibition.getSubject().getSubjectType(), ProhibitionSubjectType.U);
+        assertEquals(prohibition.getSubject().getSubjectType(), Prohibition.Subject.Type.USER);
         assertEquals(1, prohibition.getNodes().size());
         assertEquals(1234, prohibition.getNodes().get(0).getID());
         assertFalse(prohibition.getNodes().get(0).isComplement());

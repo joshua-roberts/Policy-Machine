@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pep.response;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.common.exceptions.Errors;
+import gov.nist.csd.pm.exceptions.PMException;
 
 import javax.ws.rs.core.Response;
 
@@ -55,10 +56,10 @@ public class ApiResponse {
          *          added to the Builder.
          * @return a Builder with an error response code and default message.
          */
-        public static Builder error(PMException e) {
-            Builder res = new Builder(e.getError().getCode());
-            res.message = e.getError().getMessage();
-            res.entity = e.getDetailedMessage();
+        public static Builder error(Errors err, PMException e) {
+            Builder res = new Builder(err.getCode());
+            res.message = err.getMessage();
+            res.entity = e.getMessage();
             return res;
         }
 

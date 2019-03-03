@@ -1,11 +1,11 @@
 package gov.nist.csd.pm.pep.resources;
 
-import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.requests.CreateProhibitionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;
 import gov.nist.csd.pm.pdp.services.ProhibitionsService;
+import gov.nist.csd.pm.prohibitions.model.Prohibition;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

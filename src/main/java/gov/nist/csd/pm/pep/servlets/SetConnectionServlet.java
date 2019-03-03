@@ -1,16 +1,14 @@
 package gov.nist.csd.pm.pep.servlets;
 
-import gov.nist.csd.pm.common.exceptions.PMException;
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pap.PAP;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
-
 
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Properties;
 
 public class SetConnectionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,

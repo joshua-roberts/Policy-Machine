@@ -2,7 +2,7 @@ package gov.nist.csd.pm.pap.search;
 
 import gov.nist.csd.pm.common.exceptions.PMDBException;
 import gov.nist.csd.pm.common.exceptions.PMGraphException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
@@ -12,8 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Neo4j extension of the Search class.
@@ -44,7 +44,7 @@ public class Neo4jSearch implements Search {
      * @throws PMGraphException if there is an error converting the ResultSet to a set of nodes.
      */
     @Override
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
+    public Set<Node> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
         // get the cypher query
         String cypher = getSearchCypher(name, type, properties);
         // query neo4j for the nodes
@@ -62,12 +62,12 @@ public class Neo4jSearch implements Search {
     /**
      * Get the node from the graph with the given ID.
      * @param id the ID of the node to get.
-     * @return a NodeContext with the information of the node with the given ID.
+     * @return a Node with the information of the node with the given ID.
      * @throws PMDBException if there is an error retrieving the node from the database.
      * @throws PMGraphException if there is an error converting the data returned from the database into a node.
      */
     @Override
-    public NodeContext getNode(long id) throws PMDBException, PMGraphException {
+    public Node getNode(long id) throws PMDBException, PMGraphException {
         // get the cypher query
         String cypher = String.format("match(n{id:%d}) return n", id);
         // query neo4j for the nodes

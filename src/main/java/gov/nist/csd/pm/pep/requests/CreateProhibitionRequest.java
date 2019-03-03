@@ -1,17 +1,16 @@
 package gov.nist.csd.pm.pep.requests;
 
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
+import gov.nist.csd.pm.prohibitions.model.Prohibition;
 
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CreateProhibitionRequest {
-    public String                name;
-    public boolean               intersection;
-    public HashSet<String>       operations;
-    public List<ProhibitionNode> nodes;
-    public ProhibitionSubject    subject;
+    private String                 name;
+    private boolean                intersection;
+    private Set<String>        operations;
+    private List<Prohibition.Node> nodes;
+    private Prohibition.Subject     subject;
 
     public String getName() {
         return name;
@@ -21,15 +20,15 @@ public class CreateProhibitionRequest {
         return intersection;
     }
 
-    public HashSet<String> getOperations() {
+    public Set<String> getOperations() {
         return operations;
     }
 
-    public List<ProhibitionNode> getNodes() {
+    public List<Prohibition.Node> getNodes() {
         return nodes;
     }
 
-    public ProhibitionSubject getSubject() {
+    public Prohibition.Subject getSubject() {
         return subject;
     }
 }

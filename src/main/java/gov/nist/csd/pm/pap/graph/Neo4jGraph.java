@@ -1,9 +1,10 @@
 package gov.nist.csd.pm.pap.graph;
 
 import gov.nist.csd.pm.common.exceptions.PMDBException;
-import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.exceptions.PMGraphException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.Graph;
+import gov.nist.csd.pm.graph.model.nodes.Node;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
@@ -13,10 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 
 import static gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper.mapToNode;
 
@@ -68,7 +66,7 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if the provided node is null.
      */
     @Override
-    public long createNode(NodeContext node) throws PMDBException {
+    public long createNode(Node node) throws PMDBException {
         if (node == null) {
             throw new IllegalArgumentException("a null node was provided when creating a node in neo4j");
         } else if(node.getName() == null || node.getName().isEmpty()) {
@@ -120,7 +118,7 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error updating the node in Neo4j.
      */
     @Override
-    public void updateNode(NodeContext node) throws PMDBException, PMGraphException {
+    public void updateNode(Node node) throws PMDBException, PMGraphException {
         if(node == null) {
             throw new IllegalArgumentException("a null node was provided when updating a node in neo4j");
         } else if(node.getID() == 0) {
@@ -128,7 +126,7 @@ public class Neo4jGraph implements Graph {
             throw new IllegalArgumentException("no ID was provided when updating a node in neo4j");
         }
 
-        NodeContext exNode = new Neo4jSearch(dbCtx).getNode(node.getID());
+        Node exNode = new Neo4jSearch(dbCtx).getNode(node.getID());
         // check if changing the name, if not, give the node the existing name
         if (node.getName() == null || node.getName().isEmpty()) {
             node.name(exNode.getName());
@@ -222,19 +220,19 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error retrieving the nodes from the database.
      */
     @Override
-    public HashSet<NodeContext> getNodes() throws PMDBException {
+    public Set<Node> getNodes() throws PMDBException {
         String cypher = "match(n:NODE) return n";
         try (
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            HashSet<NodeContext> nodes = new HashSet<>();
+            HashSet<Node> nodes = new HashSet<>();
             while (rs.next()) {
                 HashMap map = (HashMap) rs.getObject(1);
-                NodeContext node = mapToNode(map);
+                Node node = mapToNode(map);
                 if(node == null) {
-                    throw new PMGraphException("received a null node from neo4j");
+                    throw new PMDBException("received a null node from neo4j");
                 }
 
                 nodes.add(node);
@@ -244,6 +242,39 @@ public class Neo4jGraph implements Graph {
         catch (SQLException | PMException e) {
             throw new PMDBException(e.getMessage());
         }
+    }
+
+    /**
+     * Get the node from the graph with the given ID.
+     * @param id the ID of the node to get.
+     * @return a Node with the information of the node with the given ID.
+     * @throws PMDBException if there is an error retrieving the node from the database.
+     * @throws PMGraphException if there is an error converting the data returned from the database into a node.
+     */
+    @Override
+    public Node getNode(long id) throws PMDBException, PMGraphException {
+        // get the cypher query
+        String cypher = String.format("match(n{id:%d}) return n", id);
+        // query neo4j for the nodes
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            if(rs.next()) {
+                HashMap map = (HashMap) rs.getObject(1);
+                return Neo4jHelper.mapToNode(map);
+            }
+            throw new PMGraphException(String.format("node with ID %d does not exist", id));
+        }
+        catch (SQLException e) {
+            throw new PMDBException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Set<Node> search(String s, String s1, Map<String, String> map) throws PMException {
+        return null;
     }
 
     /**
@@ -279,14 +310,18 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error getting the children of the provided node from the database.
      */
     @Override
-    public HashSet<NodeContext> getChildren(long nodeID) throws PMDBException, PMGraphException {
-        String cypher = String.format("match(n{id:%d})<-[:assigned_to]-(m) return m", nodeID);
+    public Set<Long> getChildren(long nodeID) throws PMDBException, PMGraphException {
+        String cypher = String.format("match(n{id:%d})<-[:assigned_to]-(m) return m.id", nodeID);
         try (
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            return Neo4jHelper.getNodesFromResultSet(rs);
+            Set<Long> children = new HashSet<>();
+            while(rs.next()) {
+                children.add(rs.getLong(1));
+            }
+            return children;
         }
         catch (SQLException e) {
             throw new PMDBException(e.getMessage());
@@ -302,14 +337,18 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error getting the parents of the provided node from the database.
      */
     @Override
-    public HashSet<NodeContext> getParents(long nodeID) throws PMDBException, PMGraphException {
-        String cypher = String.format("match(n{id:%d})-[:assigned_to]->(m) return m", nodeID);
+    public Set<Long> getParents(long nodeID) throws PMDBException, PMGraphException {
+        String cypher = String.format("match(n{id:%d})-[:assigned_to]->(m) return m.id", nodeID);
         try (
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            return Neo4jHelper.getNodesFromResultSet(rs);
+            Set<Long> parents = new HashSet<>();
+            while(rs.next()) {
+                parents.add(rs.getLong(1));
+            }
+            return parents;
         }
         catch (SQLException e) {
             throw new PMDBException(e.getMessage());
@@ -328,7 +367,7 @@ public class Neo4jGraph implements Graph {
      * @throws IllegalArgumentException if the parent node type is null.
      */
     @Override
-    public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMDBException {
+    public void assign(Node childCtx, Node parentCtx) throws PMDBException {
         if(childCtx == null) {
             throw new IllegalArgumentException("child node context was null");
         } else if (parentCtx == null) {
@@ -364,7 +403,7 @@ public class Neo4jGraph implements Graph {
      * @throws IllegalArgumentException if the parent node type is null.
      */
     @Override
-    public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMDBException {
+    public void deassign(Node childCtx, Node parentCtx) throws PMDBException {
         if(childCtx == null) {
             throw new IllegalArgumentException("child node context was null");
         } else if (parentCtx == null) {
@@ -400,7 +439,7 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error associating the two nodes in the database.
      */
     @Override
-    public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMDBException {
+    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMDBException {
         if(uaCtx == null) {
             throw new IllegalArgumentException("user attribute node context was null");
         } else if (targetCtx == null) {
@@ -434,7 +473,7 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error dissociating the two nodes in the database.
      */
     @Override
-    public void dissociate(NodeContext uaCtx, NodeContext targetCtx) throws PMDBException {
+    public void dissociate(Node uaCtx, Node targetCtx) throws PMDBException {
         if(uaCtx == null) {
             throw new IllegalArgumentException("user attribute node context was null");
         } else if (targetCtx == null) {
@@ -465,14 +504,14 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an exception retrieving the associations for the source node in the database.
      */
     @Override
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws PMDBException {
+    public Map<Long, Set<String>> getSourceAssociations(long sourceID) throws PMDBException {
         String cypher = String.format("match(source:UA{id:%d})-[a:associated_with]->(target) return target.id, a.operations", sourceID);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            HashMap<Long, HashSet<String>> associations = new HashMap<>();
+            Map<Long, Set<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long targetID = rs.getLong(1);
                 HashSet<String> opsSet = new HashSet<>((Collection<String>) rs.getObject(2));
@@ -495,14 +534,14 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an exception retrieving the associations for the target node in the database.
      */
     @Override
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws PMDBException {
+    public Map<Long, Set<String>> getTargetAssociations(long targetID) throws PMDBException {
         String cypher = String.format("match(source)-[a:associated_with]->(target{id:%d}) return source.id, a.operations", targetID);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher);
                 ResultSet rs = stmt.executeQuery()
         ) {
-            HashMap<Long, HashSet<String>> associations = new HashMap<>();
+            Map<Long, Set<String>> associations = new HashMap<>();
             while (rs.next()) {
                 long sourceID = rs.getLong(1);
                 HashSet<String> opsSet = new HashSet<>((Collection) rs.getObject(2));

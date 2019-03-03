@@ -1,14 +1,13 @@
 package gov.nist.csd.pm.pap.loader.graph;
 
 import gov.nist.csd.pm.common.exceptions.PMDBException;
-import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.exceptions.PMGraphException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.relationships.Assignment;
-import gov.nist.csd.pm.common.model.graph.relationships.Association;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.relationships.Assignment;
+import gov.nist.csd.pm.graph.model.relationships.Association;
+import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,8 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
-
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
+import java.util.Set;
 
 /**
  * A Neo4j implementation of the GraphLoader interface.
@@ -39,7 +37,7 @@ public class Neo4jGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<NodeContext> getNodes() throws PMDBException, PMGraphException {
+    public Set<Node> getNodes() throws PMDBException, PMGraphException {
         String cypher = "match(n) where n:NODE return n";
         try(
                 Connection conn = neo4j.getConnection();
@@ -53,7 +51,7 @@ public class Neo4jGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Assignment> getAssignments() throws PMDBException {
+    public Set<Assignment> getAssignments() throws PMDBException {
         String cypher = "match(n)-[r:assigned_to]->(m) return n.id, m.id";
         try(
                 Connection conn = neo4j.getConnection();
@@ -71,7 +69,7 @@ public class Neo4jGraphLoader implements GraphLoader {
     }
 
     @Override
-    public HashSet<Association> getAssociations() throws PMDBException {
+    public Set<Association> getAssociations() throws PMDBException {
         String cypher = "match(ua:UA)-[a:associated_with]->(target:NODE) return ua.id,target.id,a.operations";
         try(
                 Connection conn = neo4j.getConnection();

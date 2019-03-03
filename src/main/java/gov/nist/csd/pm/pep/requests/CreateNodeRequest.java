@@ -1,13 +1,16 @@
 package gov.nist.csd.pm.pep.requests;
 
+import gov.nist.csd.pm.graph.model.nodes.Node;
+
 import java.util.HashMap;
+import java.util.Map;
 
 public class CreateNodeRequest {
     private long                    parentID;
     private long                    id;
     private String                  name;
     private String                  type;
-    private HashMap<String, String> properties;
+    private Map<String, String> properties;
 
     public long getParentID() {
         return parentID;
@@ -41,11 +44,11 @@ public class CreateNodeRequest {
         this.type = type;
     }
 
-    public HashMap<String, String> getProperties() {
+    public Map<String, String> getProperties() {
         return properties;
     }
 
-    public void setProperties(HashMap<String, String> properties) {
+    public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 
@@ -69,7 +72,7 @@ public class CreateNodeRequest {
         return this;
     }
 
-    public CreateNodeRequest properties(HashMap<String, String> properties) {
+    public CreateNodeRequest properties(Map<String, String> properties) {
         this.properties = properties;
         return this;
     }

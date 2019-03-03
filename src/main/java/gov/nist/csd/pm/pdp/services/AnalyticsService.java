@@ -1,10 +1,10 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
-
-import gov.nist.csd.pm.pdp.engine.Decider;
+import gov.nist.csd.pm.decider.Decider;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
 
 import java.util.*;
 
@@ -21,11 +21,9 @@ public class AnalyticsService extends Service {
      * Given the ID of a target node, return the permissions the current user has on it.
      * @param targetID the ID of the target node.
      * @return the set of operations the current user has on the target node.
-     * @throws PMDBException if there is an error with the database
-     * @throws PMGraphException if there is an error accessing nodes in the graph.
-     * @throws PMConfigurationException if there is an error with the configuration of the PAP.
+     * @throws PMException if there is an error getting the permissions for the current user on the target
      */
-    public HashSet<String> getPermissions(long targetID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Set<String> getPermissions(long targetID) throws PMException {
         Decider decider = getDecider();
         return decider.listPermissions(getUserID(), getProcessID(), targetID);
     }
@@ -38,7 +36,7 @@ public class AnalyticsService extends Service {
      * @throws PMGraphException if there is an error accessing the graph.
      * @throws PMDBException if there is an error accessing the database.
      */
-    public HashSet<NodeContext> getPos() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Set<Node> getPos() throws PMException {
         // Prepare the hashset to return.
         HashSet<Long> hsOa = new HashSet<>();
 
@@ -70,16 +68,16 @@ public class AnalyticsService extends Service {
             }
         }
 
-        HashSet<NodeContext> nodes = new HashSet<>();
+        HashSet<Node> nodes = new HashSet<>();
         for(Long id : hsOa) {
-            NodeContext node = getGraphPAP().getNode(id);
+            Node node = getGraphPAP().getNode(id);
             nodes.add(node);
         }
 
         return nodes;
     }
 
-    private Hashtable findBorderOaPrivRestrictedInternal() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    private Hashtable findBorderOaPrivRestrictedInternal() throws PMException {
         // Uses a hashtable htReachableOas of reachable oas (see find_border_oa_priv(u))
         // An oa is a key in this hashtable. The value is another hashtable that
         // represents a label of the oa. A label is a set of pairs {(op -> pcset)}, with
@@ -88,12 +86,12 @@ public class AnalyticsService extends Service {
         Hashtable htReachableOas = new Hashtable();
 
         // BFS from u (the base node). Prepare a queue.
-        HashSet<NodeContext> visited = new HashSet<>();
-        NodeContext crtNode;
+        Set<Long> visited = new HashSet<>();
+        Long crtNode;
 
         // Get u's directly assigned attributes and put them into the queue.
-        HashSet<NodeContext> hsAttrs = getGraphPAP().getParents(getUserID());
-        ArrayList<NodeContext> queue = new ArrayList<>(hsAttrs);
+        Set<Long> hsAttrs = getGraphPAP().getParents(getUserID());
+        List<Long> queue = new ArrayList<>(hsAttrs);
 
         // While the queue has elements, extract an element from the queue
         // and visit it.
@@ -104,13 +102,13 @@ public class AnalyticsService extends Service {
                 // If the ua has ua -> oa edges
                 if (inMemUattrHasOpsets(crtNode)) {
                     // Find the set of PCs reachable from ua.
-                    HashSet<Long> hsUaPcs = inMemFindPcSet(crtNode.getID(), NodeType.UA);
+                    HashSet<Long> hsUaPcs = inMemFindPcSet(crtNode, NodeType.UA);
 
                     // From each discovered ua traverse the edges ua -> oa.
 
                     // Find the opsets of this user attribute. Note that the set of containers for this
                     // node (user attribute) may contain not only opsets.
-                    HashMap<Long, HashSet<String>> assocs = getGraphPAP().getSourceAssociations(crtNode.getID());
+                    Map<Long, Set<String>> assocs = getGraphPAP().getSourceAssociations(crtNode);
 
                     // Go through the containers and only for opsets do the following.
                     // For each opset ops of ua:
@@ -122,7 +120,7 @@ public class AnalyticsService extends Service {
                             Hashtable htOaLabel = (Hashtable)htReachableOas.get(targetID);
 
                             // Get the operations from the opset:
-                            HashSet opers = assocs.get(targetID);
+                            Set opers = assocs.get(targetID);
                             // For each operation in the opset
                             Iterator opersIter = opers.iterator();
                             while (opersIter.hasNext()) {
@@ -146,7 +144,7 @@ public class AnalyticsService extends Service {
                             Hashtable htOaLabel = new Hashtable();
 
                             // Get the operations from the opset:
-                            HashSet opers = assocs.get(targetID);
+                            Set opers = assocs.get(targetID);
                             // For each operation in the opset
                             Iterator opersIter = opers.iterator();
                             while (opersIter.hasNext()) {
@@ -163,12 +161,8 @@ public class AnalyticsService extends Service {
                 }
                 visited.add(crtNode);
 
-                HashSet hsDescs = getGraphPAP().getParents(crtNode.getID());
-                Iterator descsIter = hsDescs.iterator();
-                while (descsIter.hasNext()) {
-                    NodeContext d = (NodeContext) descsIter.next();
-                    queue.add(d);
-                }
+                Set<Long> hsDescs = getGraphPAP().getParents(crtNode);
+                queue.addAll(hsDescs);
             }
         }
 
@@ -195,7 +189,7 @@ public class AnalyticsService extends Service {
         return htReachableOas;
     }
 
-    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    private HashSet<Long> inMemFindPcSet(Long nodeID, NodeType type) throws PMException {
         HashSet<Long> reachable = new HashSet<>();
 
         // Init the queue, visited
@@ -219,14 +213,14 @@ public class AnalyticsService extends Service {
                 // Extract its direct descendants. If a descendant is an attribute,
                 // insert it into the queue. If it is a pc, add it to reachable,
                 // if not already there
-                HashSet<NodeContext> hsContainers = getGraphPAP().getParents(crtNode);
-                Iterator<NodeContext> hsiter = hsContainers.iterator();
+                Set<Long> hsContainers = getGraphPAP().getParents(crtNode);
+                Iterator<Long> hsiter = hsContainers.iterator();
                 while (hsiter.hasNext()) {
-                    NodeContext n = hsiter.next();
-                    if(getGraphPAP().getPolicies().contains(n.getID())) {
-                        reachable.add(n.getID());
+                    Long n = hsiter.next();
+                    if(getGraphPAP().getPolicies().contains(n)) {
+                        reachable.add(n);
                     } else {
-                        queue.add(n.getID());
+                        queue.add(n);
                     }
                 }
             }
@@ -234,11 +228,11 @@ public class AnalyticsService extends Service {
         return reachable;
     }
 
-    private boolean inMemUattrHasOpsets(NodeContext uaNode) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
-        return !getGraphPAP().getSourceAssociations(uaNode.getID()).isEmpty();
+    private boolean inMemUattrHasOpsets(Long uaNode) throws PMException {
+        return !getGraphPAP().getSourceAssociations(uaNode).isEmpty();
     }
 
-    public Object explain(long userID, long targetID) throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
+    public Object explain(long userID, long targetID) throws PMException {
         Decider decider = getDecider();
         return decider.listPermissions(userID, getProcessID(), targetID);
     }

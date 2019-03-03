@@ -1,30 +1,54 @@
 package gov.nist.csd.pm.pap.graph;
 
 import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.Graph;
+import gov.nist.csd.pm.graph.MemGraph;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.relationships.Assignment;
+import gov.nist.csd.pm.graph.model.relationships.Association;
 import gov.nist.csd.pm.pap.search.Search;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.loader.graph.GraphLoader;
 import gov.nist.csd.pm.pap.loader.graph.Neo4jGraphLoader;
 import gov.nist.csd.pm.pap.search.MemGraphSearch;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class GraphPAP implements Graph, Search {
 
-    private Graph dbGraph;
+    private Graph    dbGraph;
     private MemGraph memGraph;
 
-    public GraphPAP(DatabaseContext ctx) throws PMDBException, PMGraphException {
+    public GraphPAP(DatabaseContext ctx) throws PMException {
         dbGraph = new Neo4jGraph(ctx);
+
         GraphLoader loader = new Neo4jGraphLoader(ctx);
-        memGraph = new MemGraph(loader);
+        memGraph = new MemGraph();
+
+        Set<Node> nodes = loader.getNodes();
+        for(Node node : nodes) {
+            memGraph.createNode(node);
+        }
+
+        Set<Assignment> assignments = loader.getAssignments();
+        for(Assignment assignment : assignments) {
+            long childID = assignment.getSourceID();
+            long parentID = assignment.getTargetID();
+            memGraph.assign(memGraph.getNode(childID), memGraph.getNode(parentID));
+        }
+
+        Set<Association> associations = loader.getAssociations();
+        for(Association association : associations) {
+            long uaID = association.getSourceID();
+            long targetID = association.getTargetID();
+            Set<String> operations = association.getOperations();
+            memGraph.associate(memGraph.getNode(uaID), memGraph.getNode(targetID), operations);
+        }
     }
 
     @Override
-    public long createNode(NodeContext node) throws PMDBException, PMGraphException {
+    public long createNode(Node node) throws PMException {
         long id = dbGraph.createNode(node);
         node.id(id);
         memGraph.createNode(node);
@@ -32,13 +56,13 @@ public class GraphPAP implements Graph, Search {
     }
 
     @Override
-    public void updateNode(NodeContext node) throws PMGraphException, PMDBException {
+    public void updateNode(Node node) throws PMException {
         dbGraph.updateNode(node);
         memGraph.updateNode(node);
     }
 
     @Override
-    public void deleteNode(long nodeID) throws PMDBException, PMGraphException {
+    public void deleteNode(long nodeID) throws PMException {
         dbGraph.deleteNode(nodeID);
         memGraph.deleteNode(nodeID);
     }
@@ -49,67 +73,67 @@ public class GraphPAP implements Graph, Search {
     }
 
     @Override
-    public HashSet<NodeContext> getNodes() {
+    public Collection<Node> getNodes() {
         return memGraph.getNodes();
     }
 
     @Override
-    public HashSet<Long> getPolicies() {
+    public Set<Long> getPolicies() {
         return memGraph.getPolicies();
     }
 
     @Override
-    public HashSet<NodeContext> getChildren(long nodeID) throws PMGraphException {
+    public Set<Long> getChildren(long nodeID) throws PMException {
         return memGraph.getChildren(nodeID);
     }
 
     @Override
-    public HashSet<NodeContext> getParents(long nodeID) throws PMGraphException {
+    public Set<Long> getParents(long nodeID) throws PMException {
         return memGraph.getParents(nodeID);
     }
 
     @Override
-    public void assign(NodeContext childCtx, NodeContext parentCtx) throws PMDBException, PMGraphException {
+    public void assign(Node childCtx, Node parentCtx) throws PMException {
         dbGraph.assign(childCtx,parentCtx);
         memGraph.assign(childCtx, parentCtx);
     }
 
     @Override
-    public void deassign(NodeContext childCtx, NodeContext parentCtx) throws PMDBException, PMGraphException {
+    public void deassign(Node childCtx, Node parentCtx) throws PMException {
         dbGraph.deassign(childCtx, parentCtx);
         memGraph.deassign(childCtx, parentCtx);
     }
 
     @Override
-    public void associate(NodeContext uaCtx, NodeContext targetCtx, HashSet<String> operations) throws PMDBException, PMGraphException {
+    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMException {
         dbGraph.associate(uaCtx, targetCtx, operations);
         memGraph.associate(uaCtx, targetCtx, operations);
     }
 
     @Override
-    public void dissociate(NodeContext uaCtx, NodeContext targetCtx) throws PMDBException, PMGraphException {
+    public void dissociate(Node uaCtx, Node targetCtx) throws PMException {
         dbGraph.dissociate(uaCtx, targetCtx);
         memGraph.dissociate(uaCtx, targetCtx);
     }
 
     @Override
-    public HashMap<Long, HashSet<String>> getSourceAssociations(long sourceID) throws PMGraphException {
+    public Map<Long, Set<String>> getSourceAssociations(long sourceID) throws PMException {
         return memGraph.getSourceAssociations(sourceID);
     }
 
     @Override
-    public HashMap<Long, HashSet<String>> getTargetAssociations(long targetID) throws PMGraphException {
+    public Map<Long, Set<String>> getTargetAssociations(long targetID) throws PMException {
         return memGraph.getTargetAssociations(targetID);
     }
 
     @Override
-    public HashSet<NodeContext> search(String name, String type, Map<String, String> properties) throws PMGraphException, PMDBException {
+    public Set<Node> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
         Search search = new MemGraphSearch(memGraph);
         return search.search(name, type, properties);
     }
 
     @Override
-    public NodeContext getNode(long id) throws PMGraphException, PMDBException {
+    public Node getNode(long id) throws PMException {
         Search search = new MemGraphSearch(memGraph);
         return search.getNode(id);
     }

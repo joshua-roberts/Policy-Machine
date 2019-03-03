@@ -1,4 +1,4 @@
-package gov.nist.csd.pm.common.model.graph.nodes;
+package gov.nist.csd.pm.common.util;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;

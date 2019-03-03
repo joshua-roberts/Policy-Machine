@@ -1,19 +1,15 @@
 package gov.nist.csd.pm.pap.db.neo4j;
 
-import gov.nist.csd.pm.common.exceptions.Errors;
 import gov.nist.csd.pm.common.exceptions.PMDBException;
-import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.exceptions.PMGraphException;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-
-import static gov.nist.csd.pm.common.exceptions.Errors.ERR_DB;
 
 /**
  * Neo4j helper methods
@@ -42,12 +38,12 @@ public class Neo4jHelper {
      * @throws PMDBException if there is an error iterating through the ResultSet.
      * @throws PMGraphException if there is an error converting a map to a Node.
      */
-    public static HashSet<NodeContext> getNodesFromResultSet(ResultSet rs) throws PMDBException, PMGraphException {
+    public static HashSet<Node> getNodesFromResultSet(ResultSet rs) throws PMDBException, PMGraphException {
         try {
-            HashSet<NodeContext> nodes = new HashSet<>();
+            HashSet<Node> nodes = new HashSet<>();
             while (rs.next()) {
                 HashMap map = (HashMap) rs.getObject(1);
-                NodeContext node = mapToNode(map);
+                Node node = mapToNode(map);
                 nodes.add(node);
             }
             return nodes;
@@ -59,11 +55,11 @@ public class Neo4jHelper {
 
     /**
      * Given a map of properties representing a Node, return a Node object.  If the given map is null, then return null.
-     * @param map the map to convert into a NodeContext
-     * @return a NodeContext representation of the provided map, or null if the map provided was null.
+     * @param map the map to convert into a Node
+     * @return a Node representation of the provided map, or null if the map provided was null.
      * @throws PMGraphException if there is an error converting the map to a Node.
      */
-    public static NodeContext mapToNode(Map map) throws PMGraphException {
+    public static Node mapToNode(Map map) throws PMGraphException {
         if(map == null) {
             return null;
         }
@@ -92,7 +88,7 @@ public class Neo4jHelper {
             }
         }
 
-        return new NodeContext(id, name, type, properties);
+        return new Node(id, name, type, properties);
     }
 
     /**
@@ -101,7 +97,7 @@ public class Neo4jHelper {
      * @param c the HashSet to convert to a string
      * @return a string representation of the given HashSet
      */
-    public static String setToCypherArray(HashSet<String> c) {
+    public static String setToCypherArray(Set<String> c) {
         String str = "[";
         for (String op : c) {
             op = "'" + op + "'";

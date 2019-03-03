@@ -1,8 +1,8 @@
 package gov.nist.csd.pm.pep.resources;
 
-import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
 import gov.nist.csd.pm.pdp.services.GraphService;
 import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.requests.CreateNodeRequest;
@@ -13,8 +13,9 @@ import javax.ws.rs.core.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeType.UA;
+import static gov.nist.csd.pm.graph.model.nodes.NodeType.UA;
 
 @Path("/graph")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -41,7 +42,7 @@ public class GraphResource {
         }
 
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
-        HashSet<NodeContext> nodes = graphService.search(queryParameters.getFirst("name"), queryParameters.getFirst("type"), properties);
+        Set<Node> nodes = graphService.search(queryParameters.getFirst("name"), queryParameters.getFirst("type"), properties);
 
         return ApiResponse.Builder
                 .success()
@@ -60,7 +61,7 @@ public class GraphResource {
         long parentID = request.getParentID();
         String name = request.getName();
         NodeType type = NodeType.toNodeType(request.getType());
-        HashMap<String, String> properties = request.getProperties();
+        Map<String, String> properties = request.getProperties();
 
         if (name == null) {
             throw new IllegalArgumentException("the node name cannot be null");
@@ -71,12 +72,11 @@ public class GraphResource {
         }
 
         //send the request to the pdp
-        NodeContext ctx = new NodeContext()
-                .parentID(parentID)
+        Node ctx = new Node()
                 .name(name)
                 .type(type)
                 .properties(properties);
-        long id = graphService.createNode(ctx);
+        long id = graphService.createNode(parentID, ctx);
 
         return ApiResponse.Builder
                 .success()
@@ -90,7 +90,7 @@ public class GraphResource {
                             @QueryParam("session") String session,
                             @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
-        NodeContext node = graphService.getNode(nodeID);
+        Node node = graphService.getNode(nodeID);
         return ApiResponse.Builder
                 .success()
                 .entity(node)
@@ -104,7 +104,7 @@ public class GraphResource {
                                @QueryParam("session") String session,
                                @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
-        graphService.updateNode(new NodeContext().id(nodeID).name(request.getName()).properties(request.getProperties()));
+        graphService.updateNode(new Node().id(nodeID).name(request.getName()).properties(request.getProperties()));
         return ApiResponse.Builder
                 .success()
                 .message(ApiResponse.UPDATE_NODE_SUCCESS)
@@ -131,7 +131,7 @@ public class GraphResource {
                                     @QueryParam("session") String session,
                                     @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
-        HashSet<NodeContext> children = graphService.getChildren(id);
+        Set<Node> children = graphService.getChildren(id);
         return ApiResponse.Builder
                 .success()
                 .entity(children)
@@ -145,7 +145,7 @@ public class GraphResource {
                                    @QueryParam("session") String session,
                                    @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
-        HashSet<NodeContext> parents = graphService.getParents(id);
+        Set<Node> parents = graphService.getParents(id);
         return ApiResponse.Builder
                 .success()
                 .entity(parents)
@@ -169,7 +169,7 @@ public class GraphResource {
         NodeType parentType = NodeType.toNodeType(parentParams.getFirst("type"));
 
         //tell pdp to assign the child node to the parent
-        graphService.assign(new NodeContext(childID, childType), new NodeContext(parentID, parentType));
+        graphService.assign(new Node(childID, childType), new Node(parentID, parentType));
 
         return ApiResponse.Builder
                 .success()
@@ -194,8 +194,8 @@ public class GraphResource {
         NodeType parentType = NodeType.toNodeType(parentParams.getFirst("type"));
 
         //delete assignment
-        graphService.deassign(new NodeContext(childID, childType),
-                new NodeContext(parentID, parentType));
+        graphService.deassign(new Node(childID, childType),
+                new Node(parentID, parentType));
 
         return ApiResponse.Builder
                 .success()
@@ -211,7 +211,7 @@ public class GraphResource {
                                     @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
 
-        HashMap<Long, HashSet<String>> associations = new HashMap<>();
+        HashMap<Long, Set<String>> associations = new HashMap<>();
         // if the type is source, return the source associations
         // else return the target associations
         if (type.equals("source")) {
@@ -237,10 +237,10 @@ public class GraphResource {
 
         //get the target parameters from the url
         MultivaluedMap<String, String> parentParams = targetPs.getMatrixParameters();
-        long targetID = Long.valueOf(parentParams.getFirst("id"));
+        long targetID = Long.parseLong(parentParams.getFirst("id"));
         NodeType targetType = NodeType.toNodeType(parentParams.getFirst("type"));
 
-        graphService.associate(new NodeContext(uaID, UA), new NodeContext(targetID, targetType), operations);
+        graphService.associate(new Node(uaID, UA), new Node(targetID, targetType), operations);
         return ApiResponse.Builder
                 .success()
                 .message(ApiResponse.CREATE_ASSOCIATION_SUCCESS)
@@ -252,7 +252,7 @@ public class GraphResource {
     @PUT
     public Response updateAssociation(@PathParam("uaID") long uaID,
                                       @PathParam("var1") PathSegment targetPs,
-                                      HashSet<String> operations,
+                                      Set<String> operations,
                                       @QueryParam("session") String session,
                                       @QueryParam("process") long process) throws PMException {
         GraphService graphService = new GraphService(new SessionsService().getSessionUserID(session), process);
@@ -262,7 +262,7 @@ public class GraphResource {
         long targetID = Long.valueOf(parentParams.getFirst("id"));
         NodeType targetType = NodeType.toNodeType(parentParams.getFirst("type"));
 
-        graphService.associate(new NodeContext(uaID, UA), new NodeContext(targetID, targetType), operations);
+        graphService.associate(new Node(uaID, UA), new Node(targetID, targetType), operations);
         return ApiResponse.Builder
                 .success()
                 .message(ApiResponse.UPDATE_ASSOCIATION_SUCCESS)
@@ -282,7 +282,7 @@ public class GraphResource {
         long targetID = Long.valueOf(parentParams.getFirst("id"));
         NodeType targetType = NodeType.toNodeType(parentParams.getFirst("type"));
 
-        graphService.dissociate(new NodeContext(uaID, UA), new NodeContext(targetID, targetType));
+        graphService.dissociate(new Node(uaID, UA), new Node(targetID, targetType));
         return ApiResponse.Builder
                 .success()
                 .message(ApiResponse.UPDATE_ASSOCIATION_SUCCESS)

@@ -1,16 +1,17 @@
 package gov.nist.csd.pm.pdp.services;
 
 import gov.nist.csd.pm.common.exceptions.*;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeContext;
-import gov.nist.csd.pm.common.model.graph.nodes.NodeType;
+import gov.nist.csd.pm.exceptions.PMException;
+import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
-import static gov.nist.csd.pm.common.model.graph.nodes.NodeUtils.checkPasswordHash;
+import static gov.nist.csd.pm.common.util.NodeUtils.checkPasswordHash;
 
 public class SessionsService extends Service {
 
@@ -28,14 +29,14 @@ public class SessionsService extends Service {
      * @throws PMAuthenticationException If the provided password does not match the stored password.
      * @throws PMGraphException If there is an error hashing the provided user password.
      */
-    public String createSession(String username, String password) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMAuthenticationException, PMProhibitionException {
+    public String createSession(String username, String password) throws PMException {
         //get the user node
-        HashSet<NodeContext> nodes = getGraphPAP().search(username, NodeType.U.toString(), null);
+        Set<Node> nodes = getGraphPAP().search(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
             throw new PMGraphException(String.format("node with name %s could not be found", username));
         }
 
-        NodeContext userNode = nodes.iterator().next();
+        Node userNode = nodes.iterator().next();
 
         //check password
         String storedPass = userNode.getProperties().get(PASSWORD_PROPERTY);
@@ -57,7 +58,7 @@ public class SessionsService extends Service {
         return sessionID;
     }
 
-    public long getSessionUserID(String sessionID) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
+    public long getSessionUserID(String sessionID) throws PMException {
         return getSessionManager().getSessionUserID(sessionID);
     }
 
@@ -69,7 +70,7 @@ public class SessionsService extends Service {
      * @throws PMDBException if there is an error accessing the database.
      * @throws PMGraphException if there is an error accessing the graph.
      */
-    public void deleteSession(String sessionID) throws PMConfigurationException, PMAuthorizationException, PMDBException, PMGraphException, PMProhibitionException {
+    public void deleteSession(String sessionID) throws PMException {
         getSessionManager().deleteSession(sessionID);
     }
 }

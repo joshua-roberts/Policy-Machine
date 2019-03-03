@@ -6,6 +6,7 @@ package gov.nist.csd.pm.common.exceptions;
 public enum Errors {
 
     // PMRelationException
+    ERR_PM(6000, "generic error"),
     ERR_GRAPH(6001, "graph error"),
     ERR_NODE(6002, "node error"),
     ERR_AUTHORIZATION(6003, "authorization error"),

@@ -2,6 +2,7 @@ package gov.nist.csd.pm.pep.resources;
 
 import gov.nist.csd.pm.common.exceptions.*;
 
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pdp.services.AnalyticsService;
 import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.response.ApiResponse;
@@ -12,6 +13,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.Set;
 
 @Path("/analytics")
 public class AnalyticsResource {
@@ -32,7 +34,7 @@ public class AnalyticsResource {
                                    @QueryParam("session") String session,
                                    @QueryParam("process") long process) throws PMException {
         AnalyticsService analyticsService = new AnalyticsService(new SessionsService().getSessionUserID(session), process);
-        HashSet<String> permissions = analyticsService.getPermissions(targetID);
+        Set<String> permissions = analyticsService.getPermissions(targetID);
         return ApiResponse.Builder
                 .success()
                 .entity(permissions)

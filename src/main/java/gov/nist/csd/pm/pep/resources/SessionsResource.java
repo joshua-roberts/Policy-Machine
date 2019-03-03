@@ -1,7 +1,6 @@
 package gov.nist.csd.pm.pep.resources;
 
-import gov.nist.csd.pm.common.exceptions.*;
-
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pdp.services.SessionsService;
 import gov.nist.csd.pm.pep.requests.CreateSessionRequest;
 import gov.nist.csd.pm.pep.response.ApiResponse;

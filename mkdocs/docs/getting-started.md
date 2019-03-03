@@ -20,25 +20,25 @@ Graph graph = new MemGraph();
 
 // 2. Create the user and object nodes.
 // create a user with name u1, ID 5, and the properties key1=value1
-long u1ID = graph.createNode(new NodeContext(5, "u1", NodeType.U, NodeUtils.toProperties("key1", "value1")));
+long u1ID = graph.createNode(new Node(5, "u1", NodeType.U, NodeUtils.toProperties("key1", "value1")));
 // create an object with name o1, ID 3, and the properties key1=value1
-long o1ID = graph.createNode(new NodeContext(3, "o1", NodeType.O, NodeUtils.toProperties("key1", "value1")));
+long o1ID = graph.createNode(new Node(3, "o1", NodeType.O, NodeUtils.toProperties("key1", "value1")));
 
 // 3. Create a user attribute 'ua1' and assign 'u1' to it.
-long ua1ID = graph.createNode(new NodeContext(4, "ua1", NodeType.UA, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new NodeContext(u1ID, NodeType.U), new NodeContext(ua1ID, NodeType.UA));
+long ua1ID = graph.createNode(new Node(4, "ua1", NodeType.UA, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new Node(u1ID, NodeType.U), new Node(ua1ID, NodeType.UA));
 
 // 4. Create an object attribute 'oa1' and assign 'o1' to it.
-long oa1ID = graph.createNode(new NodeContext(2, "oa1", NodeType.OA, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new NodeContext(o1ID, NodeType.O), new NodeContext(oa1ID, NodeType.OA));
+long oa1ID = graph.createNode(new Node(2, "oa1", NodeType.OA, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new Node(o1ID, NodeType.O), new Node(oa1ID, NodeType.OA));
 
 // 5. Create a policy class and assign the user and object attributes to it.
-long pc1ID = graph.createNode(new NodeContext(1, "pc1", NodeType.PC, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new NodeContext(ua1ID, NodeType.UA), new NodeContext(pc1ID, NodeType.PC));
-graph.assign(new NodeContext(oa1ID, NodeType.OA), new NodeContext(pc1ID, NodeType.PC));
+long pc1ID = graph.createNode(new Node(1, "pc1", NodeType.PC, NodeUtils.toProperties("key1", "value1")));
+graph.assign(new Node(ua1ID, NodeType.UA), new Node(pc1ID, NodeType.PC));
+graph.assign(new Node(oa1ID, NodeType.OA), new Node(pc1ID, NodeType.PC));
 
 // 6. associate 'ua1' and 'oa1' to give 'u1' read permissions on 'o1'
-graph.associate(new NodeContext(ua1ID, NodeType.UA), new NodeContext(oa1ID, NodeType.OA), new HashSet<>(Arrays.asList("read")));
+graph.associate(new Node(ua1ID, NodeType.UA), new Node(oa1ID, NodeType.OA), new HashSet<>(Arrays.asList("read")));
 
 // test the configuration is correct
 // create a new policy decider with the in memory graph

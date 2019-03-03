@@ -1,15 +1,12 @@
 package gov.nist.csd.pm.pap.loader.prohibitions;
 
 import gov.nist.csd.pm.common.exceptions.PMDBException;
-import gov.nist.csd.pm.common.exceptions.PMException;
 import gov.nist.csd.pm.common.exceptions.PMProhibitionException;
-import gov.nist.csd.pm.common.model.prohibitions.Prohibition;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionNode;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubject;
-import gov.nist.csd.pm.common.model.prohibitions.ProhibitionSubjectType;
+import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.pap.db.DatabaseContext;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pap.db.neo4j.Neo4jHelper;
+import gov.nist.csd.pm.prohibitions.model.Prohibition;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -47,7 +44,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
      * @throws PMProhibitionException if there is an error constructing the prohibition objects.
      */
     @Override
-    public List<Prohibition> loadProhibitions() throws PMDBException, PMProhibitionException {
+    public List<Prohibition> loadProhibitions() throws PMException {
         List<Prohibition> prohibitions = new ArrayList<>();
 
         String cypher = "match(p:prohibition) return p.name, p.operations, p.intersection";
@@ -62,7 +59,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
                 boolean inter = rs.getBoolean(3);
 
                 //get subject
-                ProhibitionSubject subject = null;
+                Prohibition.Subject subject = null;
                 cypher = "match(d:prohibition{name:'" + name + "'})<-[:prohibition]-(s:prohibition_subject) return s.subjectID, s.subjectType";
                 try(
                         Connection subjectConn = neo4j.getConnection();
@@ -72,12 +69,12 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
                     if (subjectRs.next()) {
                         long subjectID = subjectRs.getLong(1);
                         String subjectType = subjectRs.getString(2);
-                        subject = new ProhibitionSubject(subjectID, ProhibitionSubjectType.toType(subjectType));
+                        subject = new Prohibition.Subject(subjectID, Prohibition.Subject.Type.toType(subjectType));
                     }
                 }
 
                 //get nodes
-                List<ProhibitionNode> nodes = new ArrayList<>();
+                List<Prohibition.Node> nodes = new ArrayList<>();
                 cypher = "match(d:prohibition{name:'" + name + "'})<-[r:prohibition]-(s:prohibition_node) return s.id, r.complement";
                 try(
                         Connection resConn = neo4j.getConnection();
@@ -87,7 +84,7 @@ public class Neo4jProhibitionsLoader implements ProhibitionsLoader {
                     while(resRs.next()) {
                         long resourceID = resRs.getLong(1);
                         boolean comp = resRs.getBoolean(2);
-                        nodes.add(new ProhibitionNode(resourceID, comp));
+                        nodes.add(new Prohibition.Node(resourceID, comp));
                     }
                 }
 
