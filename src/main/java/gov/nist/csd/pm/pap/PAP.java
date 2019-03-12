@@ -5,9 +5,7 @@ import gov.nist.csd.pm.common.util.NodeUtils;
 import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.graph.model.nodes.Node;
 import gov.nist.csd.pm.graph.model.nodes.NodeType;
-import gov.nist.csd.pm.pap.db.DatabaseContext;
-import gov.nist.csd.pm.pap.graph.GraphPAP;
-import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
+import gov.nist.csd.pm.pip.db.DatabaseContext;
 import gov.nist.csd.pm.pap.sessions.SessionManager;
 
 import java.io.*;
@@ -21,8 +19,8 @@ import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.UA;
 
 /**
- * PAP is the Policy Access Point. The purpose of the PAP is to expose the underlying policy data to the PDP and EPP.
- * It initializes the backend using the connection properties set through SetConnectionServlet.  This servlet can
+ * PAP is the Policy Information Point. The purpose of the PAP is to expose the underlying policy data to the PDP and EPP.
+ * It initializes the backend using the connection properties in /resource/db.config.  This servlet can
  * be access via ../index.jsp upon starting the server.The PAP also stores the in memory graph that will be used for
  * decision making.
  */
@@ -53,7 +51,7 @@ public class PAP {
      * @throws PMConfigurationException if there is an error with the configuration of the PAP.
      * @throws PMAuthorizationException if the current user cannot carryout an action.
      */
-    public static synchronized PAP getPAP() throws PMException {
+    public static synchronized PAP initialize() throws PMException {
         if(PAP == null) {
             PAP = new PAP();
         }
@@ -70,49 +68,31 @@ public class PAP {
      * @throws PMConfigurationException if there is an error with the configuration of the PAP.
      * @throws PMAuthorizationException if the current user cannot carryout an action.
      */
-    public static synchronized PAP getPAP(DatabaseContext ctx) throws PMException {
+    public static synchronized void initialize(DatabaseContext ctx) throws PMException {
         PAP = new PAP(ctx);
-        return PAP;
-    }
-
-    /**
-     * Save the configuration properties in a file, to be read upon server startup.
-     * @param props A properties object containing the server configuration settings.
-     */
-    private static void saveProperties(Properties props) {
-        try (FileOutputStream fos = new FileOutputStream("pm.conf");
-             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            oos.writeObject(props);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private PAP() throws PMException {
-        System.out.println("initializing pap");
-        // deserialize the configuration properties
-        FileInputStream fis;
-        Properties props;
         try {
-            fis = new FileInputStream("pm.conf");
-            try (ObjectInputStream ois = new ObjectInputStream(fis)) {
-                props = (Properties) ois.readObject();
+            InputStream is = getClass().getClassLoader().getResourceAsStream("db.config");
+            if (is == null) {
+                throw new PMConfigurationException("/resource/db.config does not exist");
             }
+            Properties props = new Properties();
+            props.load(is);
+
+            DatabaseContext dbCtx = new DatabaseContext(
+                    props.getProperty("host"),
+                    Integer.valueOf(props.getProperty("port")),
+                    props.getProperty("username"),
+                    props.getProperty("password"),
+                    props.getProperty("schema")
+            );
+            init(dbCtx);
         }
-        catch (IOException | ClassNotFoundException e) {
+        catch (IOException e) {
             throw new PMConfigurationException(e.getMessage());
         }
-
-        // extract the properties
-        String database = props.getProperty("database");
-        String host = props.getProperty("host");
-        int port = Integer.parseInt(props.getProperty("port"));
-        String schema = props.getProperty("schema");
-        String username = props.getProperty("username");
-        String password = props.getProperty("password");
-
-        init(new DatabaseContext(DatabaseContext.toEnum(database), host, port, username, password, schema));
     }
 
     private PAP(DatabaseContext ctx) throws PMException {

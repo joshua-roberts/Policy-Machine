@@ -14,22 +14,7 @@ public class PMExceptionMapper implements ExceptionMapper<PMException> {
     public Response toResponse(PMException e) {
         e.printStackTrace();
 
-        Errors err;
-        if(e instanceof PMAuthenticationException) {
-            err = Errors.ERR_AUTHENTICATION;
-        } else if(e instanceof PMAuthorizationException) {
-            err = Errors.ERR_AUTHORIZATION;
-        } else if(e instanceof PMDBException) {
-            err = Errors.ERR_DB;
-        } else if(e instanceof PMProhibitionException) {
-            err = Errors.ERR_PROHIBITION;
-        } else if(e instanceof PMGraphException) {
-            err = Errors.ERR_GRAPH;
-        } else if(e instanceof PMConfigurationException) {
-            err = Errors.ERR_CONFIG;
-        } else {
-            err = Errors.ERR_PM;
-        }
+        Errors err = Errors.toException(e);
 
         return ApiResponse.Builder
                 .error(err, e)

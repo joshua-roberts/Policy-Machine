@@ -1,6 +1,6 @@
 package gov.nist.csd.pm.utils;
 
-import gov.nist.csd.pm.pap.db.DatabaseContext;
+import gov.nist.csd.pm.pip.db.DatabaseContext;
 
 import java.io.IOException;
 import java.io.InputStream;

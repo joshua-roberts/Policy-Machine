@@ -10,7 +10,7 @@ public class StartupServlet extends HttpServlet {
     @Override
     public void init() {
         try {
-            PAP.getPAP();
+            PAP.initialize();
         }
         catch (PMException e) {
             e.printStackTrace();

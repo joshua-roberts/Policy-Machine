@@ -4,11 +4,10 @@ import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.decider.Decider;
 import gov.nist.csd.pm.decider.PReviewDecider;
 import gov.nist.csd.pm.exceptions.PMException;
-import gov.nist.csd.pm.pap.graph.GraphPAP;
-import gov.nist.csd.pm.pap.prohibitions.ProhibitionsPAP;
+import gov.nist.csd.pm.pap.GraphPAP;
+import gov.nist.csd.pm.pap.PAP;
+import gov.nist.csd.pm.pap.ProhibitionsPAP;
 import gov.nist.csd.pm.pap.sessions.SessionManager;
-
-import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 /**
  * Class to provide common methods to all services.
@@ -59,19 +58,19 @@ public class Service {
         return processID;
     }
 
-    GraphPAP getGraphPAP() throws PMException {
-        return getPAP().getGraphPAP();
+    GraphPAP getGraphPIP() throws PMException {
+        return PAP.initialize().getGraphPAP();
     }
 
-    ProhibitionsPAP getProhibitionsPAP() throws PMException {
-        return getPAP().getProhibitionsPAP();
+    ProhibitionsPAP getProhibitionsPIP() throws PMException {
+        return PAP.initialize().getProhibitionsPAP();
     }
 
     SessionManager getSessionManager() throws PMException {
-        return getPAP().getSessionManager();
+        return PAP.initialize().getSessionManager();
     }
 
     public Decider getDecider() throws PMException {
-        return new PReviewDecider(getGraphPAP());
+        return new PReviewDecider(getGraphPIP());
     }
 }

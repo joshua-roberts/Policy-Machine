@@ -1,5 +1,8 @@
 package gov.nist.csd.pm.pdp.services;
 
+import gov.nist.csd.pm.audit.Auditor;
+import gov.nist.csd.pm.audit.PReviewAuditor;
+import gov.nist.csd.pm.audit.model.Path;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.decider.Decider;
 import gov.nist.csd.pm.exceptions.PMException;
@@ -70,7 +73,7 @@ public class AnalyticsService extends Service {
 
         HashSet<Node> nodes = new HashSet<>();
         for(Long id : hsOa) {
-            Node node = getGraphPAP().getNode(id);
+            Node node = getGraphPIP().getNode(id);
             nodes.add(node);
         }
 
@@ -90,7 +93,7 @@ public class AnalyticsService extends Service {
         Long crtNode;
 
         // Get u's directly assigned attributes and put them into the queue.
-        Set<Long> hsAttrs = getGraphPAP().getParents(getUserID());
+        Set<Long> hsAttrs = getGraphPIP().getParents(getUserID());
         List<Long> queue = new ArrayList<>(hsAttrs);
 
         // While the queue has elements, extract an element from the queue
@@ -108,7 +111,7 @@ public class AnalyticsService extends Service {
 
                     // Find the opsets of this user attribute. Note that the set of containers for this
                     // node (user attribute) may contain not only opsets.
-                    Map<Long, Set<String>> assocs = getGraphPAP().getSourceAssociations(crtNode);
+                    Map<Long, Set<String>> assocs = getGraphPIP().getSourceAssociations(crtNode);
 
                     // Go through the containers and only for opsets do the following.
                     // For each opset ops of ua:
@@ -161,7 +164,7 @@ public class AnalyticsService extends Service {
                 }
                 visited.add(crtNode);
 
-                Set<Long> hsDescs = getGraphPAP().getParents(crtNode);
+                Set<Long> hsDescs = getGraphPIP().getParents(crtNode);
                 queue.addAll(hsDescs);
             }
         }
@@ -213,11 +216,11 @@ public class AnalyticsService extends Service {
                 // Extract its direct descendants. If a descendant is an attribute,
                 // insert it into the queue. If it is a pc, add it to reachable,
                 // if not already there
-                Set<Long> hsContainers = getGraphPAP().getParents(crtNode);
+                Set<Long> hsContainers = getGraphPIP().getParents(crtNode);
                 Iterator<Long> hsiter = hsContainers.iterator();
                 while (hsiter.hasNext()) {
                     Long n = hsiter.next();
-                    if(getGraphPAP().getPolicies().contains(n)) {
+                    if(getGraphPIP().getPolicies().contains(n)) {
                         reachable.add(n);
                     } else {
                         queue.add(n);
@@ -229,11 +232,11 @@ public class AnalyticsService extends Service {
     }
 
     private boolean inMemUattrHasOpsets(Long uaNode) throws PMException {
-        return !getGraphPAP().getSourceAssociations(uaNode).isEmpty();
+        return !getGraphPIP().getSourceAssociations(uaNode).isEmpty();
     }
 
-    public Object explain(long userID, long targetID) throws PMException {
-        Decider decider = getDecider();
-        return decider.listPermissions(userID, getProcessID(), targetID);
+    public Map<String, List<Path>> explain(long userID, long targetID) throws PMException {
+        Auditor auditor = new PReviewAuditor(getGraphPIP());
+        return auditor.explain(userID, targetID);
     }
 }

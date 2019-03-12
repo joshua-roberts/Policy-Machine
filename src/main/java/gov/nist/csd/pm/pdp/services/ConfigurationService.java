@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import gov.nist.csd.pm.common.exceptions.*;
 import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.pap.PAP;
+import gov.nist.csd.pm.prohibitions.model.Prohibition;
 
 
 import java.security.NoSuchAlgorithmException;
@@ -15,13 +17,11 @@ import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
 import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.UA;
-import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
 
     public ConfigurationService() {}
 
-    // TODO add prohibition and obligations to json
     /**
      * Return a json string representation of the entire graph.  The json object will have 3 fields: nodes, assignments,
      * and associations.
@@ -31,26 +31,28 @@ public class ConfigurationService extends Service {
     public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        Collection<Node> nodes = getGraphPAP().getNodes();
+        Collection<Node> nodes = getGraphPIP().getNodes();
         Set<JsonAssignment> jsonAssignments = new HashSet<>();
         Set<JsonAssociation> jsonAssociations = new HashSet<>();
         for(Node node : nodes) {
-            Set<Long> parents = getGraphPAP().getParents(node.getID());
+            Set<Long> parents = getGraphPIP().getParents(node.getID());
 
             for (Long parent : parents) {
                 jsonAssignments.add(new JsonAssignment(node.getID(), parent));
             }
 
-            Map<Long, Set<String>> associations = getGraphPAP().getSourceAssociations(node.getID());
+            Map<Long, Set<String>> associations = getGraphPIP().getSourceAssociations(node.getID());
             for (long targetID : associations.keySet()) {
                 Set<String> ops = associations.get(targetID);
-                Node targetNode = getGraphPAP().getNode(targetID);
+                Node targetNode = getGraphPIP().getNode(targetID);
 
                 jsonAssociations.add(new JsonAssociation(node.getID(), targetNode.getID(), ops));
             }
         }
 
-        return gson.toJson(new JsonGraph(nodes, jsonAssignments, jsonAssociations));
+        List<Prohibition> prohibitions = getProhibitionsPIP().getProhibitions();
+
+        return gson.toJson(new Configuration(new JsonGraph(nodes, jsonAssignments, jsonAssociations), prohibitions));
     }
 
     /**
@@ -62,8 +64,9 @@ public class ConfigurationService extends Service {
      * @throws PMException If the configuration is malformed or if the contents of the configuration are not consistent.
      */
     public void load(String config) throws PMException {
-        JsonGraph graph = new Gson().fromJson(config, JsonGraph.class);
+        Configuration configuration = new Gson().fromJson(config, Configuration.class);
 
+        JsonGraph graph = configuration.getGraph();
         Collection<Node> nodes = graph.getNodes();
         HashMap<Long, Node> nodesMap = new HashMap<>();
         for(Node node : nodes) {
@@ -82,7 +85,7 @@ public class ConfigurationService extends Service {
                 }
             }
 
-            long newNodeID = getGraphPAP().createNode(node);
+            long newNodeID = getGraphPIP().createNode(node);
             nodesMap.put(node.getID(), node.id(newNodeID));
         }
 
@@ -90,7 +93,7 @@ public class ConfigurationService extends Service {
         for(JsonAssignment assignment : assignments) {
             Node childCtx = nodesMap.get(assignment.getChild());
             Node parentCtx = nodesMap.get(assignment.getParent());
-            getGraphPAP().assign(childCtx, parentCtx);
+            getGraphPIP().assign(childCtx, parentCtx);
         }
 
         Set<JsonAssociation> associations = graph.getAssociations();
@@ -98,7 +101,13 @@ public class ConfigurationService extends Service {
             long uaID = association.getUa();
             long targetID = association.getTarget();
             Node targetNode = nodesMap.get(targetID);
-            getGraphPAP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
+            getGraphPIP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
+        }
+
+        // prohibitions
+        List<Prohibition> prohibitions = configuration.getProhibitions();
+        for(Prohibition prohibition : prohibitions) {
+            getProhibitionsPIP().createProhibition(prohibition);
         }
     }
 
@@ -107,13 +116,8 @@ public class ConfigurationService extends Service {
      * @throws PMException If there is an error resetting the graph or reinitializing the PAP.
      */
     public void reset() throws PMException {
-        Collection<Node> nodes = getGraphPAP().getNodes();
-        for(Node node : nodes) {
-            getGraphPAP().deleteNode(node.getID());
-        }
-
         //reinitialize the PAP to update the in memory graph
-        getPAP().reinitialize();
+        PAP.initialize().reinitialize();
     }
 
     class JsonAssignment {
@@ -155,6 +159,32 @@ public class ConfigurationService extends Service {
 
         public Set<String> getOps() {
             return ops;
+        }
+    }
+
+    class Configuration {
+        private JsonGraph         graph;
+        private List<Prohibition> prohibitions;
+
+        public Configuration(JsonGraph graph, List<Prohibition> prohibitions) {
+            this.graph = graph;
+            this.prohibitions = prohibitions;
+        }
+
+        public JsonGraph getGraph() {
+            return graph;
+        }
+
+        public void setGraph(JsonGraph graph) {
+            this.graph = graph;
+        }
+
+        public List<Prohibition> getProhibitions() {
+            return prohibitions;
+        }
+
+        public void setProhibitions(List<Prohibition> prohibitions) {
+            this.prohibitions = prohibitions;
         }
     }
 

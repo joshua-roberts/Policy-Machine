@@ -13,6 +13,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Path("/analytics")
@@ -48,7 +50,10 @@ public class AnalyticsResource {
                             @QueryParam("session") String session,
                             @QueryParam("process") long process) throws PMException {
         AnalyticsService service = new AnalyticsService(new SessionsService().getSessionUserID(session), process);
-        System.out.println(service.explain(userID, targetID));
-        return null;
+        Map<String, List<gov.nist.csd.pm.audit.model.Path>> explain = service.explain(userID, targetID);
+        return ApiResponse.Builder
+                .success()
+                .entity(explain)
+                .build();
     }
 }
