@@ -9,14 +9,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
-public class ResetServlet extends HttpServlet {
+public class LoadSuperServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
                           HttpServletResponse response) throws IOException {
         try {
             ConfigurationService service = new ConfigurationService();
-            service.reset();
+            service.loadSuper();
 
-            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=success&message=Data+reset+successfully");
+            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=success&message=Super+loaded+successfully");
         }
         catch (PMException e) {
             response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+"));

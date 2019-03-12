@@ -38,7 +38,7 @@ public class ProhibitionsService extends Service {
         Decider decider = getDecider();
         if(subject.getSubjectType().equals(Prohibition.Subject.Type.USER) || subject.getSubjectType().equals(Prohibition.Subject.Type.USER_ATTRIBUTE)) {
             // first check that the subject exists
-            if(!getGraphPIP().exists(subject.getSubjectID())) {
+            if(!getGraphPAP().exists(subject.getSubjectID())) {
                 throw new PMGraphException(String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
             }
             if(!decider.hasPermissions(getUserID(), getProcessID(), subject.getSubjectID(), CREATE_PROHIBITION)) {
@@ -53,11 +53,11 @@ public class ProhibitionsService extends Service {
         }
 
         //create prohibition in PAP
-        getProhibitionsPIP().createProhibition(prohibition);
+        getProhibitionsPAP().createProhibition(prohibition);
     }
 
     public List<Prohibition> getProhibitions() throws PMException {
-        return getProhibitionsPIP().getProhibitions();
+        return getProhibitionsPAP().getProhibitions();
     }
 
     /**
@@ -72,7 +72,7 @@ public class ProhibitionsService extends Service {
      * @throws PMProhibitionException if a prohibition with the given name does not exist.
      */
     public Prohibition getProhibition(String prohibitionName) throws PMException {
-        Prohibition prohibition = getProhibitionsPIP().getProhibition(prohibitionName);
+        Prohibition prohibition = getProhibitionsPAP().getProhibition(prohibitionName);
         if(prohibition == null) {
             throw new PMProhibitionException(String.format("prohibition with the name %s does not exist", prohibitionName));
         }
@@ -112,6 +112,6 @@ public class ProhibitionsService extends Service {
         getProhibition(prohibitionName);
 
         //delete prohibition in PAP
-        getProhibitionsPIP().deleteProhibition(prohibitionName);
+        getProhibitionsPAP().deleteProhibition(prohibitionName);
     }
 }

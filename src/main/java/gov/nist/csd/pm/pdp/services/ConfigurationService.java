@@ -17,6 +17,7 @@ import static gov.nist.csd.pm.common.constants.Properties.HASH_LENGTH;
 import static gov.nist.csd.pm.common.constants.Properties.PASSWORD_PROPERTY;
 import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.UA;
+import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 public class ConfigurationService extends Service {
 
@@ -31,26 +32,26 @@ public class ConfigurationService extends Service {
     public String save() throws PMException {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        Collection<Node> nodes = getGraphPIP().getNodes();
+        Collection<Node> nodes = getGraphPAP().getNodes();
         Set<JsonAssignment> jsonAssignments = new HashSet<>();
         Set<JsonAssociation> jsonAssociations = new HashSet<>();
         for(Node node : nodes) {
-            Set<Long> parents = getGraphPIP().getParents(node.getID());
+            Set<Long> parents = getGraphPAP().getParents(node.getID());
 
             for (Long parent : parents) {
                 jsonAssignments.add(new JsonAssignment(node.getID(), parent));
             }
 
-            Map<Long, Set<String>> associations = getGraphPIP().getSourceAssociations(node.getID());
+            Map<Long, Set<String>> associations = getGraphPAP().getSourceAssociations(node.getID());
             for (long targetID : associations.keySet()) {
                 Set<String> ops = associations.get(targetID);
-                Node targetNode = getGraphPIP().getNode(targetID);
+                Node targetNode = getGraphPAP().getNode(targetID);
 
                 jsonAssociations.add(new JsonAssociation(node.getID(), targetNode.getID(), ops));
             }
         }
 
-        List<Prohibition> prohibitions = getProhibitionsPIP().getProhibitions();
+        List<Prohibition> prohibitions = getProhibitionsPAP().getProhibitions();
 
         return gson.toJson(new Configuration(new JsonGraph(nodes, jsonAssignments, jsonAssociations), prohibitions));
     }
@@ -70,6 +71,7 @@ public class ConfigurationService extends Service {
         Collection<Node> nodes = graph.getNodes();
         HashMap<Long, Node> nodesMap = new HashMap<>();
         for(Node node : nodes) {
+            long oldID = node.getID();
             Map<String, String> properties = node.getProperties();
 
             //if a password is present encrypt it.
@@ -85,15 +87,15 @@ public class ConfigurationService extends Service {
                 }
             }
 
-            long newNodeID = getGraphPIP().createNode(node);
-            nodesMap.put(node.getID(), node.id(newNodeID));
+            getGraphPAP().createNode(node);
+            nodesMap.put(oldID, node);
         }
 
         Set<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
             Node childCtx = nodesMap.get(assignment.getChild());
             Node parentCtx = nodesMap.get(assignment.getParent());
-            getGraphPIP().assign(childCtx, parentCtx);
+            getGraphPAP().assign(childCtx, parentCtx);
         }
 
         Set<JsonAssociation> associations = graph.getAssociations();
@@ -101,23 +103,28 @@ public class ConfigurationService extends Service {
             long uaID = association.getUa();
             long targetID = association.getTarget();
             Node targetNode = nodesMap.get(targetID);
-            getGraphPIP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
+            getGraphPAP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
         }
 
         // prohibitions
         List<Prohibition> prohibitions = configuration.getProhibitions();
         for(Prohibition prohibition : prohibitions) {
-            getProhibitionsPIP().createProhibition(prohibition);
+            getProhibitionsPAP().createProhibition(prohibition);
         }
     }
 
     /**
      * Delete all nodes from the database.  Reinitialize the PAP to update the in-memory graph and recreate the super nodes.
+     *
      * @throws PMException If there is an error resetting the graph or reinitializing the PAP.
      */
     public void reset() throws PMException {
-        //reinitialize the PAP to update the in memory graph
-        PAP.initialize().reinitialize();
+        // reset the pap
+        getPAP().reset();
+    }
+
+    public void loadSuper() throws PMException {
+        getPAP().loadSuper();
     }
 
     class JsonAssignment {

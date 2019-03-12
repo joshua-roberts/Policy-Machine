@@ -18,7 +18,7 @@ import java.util.*;
 
 public class GraphPAP implements Graph {
 
-    private Graph    dbGraph;
+    private Neo4jGraph dbGraph;
     private MemGraph memGraph;
 
     public GraphPAP(DatabaseContext ctx) throws PMException {
@@ -137,5 +137,14 @@ public class GraphPAP implements Graph {
     public Node getNode(long id) throws PMException {
         Search search = new MemGraphSearch(memGraph);
         return search.getNode(id);
+    }
+
+    public void reset() throws PMDBException {
+        Collection<Node> nodes = memGraph.getNodes();
+        for (Iterator<Node> iterator = nodes.iterator(); iterator.hasNext();) {
+            Node n = iterator.next();
+            dbGraph.deleteNode(n.getID());
+            iterator.remove();
+        }
     }
 }

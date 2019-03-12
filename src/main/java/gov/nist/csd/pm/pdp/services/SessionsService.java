@@ -31,7 +31,7 @@ public class SessionsService extends Service {
      */
     public String createSession(String username, String password) throws PMException {
         //get the user node
-        Set<Node> nodes = getGraphPIP().search(username, NodeType.U.toString(), null);
+        Set<Node> nodes = getGraphPAP().search(username, NodeType.U.toString(), null);
         if (nodes.isEmpty()) {
             throw new PMGraphException(String.format("node with name %s could not be found", username));
         }

@@ -12,7 +12,7 @@ import java.util.*;
 
 import static gov.nist.csd.pm.common.constants.Operations.*;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.*;
-import static gov.nist.csd.pm.pap.PAP.initialize;
+import static gov.nist.csd.pm.pap.PAP.getPAP;
 import static gov.nist.csd.pm.utils.TestUtils.getDatabaseContext;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,8 +28,8 @@ class GraphServiceIT {
 
     @BeforeEach
     void setup() throws PMException, IOException {
-        PAP.initialize(getDatabaseContext());
-        superUserID = PAP.initialize().getSuperU().getID();
+        PAP.getPAP(getDatabaseContext());
+        superUserID = PAP.getPAP().getSuperU().getID();
         testID = UUID.randomUUID().toString();
 
         GraphService service = new GraphService(superUserID, 0);
@@ -39,27 +39,27 @@ class GraphServiceIT {
         testPCID = pc1;
         long oa1 = service.createNode(pc1, new Node("oa1", NodeType.OA, NodeUtils.toProperties("namespace", testID)));
         testOAID = oa1;
-        long o1 = PAP.initialize().getGraphPAP().createNode(new Node("o1", O, NodeUtils.toProperties("namespace", testID)));
+        long o1 = PAP.getPAP().getGraphPAP().createNode(new Node("o1", O, NodeUtils.toProperties("namespace", testID)));
         testOID = o1;
         long ua1 = service.createNode(pc1, new Node("ua1", UA, NodeUtils.toProperties("namespace", testID)));
         testUAID = ua1;
-        long u1 = PAP.initialize().getGraphPAP().createNode(new Node("u1", U, NodeUtils.toProperties("namespace", testID)));
+        long u1 = PAP.getPAP().getGraphPAP().createNode(new Node("u1", U, NodeUtils.toProperties("namespace", testID)));
         testUserID = u1;
 
         // create assignments
-        PAP.initialize().getGraphPAP().assign(new Node(o1, O), new Node(oa1, NodeType.OA));
-        PAP.initialize().getGraphPAP().assign(new Node(u1, U), new Node(ua1, UA));
-        PAP.initialize().getGraphPAP().assign(new Node(superUserID, U), new Node(ua1, UA));
+        PAP.getPAP().getGraphPAP().assign(new Node(o1, O), new Node(oa1, NodeType.OA));
+        PAP.getPAP().getGraphPAP().assign(new Node(u1, U), new Node(ua1, UA));
+        PAP.getPAP().getGraphPAP().assign(new Node(superUserID, U), new Node(ua1, UA));
 
         // create an association
-        PAP.initialize().getGraphPAP().associate(new Node(ua1, UA), new Node(oa1, NodeType.OA), new HashSet<>(Arrays.asList(DISASSOCIATE, ASSOCIATE, ASSIGN, ASSIGN_TO, UPDATE_NODE, DELETE_NODE, DEASSIGN_FROM, DEASSIGN)));
+        PAP.getPAP().getGraphPAP().associate(new Node(ua1, UA), new Node(oa1, NodeType.OA), new HashSet<>(Arrays.asList(DISASSOCIATE, ASSOCIATE, ASSIGN, ASSIGN_TO, UPDATE_NODE, DELETE_NODE, DEASSIGN_FROM, DEASSIGN)));
     }
 
     @AfterEach
     void teardown() throws PMException {
-        Set<Node> nodes = PAP.initialize().getGraphPAP().search(null, null, NodeUtils.toProperties("namespace", testID));
+        Set<Node> nodes = PAP.getPAP().getGraphPAP().search(null, null, NodeUtils.toProperties("namespace", testID));
         for(Node node : nodes) {
-            PAP.initialize().getGraphPAP().deleteNode(node.getID());
+            PAP.getPAP().getGraphPAP().deleteNode(node.getID());
         }
     }
 
@@ -128,23 +128,23 @@ class GraphServiceIT {
 
         // user cannot update node
         GraphService service2 = new GraphService(testUserID, 0);
-        assertThrows(PMException.class, () -> service2.updateNode(new Node().id(PAP.initialize().getSuperO().getID()).name("updated super name")));
+        assertThrows(PMException.class, () -> service2.updateNode(new Node().id(PAP.getPAP().getSuperO().getID()).name("updated super name")));
     }
 
     @Test
     void TestDeleteNode() throws PMException {
         // test user tries to delete super o
         GraphService service = new GraphService(testUserID, 0);
-        assertThrows(PMException.class, () -> service.deleteNode(PAP.initialize().getSuperO().getID()));
+        assertThrows(PMException.class, () -> service.deleteNode(PAP.getPAP().getSuperO().getID()));
 
         GraphService service1 = new GraphService(superUserID, 0);
         // super user deletes test object
         service1.deleteNode(testOID);
-        assertFalse(PAP.initialize().getGraphPAP().exists(testOID));
+        assertFalse(PAP.getPAP().getGraphPAP().exists(testOID));
 
         // super user deletes test pc
         service1.deleteNode(testPCID);
-        assertFalse(PAP.initialize().getGraphPAP().exists(testPCID));
+        assertFalse(PAP.getPAP().getGraphPAP().exists(testPCID));
     }
 
     @Test
@@ -169,7 +169,7 @@ class GraphServiceIT {
         GraphService service = new GraphService(superUserID, 0);
         Set<Long> policies = service.getPolicies();
         assertAll(() -> assertTrue(policies.contains(testPCID)),
-                () -> assertTrue(policies.contains(PAP.initialize().getSuperPC().getID())));
+                () -> assertTrue(policies.contains(PAP.getPAP().getSuperPC().getID())));
     }
 
     @Test
@@ -212,15 +212,15 @@ class GraphServiceIT {
         );
 
         // super assigns test o to super oa
-        service.assign(new Node().id(testOID).type(O), PAP.initialize().getSuperOA());
+        service.assign(new Node().id(testOID).type(O), PAP.getPAP().getSuperOA());
 
         // super assigns super ua2 to test PC
-        service.assign(PAP.initialize().getSuperUA2(), new Node().id(testPCID).type(PC));
+        service.assign(PAP.getPAP().getSuperUA2(), new Node().id(testPCID).type(PC));
 
         // test user assigns test o to super oa
         GraphService service1 = new GraphService(testUserID, 0);
         assertThrows(PMException.class,
-                () -> service1.assign(new Node().id(testOID).type(O), new Node().id(PAP.initialize().getSuperOA().getID()).type(OA)));
+                () -> service1.assign(new Node().id(testOID).type(O), new Node().id(PAP.getPAP().getSuperOA().getID()).type(OA)));
     }
 
     @Test
@@ -238,11 +238,11 @@ class GraphServiceIT {
 
         // super deassign test o from oa
         service.deassign(new Node().id(testOID).type(O), new Node().id(testOAID).type(OA));
-        assertTrue(PAP.initialize().getGraphPAP().getChildren(testOAID).isEmpty());
+        assertTrue(PAP.getPAP().getGraphPAP().getChildren(testOAID).isEmpty());
 
         //test u deassign super o from super oa
         GraphService service1 = new GraphService(testUserID, 0);
-        assertThrows(PMException.class, () -> service1.deassign(PAP.initialize().getSuperO(), PAP.initialize().getSuperOA()));
+        assertThrows(PMException.class, () -> service1.deassign(PAP.getPAP().getSuperO(), PAP.getPAP().getSuperOA()));
     }
 
     @Test
@@ -264,15 +264,15 @@ class GraphServiceIT {
                 () -> assertThrows(PMException.class, () -> service.associate(new Node().id(new Random().nextLong()).type(U), new Node().id(new Random().nextLong()).type(OA), new HashSet<>()))
         );
 
-        service.associate(PAP.initialize().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test")));
-        assertTrue(PAP.initialize().getGraphPAP().getSourceAssociations(PAP.initialize().getSuperUA2().getID()).containsKey(testOAID));
-        assertTrue(PAP.initialize().getGraphPAP().getSourceAssociations(PAP.initialize().getSuperUA2().getID()).get(testOAID).contains("test"));
-        service.associate(PAP.initialize().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test123")));
-        assertTrue(PAP.initialize().getGraphPAP().getSourceAssociations(PAP.initialize().getSuperUA2().getID()).get(testOAID).contains("test123"));
+        service.associate(PAP.getPAP().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test")));
+        assertTrue(PAP.getPAP().getGraphPAP().getSourceAssociations(PAP.getPAP().getSuperUA2().getID()).containsKey(testOAID));
+        assertTrue(PAP.getPAP().getGraphPAP().getSourceAssociations(PAP.getPAP().getSuperUA2().getID()).get(testOAID).contains("test"));
+        service.associate(PAP.getPAP().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test123")));
+        assertTrue(PAP.getPAP().getGraphPAP().getSourceAssociations(PAP.getPAP().getSuperUA2().getID()).get(testOAID).contains("test123"));
 
         GraphService service1 = new GraphService(testUserID, 0);
         assertThrows(PMException.class,
-                () -> service1.associate(PAP.initialize().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test"))));
+                () -> service1.associate(PAP.getPAP().getSuperUA2(), new Node().id(testOAID).type(OA), new HashSet<>(Arrays.asList("test"))));
     }
 
     @Test
@@ -289,9 +289,9 @@ class GraphServiceIT {
         );
 
         // super dissociate super ua2 and super oa
-        service.dissociate(PAP.initialize().getSuperUA2(), PAP.initialize().getSuperOA());
-        assertFalse(PAP.initialize().getGraphPAP().getSourceAssociations(PAP.initialize().getSuperUA2().getID()).containsKey(PAP
-                .initialize().getSuperOA().getID()));
+        service.dissociate(PAP.getPAP().getSuperUA2(), PAP.getPAP().getSuperOA());
+        assertFalse(PAP.getPAP().getGraphPAP().getSourceAssociations(PAP.getPAP().getSuperUA2().getID()).containsKey(PAP
+                .getPAP().getSuperOA().getID()));
 
         // test user dissociates test ua and test oa
         GraphService service1 = new GraphService(testUserID, 0);
@@ -304,12 +304,12 @@ class GraphServiceIT {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getSourceAssociations(new Random().nextLong()));
 
-        Map<Long, Set<String>> assocs = service.getSourceAssociations(PAP.initialize().getSuperUA2().getID());
-        assertTrue(assocs.containsKey(PAP.initialize().getSuperOA().getID()));
-        assertTrue(assocs.get(PAP.initialize().getSuperOA().getID()).contains("*"));
+        Map<Long, Set<String>> assocs = service.getSourceAssociations(PAP.getPAP().getSuperUA2().getID());
+        assertTrue(assocs.containsKey(PAP.getPAP().getSuperOA().getID()));
+        assertTrue(assocs.get(PAP.getPAP().getSuperOA().getID()).contains("*"));
 
         GraphService service1 = new GraphService(testUserID, 0);
-        assertThrows(PMException.class, () -> service1.getSourceAssociations(PAP.initialize().getSuperUA2().getID()));
+        assertThrows(PMException.class, () -> service1.getSourceAssociations(PAP.getPAP().getSuperUA2().getID()));
 
     }
 
@@ -318,11 +318,11 @@ class GraphServiceIT {
         GraphService service = new GraphService(superUserID, 0);
         assertThrows(PMException.class, () -> service.getTargetAssociations(new Random().nextLong()));
 
-        Map<Long, Set<String>> assocs = service.getTargetAssociations(PAP.initialize().getSuperOA().getID());
-        assertTrue(assocs.containsKey(PAP.initialize().getSuperUA2().getID()));
-        assertTrue(assocs.get(PAP.initialize().getSuperUA2().getID()).contains("*"));
+        Map<Long, Set<String>> assocs = service.getTargetAssociations(PAP.getPAP().getSuperOA().getID());
+        assertTrue(assocs.containsKey(PAP.getPAP().getSuperUA2().getID()));
+        assertTrue(assocs.get(PAP.getPAP().getSuperUA2().getID()).contains("*"));
 
         GraphService service1 = new GraphService(testUserID, 0);
-        assertThrows(PMException.class, () -> service1.getTargetAssociations(PAP.initialize().getSuperOA().getID()));
+        assertThrows(PMException.class, () -> service1.getTargetAssociations(PAP.getPAP().getSuperOA().getID()));
     }
 }

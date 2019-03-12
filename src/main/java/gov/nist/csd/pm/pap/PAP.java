@@ -51,7 +51,7 @@ public class PAP {
      * @throws PMConfigurationException if there is an error with the configuration of the PAP.
      * @throws PMAuthorizationException if the current user cannot carryout an action.
      */
-    public static synchronized PAP initialize() throws PMException {
+    public static synchronized PAP getPAP() throws PMException {
         if(PAP == null) {
             PAP = new PAP();
         }
@@ -68,7 +68,7 @@ public class PAP {
      * @throws PMConfigurationException if there is an error with the configuration of the PAP.
      * @throws PMAuthorizationException if the current user cannot carryout an action.
      */
-    public static synchronized void initialize(DatabaseContext ctx) throws PMException {
+    public static synchronized void getPAP(DatabaseContext ctx) throws PMException {
         PAP = new PAP(ctx);
     }
 
@@ -112,14 +112,14 @@ public class PAP {
         sessionManager = new SessionManager();
 
         // check that the super nodes are created
-        checkMetadata();
+        loadSuper();
     }
 
     /**
      * Check that all of the super meta data is in the graph.  Create any nodes, assignments, or associations that do not
      * exist but should
      */
-    private void checkMetadata() throws PMException {
+    public void loadSuper() throws PMException {
         HashMap<String, String> props = NodeUtils.toProperties(NAMESPACE_PROPERTY, "super");
 
         Set<Node> nodes = getGraphPAP().search("super_ua1", UA.toString(), props);
@@ -267,6 +267,17 @@ public class PAP {
 
     public Node getSuperO() {
         return superO;
+    }
+
+    public void reset() throws PMException {
+        // delete nodes
+        graphPAP.reset();
+
+        // delete prohibitions
+        prohibitionsPAP.reset();
+
+        // delete sessions
+        sessionManager.reset();
     }
 
     /**

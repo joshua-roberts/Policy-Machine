@@ -38,10 +38,10 @@ public class SaveConfigurationScriptServlet extends HttpServlet {
             out.flush();
             out.close();
 
-            request.getRequestDispatcher("/index.jsp?display=block&result=success&message=Configuration+saved").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=success&message=Configuration+saved");
         }
         catch (Exception e) {
-            request.getRequestDispatcher("/index.jsp?display=block&result=error&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=error&message=" + e.getMessage().replaceAll(" ", "+"));
         }
     }
 }

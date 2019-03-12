@@ -37,14 +37,6 @@
 		<url-pattern>/SetConnection</url-pattern>
 	</servlet-mapping>
 	<servlet>
-		<servlet-name>SetInterval</servlet-name>
-		<servlet-class>gov.nist.csd.pm.pep.servlets.SetIntervalServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>SetInterval</servlet-name>
-		<url-pattern>/SetInterval</url-pattern>
-	</servlet-mapping>
-	<servlet>
 		<servlet-name>LoadConfigurationScript</servlet-name>
 		<servlet-class>gov.nist.csd.pm.pep.servlets.LoadConfigurationScriptServlet</servlet-class>
 	</servlet>
@@ -77,11 +69,11 @@
 		<url-pattern>/Reset</url-pattern>
 	</servlet-mapping>
 	<servlet>
-		<servlet-name>AddPolicies</servlet-name>
-		<servlet-class>gov.nist.csd.pm.pep.servlets.AddPoliciesServlet</servlet-class>
+		<servlet-name>LoadSuper</servlet-name>
+		<servlet-class>gov.nist.csd.pm.pep.servlets.LoadSuperServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>AddPolicies</servlet-name>
-		<url-pattern>/AddPolicies</url-pattern>
+		<servlet-name>LoadSuper</servlet-name>
+		<url-pattern>/LoadSuper</url-pattern>
 	</servlet-mapping>
 </web-app>

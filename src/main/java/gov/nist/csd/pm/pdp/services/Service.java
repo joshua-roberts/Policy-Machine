@@ -58,19 +58,19 @@ public class Service {
         return processID;
     }
 
-    GraphPAP getGraphPIP() throws PMException {
-        return PAP.initialize().getGraphPAP();
+    GraphPAP getGraphPAP() throws PMException {
+        return PAP.getPAP().getGraphPAP();
     }
 
-    ProhibitionsPAP getProhibitionsPIP() throws PMException {
-        return PAP.initialize().getProhibitionsPAP();
+    ProhibitionsPAP getProhibitionsPAP() throws PMException {
+        return PAP.getPAP().getProhibitionsPAP();
     }
 
     SessionManager getSessionManager() throws PMException {
-        return PAP.initialize().getSessionManager();
+        return PAP.getPAP().getSessionManager();
     }
 
     public Decider getDecider() throws PMException {
-        return new PReviewDecider(getGraphPIP());
+        return new PReviewDecider(getGraphPAP());
     }
 }

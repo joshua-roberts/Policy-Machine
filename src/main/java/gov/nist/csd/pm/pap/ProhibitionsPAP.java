@@ -9,6 +9,7 @@ import gov.nist.csd.pm.prohibitions.MemProhibitionsDAO;
 import gov.nist.csd.pm.prohibitions.ProhibitionsDAO;
 import gov.nist.csd.pm.prohibitions.model.Prohibition;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class ProhibitionsPAP implements ProhibitionsDAO {
@@ -51,5 +52,14 @@ public class ProhibitionsPAP implements ProhibitionsDAO {
     public void deleteProhibition(String prohibitionName) throws PMException {
         dbProhibitions.deleteProhibition(prohibitionName);
         memProhibitions.deleteProhibition(prohibitionName);
+    }
+
+    public void reset() throws PMException {
+        List<Prohibition> prohibitions = memProhibitions.getProhibitions();
+        for (Iterator<Prohibition> iterator = prohibitions.iterator(); iterator.hasNext();) {
+            Prohibition p = iterator.next();
+            dbProhibitions.deleteProhibition(p.getName());
+            iterator.remove();
+        }
     }
 }

@@ -41,8 +41,21 @@
         <form action="Reset" method="post">
             <h5 class="card-header">Reset Configuration</h5>
             <div class="card-body">
-                <p class="text-danger">Reset the Policy Machine configuration. This will delete any existing data in the database and memory structure</p>
+                <p class="text-danger">
+                    Reset the Policy Machine configuration. This will delete any existing data in the
+                    database and memory structure, including the super configuration. To reload the super
+                    configuration select the <strong>Load Super Configuration</strong> option below
+                </p>
                 <button type="submit" class="btn btn-primary">Reset</button>
+            </div>
+        </form>
+    </div>
+    <div class="card" style="margin-bottom: 5%">
+        <form action="LoadSuper" method="post">
+            <h5 class="card-header">Load Super Configuration</h5>
+            <div class="card-body">
+                <p>Load the super configuration into the Policy Machine. If the configuration already exists, then nothing will happen.</p>
+                <button type="submit" class="btn btn-primary">Load</button>
             </div>
         </form>
     </div>

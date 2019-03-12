@@ -75,7 +75,7 @@ public class Neo4jGraph implements Graph {
             throw new IllegalArgumentException("a null type was provided when creating a new node");
         }
 
-        // if the node properties are null, initialize to an empty map
+        // if the node properties are null, getPAP to an empty map
         if(node.getProperties() == null) {
             node.properties(new HashMap<>());
         }
@@ -220,7 +220,7 @@ public class Neo4jGraph implements Graph {
      * @throws PMDBException if there is an error retrieving the nodes from the database.
      */
     @Override
-    public Set<Node> getNodes() throws PMDBException {
+    public Collection<Node> getNodes() throws PMDBException {
         String cypher = "match(n:NODE) return n";
         try (
                 Connection conn = neo4j.getConnection();

@@ -21,12 +21,12 @@ public class SetConnectionServlet extends HttpServlet {
         String schema = request.getParameter("schema");
 
         try {
-            PAP.initialize(new DatabaseContext(host, Integer.valueOf(port), username, password, schema));
+            PAP.getPAP(new DatabaseContext(host, Integer.valueOf(port), username, password, schema));
 
-            request.getRequestDispatcher("/index.jsp?display=block&result=success&message=Database+connection+successful").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=success&message=Database+connection+successful");
         }
         catch (PMException e) {
-            request.getRequestDispatcher("/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+")).forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/index.jsp?display=block&result=danger&message=" + e.getMessage().replaceAll(" ", "+"));
         }
     }
 }

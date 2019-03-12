@@ -1,6 +1,7 @@
 package gov.nist.csd.pm.pap.sessions;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class to store active sessions in memory.  Since sessions are not persisted if the server shuts down, there is no need
@@ -24,5 +25,13 @@ public class SessionManager {
 
     public void deleteSession(String sessionID) {
         sessions.remove(sessionID);
+    }
+
+    public Map<String, Long> getSessions() {
+        return sessions;
+    }
+
+    public void reset() {
+        sessions.clear();
     }
 }

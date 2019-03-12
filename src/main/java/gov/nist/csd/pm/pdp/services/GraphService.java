@@ -96,7 +96,7 @@ public class GraphService extends Service {
         }
 
         // search the graph for any node with the same name, type, and namespace
-        Set<Node> search = getGraphPIP().search(name, type.toString(),
+        Set<Node> search = getGraphPAP().search(name, type.toString(),
                 NodeUtils.toProperties(NAMESPACE_PROPERTY, namespace));
         if(!search.isEmpty()) {
             throw new PMGraphException(String.format("a node with the name \"%s\" and type %s already exists in the namespace \"%s\"",
@@ -126,11 +126,11 @@ public class GraphService extends Service {
         }
 
         //create the node
-        long id = getGraphPIP().createNode(ctx);
+        long id = getGraphPAP().createNode(ctx);
         ctx.id(id);
 
         // assign the node to the specified parent node
-        getGraphPIP().assign(ctx, parentNodeCtx);
+        getGraphPAP().assign(ctx, parentNodeCtx);
 
         return id;
     }
@@ -138,7 +138,7 @@ public class GraphService extends Service {
     private long createPolicyClass(Node ctx) throws PMException {
         // check that the user can create a policy class
         Decider decider = getDecider();
-        if (!decider.hasPermissions(getUserID(), getProcessID(), PAP.initialize().getSuperO().getID(), CREATE_POLICY_CLASS)) {
+        if (!decider.hasPermissions(getUserID(), getProcessID(), PAP.getPAP().getSuperO().getID(), CREATE_POLICY_CLASS)) {
             throw new PMAuthorizationException("unauthorized permissions to create a policy class");
         }
 
@@ -150,19 +150,19 @@ public class GraphService extends Service {
                 .name(ctx.getName() + " rep")
                 .type(OA)
                 .properties(repProps);
-        long repID = getGraphPIP().createNode(repCtx);
+        long repID = getGraphPAP().createNode(repCtx);
         // add the ID to the rep node context to assign later
         repCtx.id(repID);
 
         // add the ID of the rep node to the properties of the policy class node
         ctx.property(REP_PROPERTY, String.valueOf(repID));
         // create pc node
-        long id = getGraphPIP().createNode(ctx);
+        long id = getGraphPAP().createNode(ctx);
         // set the ID of the created policy class node
         ctx.id(id);
 
         // assign the rep object in the super pc
-        getGraphPIP().assign(repCtx, new Node(PAP.initialize().getSuperOA().getID(), OA));
+        getGraphPAP().assign(repCtx, new Node(PAP.getPAP().getSuperOA().getID(), OA));
 
         return id;
     }
@@ -192,7 +192,7 @@ public class GraphService extends Service {
         }
 
         //update node in the PAP
-        getGraphPIP().updateNode(node);
+        getGraphPAP().updateNode(node);
     }
 
     /**
@@ -207,7 +207,7 @@ public class GraphService extends Service {
      * @throws PMAuthorizationException if the user is not authorized to delete the node.
      */
     public void deleteNode(long nodeID) throws PMException {
-        Node node = getGraphPIP().getNode(nodeID);
+        Node node = getGraphPAP().getNode(nodeID);
 
         long repID = 0;
         long targetID = nodeID;
@@ -224,7 +224,7 @@ public class GraphService extends Service {
         }
 
         // check that the user can deassign from the node's parents
-        Set<Long> parents = getGraphPIP().getParents(nodeID);
+        Set<Long> parents = getGraphPAP().getParents(nodeID);
         for(long parentID : parents) {
             Node parent = getNode(parentID);
             // check the user can deassign from parent
@@ -241,10 +241,10 @@ public class GraphService extends Service {
 
         //if all checks pass, delete the node, thus deleting assignments
         //delete the node in the PAP
-        getGraphPIP().deleteNode(nodeID);
+        getGraphPAP().deleteNode(nodeID);
         // if there is a rep ID, delete the rep
         if(repID != 0) {
-            getGraphPIP().deleteNode(repID);
+            getGraphPAP().deleteNode(repID);
         }
     }
 
@@ -257,7 +257,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
     public boolean exists(long nodeID) throws PMException {
-        return getGraphPIP().exists(nodeID);
+        return getGraphPAP().exists(nodeID);
     }
 
     /**
@@ -280,7 +280,7 @@ public class GraphService extends Service {
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
     public Set<Long> getPolicies() throws PMException {
-        return getGraphPIP().getPolicies();
+        return getGraphPAP().getPolicies();
     }
 
     /**
@@ -300,7 +300,7 @@ public class GraphService extends Service {
         }
 
         //filter any nodes that the user doesn't have any permissions on
-        Collection<Long> children = getDecider().filter(getUserID(), getProcessID(), getGraphPIP().getChildren(nodeID), ANY_OPERATIONS);
+        Collection<Long> children = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getChildren(nodeID), ANY_OPERATIONS);
         Set<Node> retChildren = new HashSet<>();
         for(long childID : children) {
             retChildren.add(getNode(childID));
@@ -323,7 +323,7 @@ public class GraphService extends Service {
             throw new PMGraphException(String.format("node with ID %d could not be found", nodeID));
         }
 
-        Collection<Long> parents = getDecider().filter(getUserID(), getProcessID(), getGraphPIP().getParents(nodeID), ANY_OPERATIONS);
+        Collection<Long> parents = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getParents(nodeID), ANY_OPERATIONS);
         Set<Node> retParents = new HashSet<>();
         for(long parentID : parents) {
             retParents.add(getNode(parentID));
@@ -380,7 +380,7 @@ public class GraphService extends Service {
         long targetID = parentCtx.getID();
         if(parentCtx.getType().equals(PC)) {
             // get the policy class node
-            Node node = getGraphPIP().getNode(targetID);
+            Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
             // set the target of the permission check to the rep node
             targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
@@ -392,7 +392,7 @@ public class GraphService extends Service {
         }
 
         // assign in the PAP
-        getGraphPIP().assign(childCtx, parentCtx);
+        getGraphPAP().assign(childCtx, parentCtx);
     }
 
     /**
@@ -439,7 +439,7 @@ public class GraphService extends Service {
         long targetID = parentCtx.getID();
         if(parentCtx.getType().equals(PC)) {
             // get the policy class node
-            Node node = getGraphPIP().getNode(targetID);
+            Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
             // set the target of the permission check to the rep node
             targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
@@ -450,7 +450,7 @@ public class GraphService extends Service {
         }
 
         //delete assignment in PAP
-        getGraphPIP().deassign(childCtx, parentCtx);
+        getGraphPAP().deassign(childCtx, parentCtx);
     }
 
     /**
@@ -503,7 +503,7 @@ public class GraphService extends Service {
         }
 
         //create association in PAP
-        getGraphPIP().associate(uaCtx, targetCtx, operations);
+        getGraphPAP().associate(uaCtx, targetCtx, operations);
     }
 
     /**
@@ -546,7 +546,7 @@ public class GraphService extends Service {
         }
 
         //create association in PAP
-        getGraphPIP().dissociate(uaCtx, targetCtx);
+        getGraphPAP().dissociate(uaCtx, targetCtx);
     }
 
     /**
@@ -570,7 +570,7 @@ public class GraphService extends Service {
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", sourceID, GET_ASSOCIATIONS));
         }
 
-        return getGraphPIP().getSourceAssociations(sourceID);
+        return getGraphPAP().getSourceAssociations(sourceID);
     }
 
     /**
@@ -594,7 +594,7 @@ public class GraphService extends Service {
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetID, GET_ASSOCIATIONS));
         }
 
-        return getGraphPIP().getTargetAssociations(targetID);
+        return getGraphPAP().getTargetAssociations(targetID);
     }
 
     /**
@@ -614,7 +614,7 @@ public class GraphService extends Service {
      */
     public Set<Node> search(String name, String type, Map<String, String> properties) throws PMException {
         // user the PAP searcher to search for the intended nodes
-        Set<Node> nodes = getGraphPIP().search(name, type, properties);
+        Set<Node> nodes = getGraphPAP().search(name, type, properties);
         nodes.removeIf(x -> {
             try {
                 return !getDecider().hasPermissions(getUserID(), getProcessID(), x.getID(), ANY_OPERATIONS);
@@ -642,7 +642,7 @@ public class GraphService extends Service {
             throw new PMGraphException(String.format("node with ID %d could not be found", id));
         }
 
-        Node node = getGraphPIP().getNode(id);
+        Node node = getGraphPAP().getNode(id);
         if(node.getType().equals(PC)) {
             id = Long.parseLong(node.getProperties().get(REP_PROPERTY));
             if(id == 0) {
