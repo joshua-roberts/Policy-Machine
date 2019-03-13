@@ -1,65 +1,44 @@
 package gov.nist.csd.pm.pap;
 
-import gov.nist.csd.pm.common.exceptions.*;
+import gov.nist.csd.pm.common.exceptions.PMDBException;
+import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.graph.Graph;
 import gov.nist.csd.pm.graph.MemGraph;
 import gov.nist.csd.pm.graph.model.nodes.Node;
-import gov.nist.csd.pm.graph.model.relationships.Assignment;
-import gov.nist.csd.pm.graph.model.relationships.Association;
-import gov.nist.csd.pm.pip.graph.Neo4jGraph;
-import gov.nist.csd.pm.pip.loader.graph.GraphLoader;
-import gov.nist.csd.pm.pip.loader.graph.Neo4jGraphLoader;
-import gov.nist.csd.pm.pip.db.DatabaseContext;
-import gov.nist.csd.pm.pip.search.MemGraphSearch;
-import gov.nist.csd.pm.pip.search.Search;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
 
 import java.util.*;
 
 public class GraphPAP implements Graph {
 
-    private Neo4jGraph dbGraph;
+    private Graph dbGraph;
     private MemGraph memGraph;
+    private HashMap<String, Long> namespaceNames;
 
-    public GraphPAP(DatabaseContext ctx) throws PMException {
-        dbGraph = new Neo4jGraph(ctx);
-
-        GraphLoader loader = new Neo4jGraphLoader(ctx);
-        memGraph = new MemGraph();
-
-        Set<Node> nodes = loader.getNodes();
-        for(Node node : nodes) {
-            memGraph.createNode(node);
-        }
-
-        Set<Assignment> assignments = loader.getAssignments();
-        for(Assignment assignment : assignments) {
-            long childID = assignment.getSourceID();
-            long parentID = assignment.getTargetID();
-            memGraph.assign(memGraph.getNode(childID), memGraph.getNode(parentID));
-        }
-
-        Set<Association> associations = loader.getAssociations();
-        for(Association association : associations) {
-            long uaID = association.getSourceID();
-            long targetID = association.getTargetID();
-            Set<String> operations = association.getOperations();
-            memGraph.associate(memGraph.getNode(uaID), memGraph.getNode(targetID), operations);
-        }
+    public GraphPAP(MemGraph memGraph, Graph dbGraph) throws PMException {
+        this.memGraph = memGraph;
+        this.dbGraph = dbGraph;
+        this.namespaceNames = new HashMap<>();
     }
 
     @Override
-    public long createNode(Node node) throws PMException {
-        long id = dbGraph.createNode(node);
-        node.id(id);
-        memGraph.createNode(node);
-        return id;
+    public Node createNode(long id, String name, NodeType nodeType, Map<String, String> properties) throws PMException {
+        // check that the node namespace, name, and type do not already exist
+        /*if(namespaceNames.get(nodeToNamespace(node)) != null) {
+            throw new PMGraphException(String.format("a node with the name %s and type %s already exists in the name space %s",
+                    node.getName(), node.getType(), node.getProperties().get(NAMESPACE_PROPERTY)));
+        }*/
+
+        Node node = dbGraph.createNode(id, name, nodeType, properties);
+        memGraph.createNode(id, name, nodeType, properties);
+        return node;
     }
 
     @Override
-    public void updateNode(Node node) throws PMException {
-        dbGraph.updateNode(node);
-        memGraph.updateNode(node);
+    public void updateNode(long id, String name, Map<String, String> properties) throws PMException {
+        dbGraph.updateNode(id, name, properties);
+        memGraph.updateNode(id, name, properties);
     }
 
     @Override
@@ -94,27 +73,27 @@ public class GraphPAP implements Graph {
     }
 
     @Override
-    public void assign(Node childCtx, Node parentCtx) throws PMException {
-        dbGraph.assign(childCtx,parentCtx);
-        memGraph.assign(childCtx, parentCtx);
+    public void assign(long childID, long parentID) throws PMException {
+        dbGraph.assign(childID, parentID);
+        memGraph.assign(childID, parentID);
     }
 
     @Override
-    public void deassign(Node childCtx, Node parentCtx) throws PMException {
-        dbGraph.deassign(childCtx, parentCtx);
-        memGraph.deassign(childCtx, parentCtx);
+    public void deassign(long childID, long parentID) throws PMException {
+        dbGraph.deassign(childID, parentID);
+        memGraph.deassign(childID, parentID);
     }
 
     @Override
-    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMException {
-        dbGraph.associate(uaCtx, targetCtx, operations);
-        memGraph.associate(uaCtx, targetCtx, operations);
+    public void associate(long uaID, long targetID, Set<String> operations) throws PMException {
+        dbGraph.associate(uaID, targetID, operations);
+        memGraph.associate(uaID, targetID, operations);
     }
 
     @Override
-    public void dissociate(Node uaCtx, Node targetCtx) throws PMException {
-        dbGraph.dissociate(uaCtx, targetCtx);
-        memGraph.dissociate(uaCtx, targetCtx);
+    public void dissociate(long uaID, long targetID) throws PMException {
+        dbGraph.dissociate(uaID, targetID);
+        memGraph.dissociate(uaID, targetID);
     }
 
     @Override
@@ -128,18 +107,16 @@ public class GraphPAP implements Graph {
     }
 
     @Override
-    public Set<Node> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
-        Search search = new MemGraphSearch(memGraph);
-        return search.search(name, type, properties);
+    public Set<Node> search(String name, String type, Map<String, String> properties) {
+        return memGraph.search(name, type, properties);
     }
 
     @Override
     public Node getNode(long id) throws PMException {
-        Search search = new MemGraphSearch(memGraph);
-        return search.getNode(id);
+        return memGraph.getNode(id);
     }
 
-    public void reset() throws PMDBException {
+    public void reset() throws PMException {
         Collection<Node> nodes = memGraph.getNodes();
         for (Iterator<Node> iterator = nodes.iterator(); iterator.hasNext();) {
             Node n = iterator.next();

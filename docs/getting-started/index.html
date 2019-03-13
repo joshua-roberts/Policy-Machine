@@ -76,28 +76,63 @@
     <ul class="subnav-l1 current">
     
       
+        <li class="toctree-l2">
+          <a class="toctree-l3" href="#purpose">Purpose</a>
+        </li>
+    
+      
+        <li class="toctree-l2">
+          <a class="toctree-l3" href="#important-notes">Important Notes</a>
+        </li>
+    
+      
           
 
-  <li class="toctree-l2 current with-children">
-    <a href="#standalone-java-library">
-      Standalone Java Library
+  <li class="toctree-l2">
+    <a href="#run-with-docker-compose">
+      Run with Docker-compose
       <span class="toctree-expand"></span>
     </a>
   </li>
 
 
 
-  <li class="toctree-l2 current">
-    <ul class="subnav-l2 current">
+  <li class="toctree-l2">
+    <ul class="subnav-l2 toc-hidden">
+    
+      
+          
+
+  <li class="toctree-l3 current with-children">
+    <a href="#docker-compose-file">
+      Docker Compose File
+      <span class="toctree-expand"></span>
+    </a>
+  </li>
+
+
+
+  <li class="toctree-l3 current">
+    <ul class="subnav-l3 current">
+    
+      
+        <li class="toctree-l4">
+          <a class="toctree-l5" href="#notes-on-neo4j">Notes on Neo4j</a>
+        </li>
+    
+    </ul>
+  </li>
+
+      
     
       
         <li class="toctree-l3">
-          <a class="toctree-l4" href="#build-policy-machine-jar-library">Build Policy Machine JAR Library</a>
+          <a class="toctree-l4" href="#tested-operating-systems">Tested Operating Systems</a>
         </li>
     
       
         <li class="toctree-l3">
-          <a class="toctree-l4" href="#example">Example</a>
+          <a class="toctree-l4" href="#connecting-to-a-database">Connecting to a Database</a>
         </li>
     
     </ul>
@@ -164,52 +199,72 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="getting-started">Getting Started</h1>
-<h2 id="standalone-java-library">Standalone Java Library</h2>
-<p>The REST API provides tools to create NGAC aware applications but requires a certain level of already developed infrastructure to really be useful.  If you are looking to just experiment with NGAC graphs and use cases, you can use the Policy Decision Point (PDP), Event Processing Point (EPP), and the Policy Information Point (PIP) packages to test different NGAC policy configurations in your own environments.</p>
-<h3 id="build-policy-machine-jar-library">Build Policy Machine JAR Library</h3>
+                <h2 id="getting-started">Getting Started</h2>
+<h3 id="purpose">Purpose</h3>
+<p>The Policy Machine REST API exposes a standard set of administrative NGAC commands.  This API also acts as a Policy Enforcement Point (PEP) by ensuring any calling user has permission to carry out a command before any action is taken. Exposing the PEP allows users to create web-based, NGAC aware applications.</p>
+<h3 id="important-notes">Important Notes</h3>
 <ol>
-<li>In <strong>pom.xml</strong> change <code>&lt;packaging&gt;war&lt;/packaging&gt;</code> to <code>&lt;packaging&gt;jar&lt;/packaging&gt;</code>.</li>
-<li>Run <code>mvn package</code> from the project root.</li>
-<li><code>pm.jar</code> will be created in /target/.  </li>
-<li>Add <code>pm.jar</code> to your classpath.
-Examples can be found below and in <a href="/examples/#standalone-examples">examples</a></li>
+<li><strong>Namespaces</strong> - Node's can belong to namespaces which allow for multiple nodes of the same type to have the same name.  Nodes that have the same name but different type are allowed in the same namesapce. If a node is created with out specifying the namespace, it will be put in the 'default' namespace.</li>
+<li><strong>Super user metadata</strong> - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 user attributes super_ua1 and super_ua2. These two attributes are assigned to a policy class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the policy class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
+<img alt="alt text" src="../images/super.png" title="super" /></li>
+<li><strong>Creating a policy class</strong> - When creating a policy class we check if the requesting user has the permission "create a policy class" on the super object.</li>
+<li><strong>Policy class assignments</strong> - When a policy class is created, an Object Attribute that will represent the policy class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the policy class.  This allows us to control who can perform these actions since policy classes them selves cannot be assigned or associated to any other nodes.
+<img alt="alt text" src="../images/pc.png" title="creating a policy class" /></li>
 </ol>
-<h3 id="example">Example</h3>
-<p>This is an example of building a simple graph, with one of each type of node. We will use the <code>listPermissions</code> function to compute all the permissions <code>u1</code> has on <code>o1</code>.</p>
-<pre><code>// create a new in memory graph
-Graph graph = new MemGraph();
-
-// create a node for each type
-long pc1ID = graph.createNode(new NodeContext(1, &quot;pc1&quot;, PC, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long oa1ID = graph.createNode(new NodeContext(2, &quot;oa1&quot;, OA, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long o1ID = graph.createNode(new NodeContext(3, &quot;o1&quot;, O, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long ua1ID = graph.createNode(new NodeContext(4, &quot;ua1&quot;, UA, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-long u1ID = graph.createNode(new NodeContext(5, &quot;u1&quot;, U, NodeUtils.toProperties(&quot;key1&quot;, &quot;value1&quot;)));
-
-// create assignments
-graph.assign(new NodeContext(o1ID, O), new NodeContext(oa1ID, OA));
-graph.assign(new NodeContext(oaID1, OA), new NodeContext(pc1ID, PC));
-graph.assign(new NodeContext(u1ID, U), new NodeContext(ua1ID, UA));
-graph.assign(new NodeContext(ua1ID, UA), new NodeContext(pc1ID, PC));
-
-// create an association
-graph.associate(new NodeContext(ua1ID, UA), new NodeContext(oa1ID, OA), new HashSet&lt;&gt;(Arrays.asList(&quot;read&quot;, &quot;write&quot;)));
-
-// create a prohibition for u1 on oa1
-Prohibition prohibition = new Prohibition();
-prohibition.setName(&quot;test_deny&quot;);
-prohibition.setSubject(new ProhibitionSubject(u1, ProhibitionSubjectType.U));
-prohibition.setIntersection(false);
-prohibition.setOperations(new HashSet&lt;&gt;(Arrays.asList(&quot;read&quot;)));
-prohibition.addNode(new ProhibitionNode(oa1, false));
-
-// create a new policy decider with the in memory graph and a list of prohibitions
-Decider decider = new PReviewDecider(graph, Arrays.asList(prohibition));
-
-// print the list of permissions that u1 has on o1
-System.out.println(decider.listPermissions(u1, NO_PROCESS, o1));// print [&quot;read&quot;, &quot;write&quot;]
+<h3 id="run-with-docker-compose">Run with Docker-compose</h3>
+<ol>
+<li>Build the war file by running <code>mvn clean package install</code> from the project root. This will create <code>pm.war</code> in the project's <code>/target/</code> directory.</li>
+<li>Run <code>docker-compose up</code> from the project root to start the docker container.</li>
+</ol>
+<h4 id="docker-compose-file">Docker Compose File</h4>
+<pre><code class="yaml">version: '3'
+services:
+  neo4j:
+    image: neo4j:latest
+    volumes:
+      - $HOME/neo4j/data:/data
+      - $HOME/neo4j/logs:/logs
+    ports:
+      - 7474:7474
+      - 7687:7687
+  pm:
+    image: tomcat:8-jre8
+    volumes:
+      - ./target/pm.war:/usr/local/tomcat/webapps/pm.war
+    ports:
+      - 8080:8080
+    links:
+      - neo4j
 </code></pre>
+
+<p>The Compose file creates two linked containers.  </p>
+<ol>
+<li>A Neo4j container which is where we will store our access control policy data. We expose the ports 7474 and 7687 to interact with the Neo4j database.</li>
+<li>The tomcat server that will deploy <code>pm.war</code>.</li>
+</ol>
+<h5 id="notes-on-neo4j">Notes on Neo4j</h5>
+<p>The web application recognizes the neo4j service by the name <code>neo4j</code>.  Therefore, when setting the connection to the database, the host name should be <code>neo4j</code>.  Also, the bolt protocol is used so the port should be <code>7687</code>.</p>
+<h4 id="tested-operating-systems">Tested Operating Systems</h4>
+<ol>
+<li>macOS<ul>
+<li><a href="https://hub.docker.com/editions/community/docker-ce-desktop-mac">Docker for Mac</a></li>
+</ul>
+</li>
+<li>Windows 7<ul>
+<li><a href="https://docs.docker.com/toolbox/toolbox_install_windows">Docker Toolbox</a></li>
+<li><strong>Note</strong>: Docker Toolbox is legacy software and handles volumes differently than Docker for Windows/Mac.  There is one line in the Docker Compose file that needs to be updated.<ul>
+<li>Create a shared folder in Oracle VirtualBox called <code>/target/</code> which points to the target folder of the PM project.</li>
+<li>change this line in the Compose file:
+<code>./target/pm.war:/usr/local/tomcat/webapps/pm.war</code>
+to
+<code>//target/pm.war:/usr/local/tomcat/webapps/pm.war</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="connecting-to-a-database">Connecting to a Database</h4>
+<p>Update the database connection parameters in <code>/resources/db.config</code>.</p>
               
             </div>
           </div>

@@ -19,6 +19,7 @@ import static gov.nist.csd.pm.common.constants.Properties.*;
 import static gov.nist.csd.pm.common.util.NodeUtils.generatePasswordHash;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.OA;
 import static gov.nist.csd.pm.graph.model.nodes.NodeType.PC;
+import static gov.nist.csd.pm.pap.PAP.getPAP;
 
 /**
  * GraphService provides methods to maintain an NGAC graph, while also ensuring any user interacting with the graph,
@@ -45,27 +46,25 @@ public class GraphService extends Service {
      * If the parent node is a policy class, check the permissions the current user has on the representative of the policy class.
      *
      * @param parentID the ID of the parent node if creating a non policy class node.
-     * @param ctx the context information for the node to create.  This includes the name, type, and properties.
+     * @param name the name of the node to create.
+     * @param type the type of the node.
+     * @param properties properties to add to the node.
      * @return the new node created with it's ID.
-     * @throws IllegalArgumentException if the Node parameter is null.
-     * @throws IllegalArgumentException if the Node's name field is null or empty.
-     * @throws IllegalArgumentException if the Node's type field is null.
+     * @throws IllegalArgumentException if the name is null or empty.
+     * @throws IllegalArgumentException if the type is null.
      * @throws PMGraphException if a node already exists with the given name, type, and namespace property.
      * @throws PMAuthorizationException if the user does not have permission to create the node.
      * @throws PMConfigurationException if there is a configuration error in the PAP.
      */
-    public long createNode(long parentID, Node ctx) throws PMException {
-        if(ctx == null) {
-            throw new IllegalArgumentException("a null request was provided when creating a node in the PDP");
-        } else if (ctx.getName() == null || ctx.getName().isEmpty()) {
+    public Node createNode(long parentID, String name, NodeType type, Map<String, String> properties) throws PMException {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("a node cannot have a null or empty name");
-        } else if (ctx.getType() == null) {
+        } else if (type == null) {
             throw new IllegalArgumentException("a node cannot have a null type");
         }
 
         // instantiate the properties map if it's null
         // if this node is a user, hash the password if present in the properties
-        Map<String, String> properties = ctx.getProperties();
         if(properties == null) {
             properties = new HashMap<>();
         }
@@ -78,13 +77,14 @@ public class GraphService extends Service {
             }
         }
 
-        checkNamespace(ctx.getName(), ctx.getType(), properties);
+        checkNamespace(name, type, properties);
 
+        long id = new Random().nextLong();
         // create the node
-        if(ctx.getType().equals(PC)) {
-            return createPolicyClass(ctx);
+        if(type.equals(PC)) {
+            return createPolicyClass(id, name, properties);
         } else {
-            return createNonPolicyClass(parentID, ctx);
+            return createNonPolicyClass(parentID, id, name, type, properties);
         }
     }
 
@@ -104,7 +104,7 @@ public class GraphService extends Service {
         }
     }
 
-    private long createNonPolicyClass(long parentID, Node ctx) throws PMException {
+    private Node createNonPolicyClass(long parentID, long id, String name, NodeType type, Map<String, String> properties) throws PMException {
         //check that the parent node exists
         if(!exists(parentID)) {
             throw new PMGraphException(String.format("the specified parent node with ID %d does not exist", parentID));
@@ -114,85 +114,81 @@ public class GraphService extends Service {
         Node parentNodeCtx = getNode(parentID);
 
         // check if the parent is a PC and get the rep if it is
+        long targetID = parentID;
         if(parentNodeCtx.getType().equals(PC)) {
-            parentID = Long.parseLong(parentNodeCtx.getProperties().get(REP_PROPERTY));
+            targetID = Long.parseLong(parentNodeCtx.getProperties().get(REP_PROPERTY));
         }
 
         // check that the user has the permission to assign to the parent node
         Decider decider = getDecider();
-        if (!decider.hasPermissions(getUserID(), getProcessID(), parentID, ASSIGN_TO)) {
+        if (!decider.hasPermissions(getUserID(), targetID, ASSIGN_TO)) {
             // if the user cannot assign to the parent node, delete the newly created node
             throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", ASSIGN_TO, parentID));
         }
 
         //create the node
-        long id = getGraphPAP().createNode(ctx);
-        ctx.id(id);
+        Node node = getGraphPAP().createNode(id, name, type, properties);
 
         // assign the node to the specified parent node
-        getGraphPAP().assign(ctx, parentNodeCtx);
+        getGraphPAP().assign(id, parentID);
 
-        return id;
+        return node;
     }
 
-    private long createPolicyClass(Node ctx) throws PMException {
+    private Node createPolicyClass(long id, String name, Map<String, String> properties) throws PMException {
         // check that the user can create a policy class
         Decider decider = getDecider();
-        if (!decider.hasPermissions(getUserID(), getProcessID(), PAP.getPAP().getSuperO().getID(), CREATE_POLICY_CLASS)) {
+        if (!decider.hasPermissions(getUserID(), getPAP().getSuperO().getID(), CREATE_POLICY_CLASS)) {
             throw new PMAuthorizationException("unauthorized permissions to create a policy class");
         }
 
         // create a node to represent the policy class in the super policy class
         // this way we can set permissions on this node to control who can (de)assign to the policy class node.
         HashMap<String, String> repProps = new HashMap<>();
-        ctx.getProperties().forEach(repProps::putIfAbsent);
-        Node repCtx = new Node()
-                .name(ctx.getName() + " rep")
-                .type(OA)
-                .properties(repProps);
-        long repID = getGraphPAP().createNode(repCtx);
-        // add the ID to the rep node context to assign later
-        repCtx.id(repID);
+        properties.forEach(repProps::putIfAbsent);
+        
+        long repID = new Random().nextLong();
+        getGraphPAP().createNode(repID, name + " rep", NodeType.OA, repProps);
 
         // add the ID of the rep node to the properties of the policy class node
-        ctx.property(REP_PROPERTY, String.valueOf(repID));
+        properties.put(REP_PROPERTY, String.valueOf(repID));
+        
         // create pc node
-        long id = getGraphPAP().createNode(ctx);
-        // set the ID of the created policy class node
-        ctx.id(id);
-
+        Node pcNode = getGraphPAP().createNode(id, name, PC, properties);
+        
         // assign the rep object in the super pc
-        getGraphPAP().assign(repCtx, new Node(PAP.getPAP().getSuperOA().getID(), OA));
+        getGraphPAP().assign(repID, getPAP().getSuperOA().getID());
 
-        return id;
+        return pcNode;
     }
 
     /**
-     * Update the node in the database and in the in-memory graph
-     * @param node the context of the node to update. This includes the id, name, type, and properties.
-     * @throws IllegalArgumentException if the given node is null.
+     * Update the node in the database and in the in-memory graph.  If the name is null or empty it is ignored, likewise
+     * for properties.
+     *
+     * @param id the ID of the node to update.
+     * @param name the name to give the node.
+     * @param properties the properties of the node.
      * @throws IllegalArgumentException if the given node id is 0.
      * @throws PMGraphException if the given node does not exist in the graph.
      * @throws PMConfigurationException if there is a configuration error in the PAP.
      * @throws PMAuthorizationException if the user is not authorized to update the node.
      */
-    public void updateNode(Node node) throws PMException {
-        if(node == null) {
-            throw new IllegalArgumentException("a null node was provided when updating a node in the PDP");
-        } else if(node.getID() == 0) {
+    public void updateNode(long id, String name, Map<String, String> properties) throws PMException {
+        if(id == 0) {
             throw new IllegalArgumentException("no ID was provided when updating the node");
-        } else if (!exists(node.getID())) {
-            throw new PMGraphException(String.format("node with ID %d could not be found", node.getID()));
+        } else if (!exists(id)) {
+            throw new PMGraphException(String.format("node with ID %d could not be found", id));
         }
 
         // check that the user can update the node
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), node.getID(), UPDATE_NODE)) {
-            throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", UPDATE_NODE, node.getID()));
+        if(!decider.hasPermissions(getUserID(), id, UPDATE_NODE)) {
+            throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", UPDATE_NODE, id));
         }
 
         //update node in the PAP
-        getGraphPAP().updateNode(node);
+        getGraphPAP().updateNode(id, name, properties);
     }
 
     /**
@@ -219,7 +215,7 @@ public class GraphService extends Service {
 
         // check the user can deassign the node
         Decider decider = getDecider();
-        if (!decider.hasPermissions(getUserID(), getProcessID(), targetID, DEASSIGN)) {
+        if (!decider.hasPermissions(getUserID(), targetID, DEASSIGN)) {
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", nodeID, DEASSIGN));
         }
 
@@ -234,7 +230,7 @@ public class GraphService extends Service {
             } else {
                 targetID = parent.getID();
             }
-            if(!decider.hasPermissions(getUserID(), getProcessID(), targetID, DEASSIGN_FROM)) {
+            if(!decider.hasPermissions(getUserID(), targetID, DEASSIGN_FROM)) {
                 throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetID, DEASSIGN_FROM));
             }
         }
@@ -268,9 +264,16 @@ public class GraphService extends Service {
      * @throws PMDBException if the PAP accesses the database and an error occurs.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      */
-    /*public Set<Node> getNodes() throws PMGraphException, PMDBException, PMConfigurationException, PMAuthorizationException, PMProhibitionException {
-        return getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getNodes(), ANY_OPERATIONS);
-    }*/
+    public Set<Node> getNodes() throws PMException {
+        Collection<Node> nodes = getGraphPAP().getNodes();
+        List<Long> nodeIDs = new ArrayList<>();
+        for(Node node : nodes) {
+            nodeIDs.add(node.getID());
+        }
+        Collection<Long> filteredNodes = getDecider().filter(getUserID(), nodeIDs, ANY_OPERATIONS);
+        nodes.removeIf(n -> !filteredNodes.contains(n.getID()));
+        return new HashSet<>(nodes);
+    }
 
     /**
      * Get the set of policy class IDs. This can be performed by the in-memory graph.
@@ -300,7 +303,7 @@ public class GraphService extends Service {
         }
 
         //filter any nodes that the user doesn't have any permissions on
-        Collection<Long> children = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getChildren(nodeID), ANY_OPERATIONS);
+        Collection<Long> children = getDecider().filter(getUserID(), getGraphPAP().getChildren(nodeID), ANY_OPERATIONS);
         Set<Node> retChildren = new HashSet<>();
         for(long childID : children) {
             retChildren.add(getNode(childID));
@@ -323,7 +326,7 @@ public class GraphService extends Service {
             throw new PMGraphException(String.format("node with ID %d could not be found", nodeID));
         }
 
-        Collection<Long> parents = getDecider().filter(getUserID(), getProcessID(), getGraphPAP().getParents(nodeID), ANY_OPERATIONS);
+        Collection<Long> parents = getDecider().filter(getUserID(), getGraphPAP().getParents(nodeID), ANY_OPERATIONS);
         Set<Node> retParents = new HashSet<>();
         for(long parentID : parents) {
             retParents.add(getNode(parentID));
@@ -334,51 +337,43 @@ public class GraphService extends Service {
     /**
      * Create the assignment in both the db and in-memory graphs. First check that the user is allowed to assign the child,
      * and allowed to assign something to the parent. Both child and parent contexts must include the ID and type of the node.
-     * @param childCtx the context information for the child node.
-     * @param parentCtx the context information for the parent node.
-     * @throws IllegalArgumentException if the child node is null.
-     * @throws IllegalArgumentException if the parent node is null.
-     * @throws IllegalArgumentException if the child node does not have an ID or type.
-     * @throws IllegalArgumentException if the parent node does not have an ID or type.
+     * @param childID the ID of the child node.
+     * @param parentID the ID of the parent node.
+     * @throws IllegalArgumentException if the child ID is 0.
+     * @throws IllegalArgumentException if the parent ID is 0.
      * @throws PMGraphException if the child or parent node does not exist.
      * @throws PMGraphException if the assignment is invalid.
      * @throws PMDBException if the PAP accesses the database and there is an error.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException if the current user does not have permission to create the assignment.
      */
-    public void assign(Node childCtx, Node parentCtx) throws PMException {
+    public void assign(long childID, long parentID) throws PMException {
         // check that the nodes are not null
-        if(childCtx == null) {
-            throw new IllegalArgumentException("child node was null");
-        } else if(parentCtx == null) {
-            throw new IllegalArgumentException("parent node was null");
-        } else if(childCtx.getID() == 0) {
+        if(childID == 0) {
             throw new IllegalArgumentException("the child node ID cannot be 0 when creating an assignment");
-        } else if(childCtx.getType() == null) {
-            throw new IllegalArgumentException("the child node type cannot be null when creating an assignment");
-        } else if(parentCtx.getID() == 0) {
+        } else if(parentID == 0) {
             throw new IllegalArgumentException("the parent node ID cannot be 0 when creating an assignment");
-        } else if(parentCtx.getType() == null) {
-            throw new IllegalArgumentException("the parent node type cannot be null when creating an assignment");
-        } else if(!exists(childCtx.getID())) {
-            throw new PMGraphException(String.format("child node with ID %d does not exist", childCtx.getID()));
-        } else if(!exists(parentCtx.getID())) {
-            throw new PMGraphException(String.format("parent node with ID %d does not exist", parentCtx.getID()));
+        } else if(!exists(childID)) {
+            throw new PMGraphException(String.format("child node with ID %d does not exist", childID));
+        } else if(!exists(parentID)) {
+            throw new PMGraphException(String.format("parent node with ID %d does not exist", parentID));
         }
-
-        //check if the assignment is valid
-        Assignment.checkAssignment(childCtx.getType(), parentCtx.getType());
 
         //check the user can assign the child
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), childCtx.getID(), ASSIGN)) {
-            throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", ASSIGN, childCtx.getID()));
+        if(!decider.hasPermissions(getUserID(), childID, ASSIGN)) {
+            throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", ASSIGN, childID));
         }
+
+        //check if the assignment is valid
+        Node child = getNode(childID);
+        Node parent = getNode(parentID);
+        Assignment.checkAssignment(child.getType(), parent.getType());
 
         //check that the user can assign to the parent
         // if the parent is a PC, check for permissions on the rep node
-        long targetID = parentCtx.getID();
-        if(parentCtx.getType().equals(PC)) {
+        long targetID = parentID;
+        if(parent.getType().equals(PC)) {
             // get the policy class node
             Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
@@ -387,57 +382,50 @@ public class GraphService extends Service {
         }
 
         // check that the user can assign to the parent node
-        if (!decider.hasPermissions(getUserID(), getProcessID(), targetID, ASSIGN_TO)) {
+        if (!decider.hasPermissions(getUserID(), targetID, ASSIGN_TO)) {
             throw new PMAuthorizationException(String.format("unauthorized permission %s on node with ID %d", ASSIGN_TO, targetID));
         }
 
         // assign in the PAP
-        getGraphPAP().assign(childCtx, parentCtx);
+        getGraphPAP().assign(childID, parentID);
     }
 
     /**
      * Create the assignment in both the db and in-memory graphs. First check that the user is allowed to assign the child,
      * and allowed to assign something to the parent.
-     * @param childCtx The context information for the child of the assignment to delete.
-     * @param parentCtx The context information for the parent of the assignment to delete.
-     * @throws IllegalArgumentException if the child node is null.
-     * @throws IllegalArgumentException if the parent node is null.
-     * @throws IllegalArgumentException if the child node does not have an ID or type.
-     * @throws IllegalArgumentException if the parent node does not have an ID or type.
+     * @param childID the ID of the child of the assignment to delete.
+     * @param parentID the ID of the parent of the assignment to delete.
+     * @throws IllegalArgumentException if the child ID is 0.
+     * @throws IllegalArgumentException if the parent ID is 0.
      * @throws PMGraphException if the child or parent node does not exist.
      * @throws PMDBException if the PAP accesses the database and there is an error.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException if the current user does not have permission to delete the assignment.
      */
-    public void deassign(Node childCtx, Node parentCtx) throws PMException {
+    public void deassign(long childID, long parentID) throws PMException {
         // check that the parameters are correct
-        if(childCtx == null) {
-            throw new IllegalArgumentException("child node was null when deassigning");
-        } else if(parentCtx == null) {
-            throw new IllegalArgumentException("parent node was null when deassigning");
-        } else if(childCtx.getID() == 0) {
+        if(childID == 0) {
             throw new IllegalArgumentException("the child node ID cannot be 0 when deassigning");
-        } else if(childCtx.getType() == null) {
-            throw new IllegalArgumentException("the child node type cannot be null when deassigning");
-        } else if(parentCtx.getID() == 0) {
+        } else if(parentID == 0) {
             throw new IllegalArgumentException("the parent node ID cannot be 0 when deassigning");
-        } else if(parentCtx.getType() == null) {
-            throw new IllegalArgumentException("the parent node type cannot be null when deassigning");
-        } else if(!exists(childCtx.getID())) {
-            throw new PMGraphException(String.format("child node with ID %d could not be found when deassigning", childCtx.getID()));
-        } else if(!exists(parentCtx.getID())) {
-            throw new PMGraphException(String.format("parent node with ID %d could not be found when deassigning", parentCtx.getID()));
+        } else if(!exists(childID)) {
+            throw new PMGraphException(String.format("child node with ID %d could not be found when deassigning", childID));
+        } else if(!exists(parentID)) {
+            throw new PMGraphException(String.format("parent node with ID %d could not be found when deassigning", parentID));
         }
 
         Decider decider = getDecider();
         //check the user can deassign the child
-        if(!decider.hasPermissions(getUserID(), getProcessID(), childCtx.getID(), DEASSIGN)) {
-            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", childCtx, DEASSIGN));
+        if(!decider.hasPermissions(getUserID(), childID, DEASSIGN)) {
+            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", childID, DEASSIGN));
         }
+
+        Node parent = getNode(parentID);
+
         //check that the user can deassign from the parent
         // if the parent is a PC, check for permissions on the rep node
-        long targetID = parentCtx.getID();
-        if(parentCtx.getType().equals(PC)) {
+        long targetID = parentID;
+        if(parent.getType().equals(PC)) {
             // get the policy class node
             Node node = getGraphPAP().getNode(targetID);
             // get the rep property which is the ID of the rep node
@@ -445,108 +433,94 @@ public class GraphService extends Service {
             targetID = Long.parseLong(node.getProperties().get(REP_PROPERTY));
         }
 
-        if (!decider.hasPermissions(getUserID(), getProcessID(), targetID, DEASSIGN_FROM)) {
+        if (!decider.hasPermissions(getUserID(), targetID, DEASSIGN_FROM)) {
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetID, DEASSIGN_FROM));
         }
 
         //delete assignment in PAP
-        getGraphPAP().deassign(childCtx, parentCtx);
+        getGraphPAP().deassign(childID, parentID);
     }
 
     /**
      * Create an association between the user attribute and the target node with the given operations. First, check that
      * the user has the permissions to associate the user attribute and target nodes.  If an association already exists
      * between the two nodes than update the existing association with the provided operations (overwrite).
-     * @param uaCtx The context information of the user attribute.
-     * @param targetCtx The information for the target node.
-     * @param operations A Set of operations to add to the Association.
-     * @throws IllegalArgumentException If the user attribute node is null.
-     * @throws IllegalArgumentException If the target node is null.
-     * @throws IllegalArgumentException If the user attribute node does not have an ID or type.
-     * @throws IllegalArgumentException If the target node does not have an ID or type.
-     * @throws IllegalArgumentException If the user attribute node does not exist.
-     * @throws PMGraphException If the target node does not exist.
-     * @throws PMGraphException If the association is invalid.
+     * @param uaID the ID of the user attribute.
+     * @param targetID the ID of the target node.
+     * @param operations a Set of operations to add to the Association.
+     * @throws IllegalArgumentException if the user attribute ID is 0.
+     * @throws IllegalArgumentException if the target node ID is 0.
+     * @throws PMGraphException if the user attribute node does not exist.
+     * @throws PMGraphException if the target node does not exist.
+     * @throws PMGraphException if the association is invalid.
      * @throws PMDBException if the PAP accesses the database and there is an error.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
-     * @throws PMAuthorizationException If the current user does not have permission to create the association.
+     * @throws PMAuthorizationException if the current user does not have permission to create the association.
      */
-    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMException {
-        if(uaCtx == null) {
-            throw new IllegalArgumentException("user attribute node was null");
-        } else if(targetCtx == null) {
-            throw new IllegalArgumentException("target node was null");
-        } else if(uaCtx.getID() == 0) {
+    public void associate(long uaID, long targetID, Set<String> operations) throws PMException {
+        if(uaID == 0) {
             throw new IllegalArgumentException("the user attribute ID cannot be 0 when creating an association");
-        } else if(targetCtx.getID() == 0) {
+        } else if(targetID == 0) {
             throw new IllegalArgumentException("the target node ID cannot be 0 when creating an association");
-        } else if(targetCtx.getType() == null) {
-            throw new IllegalArgumentException("the target node type cannot be null when creating an association");
-        } else if(!exists(uaCtx.getID())) {
-            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", uaCtx.getID()));
-        } else if(!exists(targetCtx.getID())) {
-            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", targetCtx.getID()));
+        } else if(!exists(uaID)) {
+            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", uaID));
+        } else if(!exists(targetID)) {
+            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", targetID));
         }
 
-        Node sourceNode = getNode(uaCtx.getID());
-        Node targetNode = getNode(targetCtx.getID());
+        Node sourceNode = getNode(uaID);
+        Node targetNode = getNode(targetID);
 
         Association.checkAssociation(sourceNode.getType(), targetNode.getType());
 
         //check the user can associate the source and target nodes
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), uaCtx.getID(), ASSOCIATE)) {
-            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", uaCtx, ASSOCIATE));
+        if(!decider.hasPermissions(getUserID(), uaID, ASSOCIATE)) {
+            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", sourceNode.getName(), ASSOCIATE));
         }
-        if (!decider.hasPermissions(getUserID(), getProcessID(), targetCtx.getID(), ASSOCIATE)) {
-            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetCtx, ASSOCIATE));
+        if (!decider.hasPermissions(getUserID(), targetID, ASSOCIATE)) {
+            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetNode.getName(), ASSOCIATE));
         }
 
         //create association in PAP
-        getGraphPAP().associate(uaCtx, targetCtx, operations);
+        getGraphPAP().associate(uaID, targetID, operations);
     }
 
     /**
      * Delete the association between the user attribute and the target node.  First, check that the user has the
      * permission to delete the association.
-     * @param uaCtx The ID of the user attribute.
-     * @param targetCtx The information for the target node.
-     * @throws IllegalArgumentException If the user attribute node is null.
-     * @throws IllegalArgumentException If the target node is null.
-     * @throws IllegalArgumentException If the user attribute node does not have an ID.
-     * @throws IllegalArgumentException If the target node does not have an ID.
+     * @param uaID The ID of the user attribute.
+     * @param targetID The ID of the target node.
+     * @throws IllegalArgumentException If the user attribute ID is 0.
+     * @throws IllegalArgumentException If the target node ID is 0.
      * @throws PMGraphException If the user attribute node does not exist.
      * @throws PMGraphException If the target node does not exist.
      * @throws PMDBException if the PAP accesses the database and there is an error.
      * @throws PMConfigurationException if there is an error in the configuration of the PAP.
      * @throws PMAuthorizationException If the current user does not have permission to delete the association.
      */
-    public void dissociate(Node uaCtx, Node targetCtx) throws PMException {
-        if(uaCtx == null) {
-            throw new IllegalArgumentException("user attribute node was null");
-        } else if(targetCtx == null) {
-            throw new IllegalArgumentException("target node was null");
-        } else if(uaCtx.getID() == 0) {
+    public void dissociate(long uaID, long targetID) throws PMException {
+        if(uaID == 0) {
             throw new IllegalArgumentException("the user attribute ID cannot be 0 when creating an association");
-        } else if(targetCtx.getID() == 0) {
+        } else if(targetID == 0) {
             throw new IllegalArgumentException("the target node ID cannot be 0 when creating an association");
-        } else if(!exists(uaCtx.getID())) {
-            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", uaCtx.getID()));
-        } else if(!exists(targetCtx.getID())) {
-            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", targetCtx.getID()));
+        } else if(!exists(uaID)) {
+            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", uaID));
+        } else if(!exists(targetID)) {
+            throw new PMGraphException(String.format("node with ID %d could not be found when creating an association", targetID));
         }
 
         //check the user can associate the source and target nodes
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), uaCtx.getID(), DISASSOCIATE)) {
-            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", uaCtx, DISASSOCIATE));
+        if(!decider.hasPermissions(getUserID(), uaID, DISASSOCIATE)) {
+            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", uaID, DISASSOCIATE));
         }
-        if (!decider.hasPermissions(getUserID(), getProcessID(), targetCtx.getID(), DISASSOCIATE)) {
-            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetCtx, DISASSOCIATE));
+        if (!decider.hasPermissions(getUserID(), targetID, DISASSOCIATE)) {
+            throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetID, DISASSOCIATE));
         }
 
         //create association in PAP
-        getGraphPAP().dissociate(uaCtx, targetCtx);
+        getGraphPAP().dissociate(uaID, targetID);
     }
 
     /**
@@ -566,7 +540,7 @@ public class GraphService extends Service {
 
         //check the user can get the associations of the source node
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), sourceID, GET_ASSOCIATIONS)){
+        if(!decider.hasPermissions(getUserID(), sourceID, GET_ASSOCIATIONS)){
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", sourceID, GET_ASSOCIATIONS));
         }
 
@@ -590,7 +564,7 @@ public class GraphService extends Service {
 
         //check the user can get the associations of the source node
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), targetID, GET_ASSOCIATIONS)){
+        if(!decider.hasPermissions(getUserID(), targetID, GET_ASSOCIATIONS)){
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", targetID, GET_ASSOCIATIONS));
         }
 
@@ -617,7 +591,7 @@ public class GraphService extends Service {
         Set<Node> nodes = getGraphPAP().search(name, type, properties);
         nodes.removeIf(x -> {
             try {
-                return !getDecider().hasPermissions(getUserID(), getProcessID(), x.getID(), ANY_OPERATIONS);
+                return !getDecider().hasPermissions(getUserID(), x.getID(), ANY_OPERATIONS);
             }
             catch (PMException e) {
                 return true;
@@ -651,7 +625,7 @@ public class GraphService extends Service {
         }
 
         Decider decider = getDecider();
-        if(!decider.hasPermissions(getUserID(), getProcessID(), id, ANY_OPERATIONS)) {
+        if(!decider.hasPermissions(getUserID(), id, ANY_OPERATIONS)) {
             throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", id, ANY_OPERATIONS));
         }
 

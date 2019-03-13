@@ -69,9 +69,8 @@ public class ConfigurationService extends Service {
 
         JsonGraph graph = configuration.getGraph();
         Collection<Node> nodes = graph.getNodes();
-        HashMap<Long, Node> nodesMap = new HashMap<>();
         for(Node node : nodes) {
-            long oldID = node.getID();
+            long id = node.getID();
             Map<String, String> properties = node.getProperties();
 
             //if a password is present encrypt it.
@@ -87,23 +86,19 @@ public class ConfigurationService extends Service {
                 }
             }
 
-            getGraphPAP().createNode(node);
-            nodesMap.put(oldID, node);
+            getGraphPAP().createNode(id, node.getName(), node.getType(), properties);
         }
 
         Set<JsonAssignment> assignments = graph.getAssignments();
         for(JsonAssignment assignment : assignments) {
-            Node childCtx = nodesMap.get(assignment.getChild());
-            Node parentCtx = nodesMap.get(assignment.getParent());
-            getGraphPAP().assign(childCtx, parentCtx);
+            getGraphPAP().assign(assignment.getChild(), assignment.getParent());
         }
 
         Set<JsonAssociation> associations = graph.getAssociations();
         for(JsonAssociation association : associations) {
             long uaID = association.getUa();
             long targetID = association.getTarget();
-            Node targetNode = nodesMap.get(targetID);
-            getGraphPAP().associate(new Node(nodesMap.get(uaID).getID(), UA), new Node(targetNode.getID(), targetNode.getType()), association.getOps());
+            getGraphPAP().associate(uaID, targetID, association.getOps());
         }
 
         // prohibitions

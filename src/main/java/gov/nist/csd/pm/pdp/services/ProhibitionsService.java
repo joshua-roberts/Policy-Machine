@@ -41,13 +41,13 @@ public class ProhibitionsService extends Service {
             if(!getGraphPAP().exists(subject.getSubjectID())) {
                 throw new PMGraphException(String.format("node with ID %d and type %s does not exist", subject.getSubjectID(), subject.getSubjectType()));
             }
-            if(!decider.hasPermissions(getUserID(), getProcessID(), subject.getSubjectID(), CREATE_PROHIBITION)) {
+            if(!decider.hasPermissions(getUserID(), subject.getSubjectID(), CREATE_PROHIBITION)) {
                 throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", subject.getSubjectID(), PROHIBIT_SUBJECT));
             }
         }
 
         for(Prohibition.Node node : nodes) {
-            if(!decider.hasPermissions(getUserID(), getProcessID(), node.getID(), CREATE_PROHIBITION)) {
+            if(!decider.hasPermissions(getUserID(), node.getID(), CREATE_PROHIBITION)) {
                 throw new PMAuthorizationException(String.format("unauthorized permissions on %s: %s", node.getID(), Operations.PROHIBIT_RESOURCE));
             }
         }

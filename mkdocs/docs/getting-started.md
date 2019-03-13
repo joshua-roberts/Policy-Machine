@@ -1,51 +1,63 @@
-# Getting Started
+## Getting Started
 
-## Standalone Java Library
-The REST API provides tools to create NGAC aware applications but requires a certain level of already developed infrastructure to really be useful.  If you are looking to just experiment with NGAC graphs and use cases, you can use the Policy Decision Point (PDP), Event Processing Point (EPP), and the Policy Information Point (PIP) packages to test different NGAC policy configurations in your own environments.
+### Purpose
+The Policy Machine REST API exposes a standard set of administrative NGAC commands.  This API also acts as a Policy Enforcement Point (PEP) by ensuring any calling user has permission to carry out a command before any action is taken. Exposing the PEP allows users to create web-based, NGAC aware applications.
 
-### Build Policy Machine JAR Library
+### Important Notes
 
-1. In **pom.xml** change `<packaging>war</packaging>` to `<packaging>jar</packaging>`.
-2. Run `mvn package` from the project root.
-3. `pm.jar` will be created in /target/.  
-4. Add `pm.jar` to your classpath.
-Examples can be found below and in [examples](/examples/#standalone-examples)
+1. **Namespaces** - Node's can belong to namespaces which allow for multiple nodes of the same type to have the same name.  Nodes that have the same name but different type are allowed in the same namesapce. If a node is created with out specifying the namespace, it will be put in the 'default' namespace.
+1. **Super user metadata** - There are 7 nodes that make up the super user metadata. The super user is assigned to 2 user attributes super_ua1 and super_ua2. These two attributes are assigned to a policy class also called super.  Super_ua1 is associated with an Object Attribute, super_oa1, which is also assigned to the policy class super, with * permissions.  This gives any user in super_ua1 all permissions on objects in super_oa1. There is one Object called super assigned to super_oa1. Super_ua2 is associated with super_ua1 with * permissions.  This allows the super user to have all permissions on itself as well.
+![alt text](images/super.png "super")
+2. **Creating a policy class** - When creating a policy class we check if the requesting user has the permission "create a policy class" on the super object.
+3. **Policy class assignments** - When a policy class is created, an Object Attribute that will represent the policy class is also created, and assigned to super_oa1.  The representative will be used any time a user is assigning to or deassigning from the policy class.  This allows us to control who can perform these actions since policy classes them selves cannot be assigned or associated to any other nodes.
+![alt text](images/pc.png "creating a policy class")
 
-### Example
-We want to grant user `u1` read permission on object `o1`.  The following code sample will accomplish this.
+### Run with Docker-compose
 
+1. Build the war file by running `mvn clean package install` from the project root. This will create `pm.war` in the project's `/target/` directory.
+2. Run `docker-compose up` from the project root to start the docker container.
+
+#### Docker Compose File
+```yaml
+version: '3'
+services:
+  neo4j:
+    image: neo4j:latest
+    volumes:
+      - $HOME/neo4j/data:/data
+      - $HOME/neo4j/logs:/logs
+    ports:
+      - 7474:7474
+      - 7687:7687
+  pm:
+    image: tomcat:8-jre8
+    volumes:
+      - ./target/pm.war:/usr/local/tomcat/webapps/pm.war
+    ports:
+      - 8080:8080
+    links:
+      - neo4j
 ```
-// 1. Create a new graph.  For this example, we'll use the in-memory implementation of the 'Graph' interface.
-Graph graph = new MemGraph();
+The Compose file creates two linked containers.  
 
-// 2. Create the user and object nodes.
-// create a user with name u1, ID 5, and the properties key1=value1
-long u1ID = graph.createNode(new Node(5, "u1", NodeType.U, NodeUtils.toProperties("key1", "value1")));
-// create an object with name o1, ID 3, and the properties key1=value1
-long o1ID = graph.createNode(new Node(3, "o1", NodeType.O, NodeUtils.toProperties("key1", "value1")));
+1. A Neo4j container which is where we will store our access control policy data. We expose the ports 7474 and 7687 to interact with the Neo4j database.
+2. The tomcat server that will deploy `pm.war`.
 
-// 3. Create a user attribute 'ua1' and assign 'u1' to it.
-long ua1ID = graph.createNode(new Node(4, "ua1", NodeType.UA, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new Node(u1ID, NodeType.U), new Node(ua1ID, NodeType.UA));
+##### Notes on Neo4j
+The web application recognizes the neo4j service by the name `neo4j`.  Therefore, when setting the connection to the database, the host name should be `neo4j`.  Also, the bolt protocol is used so the port should be `7687`.
 
-// 4. Create an object attribute 'oa1' and assign 'o1' to it.
-long oa1ID = graph.createNode(new Node(2, "oa1", NodeType.OA, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new Node(o1ID, NodeType.O), new Node(oa1ID, NodeType.OA));
+#### Tested Operating Systems
 
-// 5. Create a policy class and assign the user and object attributes to it.
-long pc1ID = graph.createNode(new Node(1, "pc1", NodeType.PC, NodeUtils.toProperties("key1", "value1")));
-graph.assign(new Node(ua1ID, NodeType.UA), new Node(pc1ID, NodeType.PC));
-graph.assign(new Node(oa1ID, NodeType.OA), new Node(pc1ID, NodeType.PC));
+1. macOS
+    - [Docker for Mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
+2. Windows 7
+    - [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows)
+    - **Note**: Docker Toolbox is legacy software and handles volumes differently than Docker for Windows/Mac.  There is one line in the Docker Compose file that needs to be updated.
+	      - Create a shared folder in Oracle VirtualBox called `/target/` which points to the target folder of the PM project.
+        - change this line in the Compose file:
+	    `./target/pm.war:/usr/local/tomcat/webapps/pm.war`
+	    to
+	    `//target/pm.war:/usr/local/tomcat/webapps/pm.war`
 
-// 6. associate 'ua1' and 'oa1' to give 'u1' read permissions on 'o1'
-graph.associate(new Node(ua1ID, NodeType.UA), new Node(oa1ID, NodeType.OA), new HashSet<>(Arrays.asList("read")));
-
-// test the configuration is correct
-// create a new policy decider with the in memory graph
-// the second parameter is a list of prohibitions, but since they aren't used in this example, null is fine
-Decider decider = new PReviewDecider(graph, null);
-
-// use the listPermissions method to list the permissions 'u1' has on 'o1'
-HashSet<String> permissions = decider.listPermissions(u1ID, 0, o1ID);
-assertTrue(permissions.contains("read"));
-```
+#### Connecting to a Database
+Update the database connection parameters in `/resources/db.config`.

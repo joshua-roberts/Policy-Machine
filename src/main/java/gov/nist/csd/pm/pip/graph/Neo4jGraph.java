@@ -5,10 +5,12 @@ import gov.nist.csd.pm.common.exceptions.PMGraphException;
 import gov.nist.csd.pm.exceptions.PMException;
 import gov.nist.csd.pm.graph.Graph;
 import gov.nist.csd.pm.graph.model.nodes.Node;
+import gov.nist.csd.pm.graph.model.nodes.NodeType;
+import gov.nist.csd.pm.graph.model.relationships.Assignment;
+import gov.nist.csd.pm.graph.model.relationships.Association;
 import gov.nist.csd.pm.pip.db.DatabaseContext;
 import gov.nist.csd.pm.pip.db.neo4j.Neo4jConnection;
 import gov.nist.csd.pm.pip.db.neo4j.Neo4jHelper;
-import gov.nist.csd.pm.pip.search.Neo4jSearch;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,17 +31,11 @@ public class Neo4jGraph implements Graph {
     private Neo4jConnection neo4j;
 
     /**
-     * Store the database connection parameters.
-     */
-    private DatabaseContext dbCtx;
-
-    /**
      * Receive context information about the database connection, and create a new connection to the Neo4j instance.
      * @param ctx Context information about the Neo4j connection.
      * @throws PMDBException When there is an error connecting to Neo4j.
      */
     public Neo4jGraph(DatabaseContext ctx) throws PMDBException {
-        this.dbCtx = ctx;
         this.neo4j = new Neo4jConnection(ctx.getHost(), ctx.getPort(), ctx.getUsername(), ctx.getPassword());
 
         // create an index on node IDs
@@ -58,42 +54,39 @@ public class Neo4jGraph implements Graph {
     /**
      * Create a new node with the information provided in node. The ID is a random long value.
      *
-     * @param node the context of the node to create.  This includes the id, name, type, and properties.
      * @return the ID of the created node.
-     * @throws IllegalArgumentException if the node is null.
+     * @throws IllegalArgumentException if the ID is 0.
      * @throws IllegalArgumentException if the node name is null or empty.
      * @throws IllegalArgumentException if the node type is null.
      * @throws PMDBException if the provided node is null.
      */
     @Override
-    public long createNode(Node node) throws PMDBException {
-        if (node == null) {
-            throw new IllegalArgumentException("a null node was provided when creating a node in neo4j");
-        } else if(node.getName() == null || node.getName().isEmpty()) {
+    public Node createNode(long id, String name, NodeType nodeType, Map<String, String> properties) throws PMException {
+        if (id == 0) {
+            throw new IllegalArgumentException("id was 0");
+        } else if(name == null || name.isEmpty()) {
             throw new IllegalArgumentException("a null name was provided when creating a new node");
-        }else if(node.getType() == null) {
+        }else if(nodeType == null) {
             throw new IllegalArgumentException("a null type was provided when creating a new node");
         }
 
         // if the node properties are null, getPAP to an empty map
-        if(node.getProperties() == null) {
-            node.properties(new HashMap<>());
+        if(properties == null) {
+           properties = new HashMap<>();
         }
 
         // generate a random ID
-        long id = new Random().nextLong();
-
         String cypher = String.format("create(n:NODE:%s{id: %d, name: '%s', type: '%s'})",
-                node.getType(), id, node.getName(), node.getType());
+                nodeType, id,name, nodeType);
 
         // build a string for the node's properties
         StringBuilder propStr = new StringBuilder();
-        for (String key : node.getProperties().keySet()) {
+        for (String key : properties.keySet()) {
             if (propStr.length() == 0) {
-                propStr.append(String.format("%s: '%s'", key, node.getProperties().get(key)));
+                propStr.append(String.format("%s: '%s'", key, properties.get(key)));
             }
             else {
-                propStr.append(String.format(", %s: '%s'", key, node.getProperties().get(key)));
+                propStr.append(String.format(", %s: '%s'", key, properties.get(key)));
             }
         }
         cypher += String.format(" set n += {%s}", propStr.toString());
@@ -103,7 +96,7 @@ public class Neo4jGraph implements Graph {
                 PreparedStatement stmt = conn.prepareStatement(cypher)
         ) {
             stmt.executeQuery();
-            return id;
+            return new Node(id, name, nodeType, properties);
         } catch (SQLException e) {
             throw new PMDBException(e.getMessage());
         }
@@ -112,45 +105,38 @@ public class Neo4jGraph implements Graph {
     /**
      * Update a node based on the given node context.  Only name and properties can be updated.
      *
-     * @param node the context of the node to update. This includes the id, name, type, and properties.
      * @throws IllegalArgumentException if the provided node to update is null.
      * @throws IllegalArgumentException if the provided node to update has an ID of 0.
      * @throws PMDBException if there is an error updating the node in Neo4j.
      */
     @Override
-    public void updateNode(Node node) throws PMDBException, PMGraphException {
-        if(node == null) {
-            throw new IllegalArgumentException("a null node was provided when updating a node in neo4j");
-        } else if(node.getID() == 0) {
+    public void updateNode(long id, String name, Map<String, String> properties) throws PMException {
+        if(id == 0) {
             //throw an exception if the provided context does not have an ID
             throw new IllegalArgumentException("no ID was provided when updating a node in neo4j");
         }
 
-        Node exNode = new Neo4jSearch(dbCtx).getNode(node.getID());
-        // check if changing the name, if not, give the node the existing name
-        if (node.getName() == null || node.getName().isEmpty()) {
-            node.name(exNode.getName());
-        }
+        Node exNode = getNode(id);
 
-        // set the type of the updated node
-        node.type(exNode.getType());
-
-        String cypher = String.format("match(n:NODE{id:%d}) set n={} ", node.getID());
-
+        String cypher = String.format("match(n:NODE:%s{id:%d}) set n={} ", exNode.getType(), id);
         // have to reset the ID etc because neo4j will erase all properties
         // build a string for the node's name and properties
         StringBuilder propStr = new StringBuilder();
-        propStr.append(String.format("id: %s", node.getID()));
-        propStr.append(String.format(", name: '%s'", node.getName()));
-        propStr.append(String.format(", type: '%s'", node.getType()));
+        propStr.append(String.format("id: %s", id));
+        propStr.append(String.format(", type: '%s'", exNode.getType()));
+        if (name != null && !name.isEmpty()) {
+            propStr.append(String.format(", name: '%s'", name));
+        } else {
+            propStr.append(String.format(", name: '%s'", exNode.getName()));
+        }
 
-        if (node.getProperties() != null) {
-            for (String key : node.getProperties().keySet()) {
+        if (properties != null) {
+            for (String key : properties.keySet()) {
                 if (propStr.length() == 0) {
-                    propStr.append(String.format("%s: '%s'", key, node.getProperties().get(key)));
+                    propStr.append(String.format("%s: '%s'", key, properties.get(key)));
                 }
                 else {
-                    propStr.append(String.format(", %s: '%s'", key, node.getProperties().get(key)));
+                    propStr.append(String.format(", %s: '%s'", key, properties.get(key)));
                 }
             }
         }
@@ -174,7 +160,6 @@ public class Neo4jGraph implements Graph {
     /**
      * Delete a node from the graph.
      *
-     * @param nodeID the ID of the node to delete.
      * @throws PMDBException if there is an error deleting the node from the database.
      */
     @Override
@@ -194,7 +179,6 @@ public class Neo4jGraph implements Graph {
     /**
      * Check if a node with the given ID exists in the database.
      *
-     * @param nodeID the ID of the node to check for.
      * @return true if a node with the given ID exists, false otherwise.
      * @throws PMDBException if there is an error check if the node exists in the database.
      */
@@ -246,7 +230,7 @@ public class Neo4jGraph implements Graph {
 
     /**
      * Get the node from the graph with the given ID.
-     * @param id the ID of the node to get.
+     *
      * @return a Node with the information of the node with the given ID.
      * @throws PMDBException if there is an error retrieving the node from the database.
      * @throws PMGraphException if there is an error converting the data returned from the database into a node.
@@ -272,9 +256,55 @@ public class Neo4jGraph implements Graph {
         }
     }
 
+    /**
+     * Search the neo4j database for nodes based on name, type, and properties. This implementation does not support
+     * wildcard searching.
+     * @param name the name of the nodes to search for.
+     * @param type the type of the nodes to search for.
+     * @param properties the properties of the nodes to search for.
+     * @return the set of nodes that match the search parameters.
+     * @throws PMDBException if there is an error retrieving the nodes from the database.
+     * @throws PMGraphException if there is an error converting the ResultSet to a set of nodes.
+     */
     @Override
-    public Set<Node> search(String s, String s1, Map<String, String> map) throws PMException {
-        return null;
+    public Set<Node> search(String name, String type, Map<String, String> properties) throws PMDBException, PMGraphException {
+        // get the cypher query
+        String cypher = getSearchCypher(name, type, properties);
+        // query neo4j for the nodes
+        try(
+                Connection conn = neo4j.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(cypher);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            return Neo4jHelper.getNodesFromResultSet(rs);
+        } catch (SQLException e) {
+            throw new PMDBException(e.getMessage());
+        }
+    }
+
+    private static String getSearchCypher(String name, String type, Map<String,String> properties) {
+        String propsStr = "";
+        if (name != null && !name.isEmpty()){
+            propsStr = String.format("name: \"%s\"", name);
+        }
+
+        String typeStr = "";
+        if (type != null && !type.isEmpty()){
+            typeStr = String.format(":%s", type);
+        }
+
+        if (properties != null) {
+            for (String key : properties.keySet()) {
+                String value = properties.get(key);
+                if (propsStr.isEmpty()) {
+                    propsStr += String.format("%s: \"%s\"", key, value);
+                } else {
+                    propsStr += String.format(", %s: \"%s\"", key, value);
+                }
+            }
+        }
+
+        return String.format("match(n%s{%s}) return n", typeStr, propsStr);
     }
 
     /**
@@ -304,7 +334,6 @@ public class Neo4jGraph implements Graph {
     /**
      * Get the children of the node with the given ID.
      *
-     * @param nodeID the ID of the node to get the children of.
      * @return the set of nodes that are assigned to the node with the given ID.
      * @throws PMGraphException if there is an error converting the ResultSet returned from the database to a set of Nodes.
      * @throws PMDBException if there is an error getting the children of the provided node from the database.
@@ -331,7 +360,6 @@ public class Neo4jGraph implements Graph {
     /**
      * Get the parents of the node with the given ID.
      *
-     * @param nodeID the ID of the node to get the children of.
      * @return the set of nodes that are assigned to the node with the given ID.
      * @throws PMGraphException if there is an error converting the ResultSet returned from the database to a set of Nodes.
      * @throws PMDBException if there is an error getting the parents of the provided node from the database.
@@ -358,29 +386,20 @@ public class Neo4jGraph implements Graph {
     /**
      * Assign the child node to the parent node.
      *
-     * @param childCtx the ID and type of the child node.
-     * @param parentCtx the ID and type of the parent node.
      * @throws PMDBException if there is an error assigning the child to the parent in the database.
-     * @throws IllegalArgumentException if the child node is null.
-     * @throws IllegalArgumentException if the parent node is null.
-     * @throws IllegalArgumentException if the child node type is null.
-     * @throws IllegalArgumentException if the parent node type is null.
+     * @throws PMGraphException if the child node doesn't exist.
+     * @throws PMGraphException if the parent node doesn't exist.
      */
     @Override
-    public void assign(Node childCtx, Node parentCtx) throws PMDBException {
-        if(childCtx == null) {
-            throw new IllegalArgumentException("child node context was null");
-        } else if (parentCtx == null) {
-            throw new IllegalArgumentException("parent node context was null");
-        } else if(childCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the child of the assignment to create.");
-        } else if (parentCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the parent of the assignment to create.");
-        }
+    public void assign(long childID, long parentID) throws PMException {
+        Node child = getNode(childID);
+        Node parent = getNode(parentID);
+
+        Assignment.checkAssignment(child.getType(), parent.getType());
 
         String cypher = String.format("MATCH (a:%s{id: %d}), (b:%s{id: %d}) " +
-                        "CREATE (a)-[:assigned_to]->(b)", childCtx.getType(), childCtx.getID(),
-                parentCtx.getType(), parentCtx.getID());
+                        "CREATE (a)-[:assigned_to]->(b)",child.getType(), child.getID(),
+                parent.getType(), parent.getID());
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher)
@@ -394,28 +413,18 @@ public class Neo4jGraph implements Graph {
 
     /**
      * Deassign the child node from the parent node.
-     * @param childCtx the context information for the child of the assignment to delete.
-     * @param parentCtx the context information for the parent of the assignment to delete.
+     *
      * @throws PMDBException if there is an error deleting this assignment in the database.
-     * @throws IllegalArgumentException if the child node is null.
-     * @throws IllegalArgumentException if the parent node is null.
-     * @throws IllegalArgumentException if the child node type is null.
-     * @throws IllegalArgumentException if the parent node type is null.
+     * @throws PMGraphException if the child node doesn't exist.
+     * @throws PMGraphException if the parent node doesn't exist.
      */
     @Override
-    public void deassign(Node childCtx, Node parentCtx) throws PMDBException {
-        if(childCtx == null) {
-            throw new IllegalArgumentException("child node context was null");
-        } else if (parentCtx == null) {
-            throw new IllegalArgumentException("parent node context was null");
-        } else if(childCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the child of the assignment to delete.");
-        } else if (parentCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the parent of the assignment to delete.");
-        }
+    public void deassign(long childID, long parentID) throws PMException {
+        Node child = getNode(childID);
+        Node parent = getNode(parentID);
 
         String cypher = String.format("match (a:%s{id: %d})-[r:assigned_to]->(b:%s{id: %d}) delete r",
-                childCtx.getType(), childCtx.getID(), parentCtx.getType(), parentCtx.getID());
+                child.getType(), child.getID(), parent.getType(), parent.getID());
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher)
@@ -430,28 +439,22 @@ public class Neo4jGraph implements Graph {
     /**
      * Create an association between the user attribute and the target node. If an association already exists, update
      * the operations to the ones provided.
-     * @param uaCtx the context information for the user attribute of the association
-     * @param targetCtx the context information for the target of the association.
-     * @param operations A Set of operations to add to the Association.
-     * @throws IllegalArgumentException if the user attribute node context is null.
-     * @throws IllegalArgumentException if the target node context is null.
-     * @throws IllegalArgumentException if the target node type is null.
+     *
+     * @throws PMGraphException if the user attribute node doesn't exist.
+     * @throws PMGraphException if the target node doesn't exist.
      * @throws PMDBException if there is an error associating the two nodes in the database.
      */
     @Override
-    public void associate(Node uaCtx, Node targetCtx, Set<String> operations) throws PMDBException {
-        if(uaCtx == null) {
-            throw new IllegalArgumentException("user attribute node context was null");
-        } else if (targetCtx == null) {
-            throw new IllegalArgumentException("target node context was null");
-        } else if(targetCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the target of the association to create.");
-        }
+    public void associate(long uaID, long targetID, Set<String> operations) throws PMException {
+        Node ua = getNode(uaID);
+        Node target = getNode(targetID);
+
+        Association.checkAssociation(ua.getType(), target.getType());
 
         String operationsStr = Neo4jHelper.setToCypherArray(operations);
         String cypher = String.format("MATCH (ua:UA{id: %d}), (target:%s{id: %d}) " +
-                        "merge (ua)-[a:associated_with]->(target) set a.operations = %s", uaCtx.getID(), targetCtx.getType(),
-                targetCtx.getID(), operationsStr);
+                        "merge (ua)-[a:associated_with]->(target) set a.operations = %s", ua.getID(),
+                target.getType(), target.getID(), operationsStr);
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher)
@@ -465,25 +468,18 @@ public class Neo4jGraph implements Graph {
 
     /**
      * Delete an association between the user attribute and target node.
-     * @param uaCtx the information for the user attribute.
-     * @param targetCtx the information for the target node.
-     * @throws IllegalArgumentException if the user attribute node context is null.
-     * @throws IllegalArgumentException if the target node context is null.
-     * @throws IllegalArgumentException if the target node type is null.
+     *
+     * @throws PMGraphException if the user attribute node doesn't exist.
+     * @throws PMGraphException if the target node doesn't exist.
      * @throws PMDBException if there is an error dissociating the two nodes in the database.
      */
     @Override
-    public void dissociate(Node uaCtx, Node targetCtx) throws PMDBException {
-        if(uaCtx == null) {
-            throw new IllegalArgumentException("user attribute node context was null");
-        } else if (targetCtx == null) {
-            throw new IllegalArgumentException("target node context was null");
-        } else if(targetCtx.getType() == null) {
-            throw new IllegalArgumentException("a null type was provided for the target of the association to delete.");
-        }
+    public void dissociate(long uaID, long targetID) throws PMException {
+        Node ua = getNode(uaID);
+        Node target = getNode(targetID);
 
-        String cypher = String.format("match (ua:UA{id:%d})-[r:associated_with]->(target%s{id:%d}) delete r", uaCtx.getID(),
-                targetCtx.getType(), targetCtx.getID());
+        String cypher = String.format("match (ua:UA{id:%d})-[r:associated_with]->(target%s{id:%d}) delete r",
+                ua.getID(), target.getType(), target.getID());
         try(
                 Connection conn = neo4j.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(cypher)
@@ -499,7 +495,6 @@ public class Neo4jGraph implements Graph {
      * Get the associations that the provided node is the source of. Note: Only user attributes can be source nodes in
      * an association.
      *
-     * @param sourceID the ID of the source node.
      * @return a map of target node IDs and operations given to the source node for each association.
      * @throws PMDBException if there is an exception retrieving the associations for the source node in the database.
      */
@@ -529,7 +524,6 @@ public class Neo4jGraph implements Graph {
      * Get the associations that the provided node is the target of. Note: Only user attributes and Object Attributes
      * can be target nodes in an association.
      *
-     * @param targetID the ID of the target node.
      * @return a map of source node IDs and operations the source nodes have on the given target ID through each association.
      * @throws PMDBException if there is an exception retrieving the associations for the target node in the database.
      */

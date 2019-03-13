@@ -28,7 +28,7 @@ public class AnalyticsService extends Service {
      */
     public Set<String> getPermissions(long targetID) throws PMException {
         Decider decider = getDecider();
-        return decider.listPermissions(getUserID(), getProcessID(), targetID);
+        return decider.listPermissions(getUserID(), targetID);
     }
 
 
