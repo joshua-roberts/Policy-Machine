@@ -1,0 +1,33 @@
+name: test
+description: test description
+steps:
+  - description: step 1
+    actions:
+      - "assign u1 ua1"
+      - "assign u1 ua2"
+      - "assign u2 ua2"
+      - "assign ua1 ua2"
+    consequence: "u1 assigned to ua1"
+  - description: step 2
+    actions:
+      - "assign ua1 pc1"
+      - "assign ua2 pc1"
+    consequence: "ua1 assigned to pc1"
+  - description: step 3
+    actions:
+      - "assign o1 oa1"
+      - "assign o2 oa1"
+      - "assign o2 oa2"
+      - "assign o3 oa2"
+    consequence: "o1 assigned to oa1"
+  - description: step 4
+    actions:
+      - "assign oa1 pc1"
+      - "assign oa2 pc1"
+      - "assign oa1 pc2"
+    consequence: "oa1 assigned to pc1"
+  - description: step 5
+    actions:
+      - "associate ua1 oa1 read,write"
+      - "associate ua2 oa2 read"
+    consequence: "ua1 associated with oa1"

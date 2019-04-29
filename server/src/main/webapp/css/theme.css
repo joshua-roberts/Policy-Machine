@@ -1,0 +1,22 @@
+input[type=text]{
+    margin-bottom: 3%;
+}
+body{
+    background-color: lightgrey;
+    padding-bottom: 20px;
+}
+.tile{
+    cursor: pointer;
+}
+.icon-panel:hover {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+.icon-panel:active {
+    box-shadow: none;
+}
+.backbtn:hover {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+form{
+    margin: 0;
+}

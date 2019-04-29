@@ -1,0 +1,35 @@
+# services: server, database, application
+# what if the database is not started as part of docker
+version: '3'
+
+services:
+  client:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile
+    ports:
+      - "4200:4200"
+      - "49153:49153"
+    volumes:
+       - './client/:/usr/src/app'
+       - '/usr/src/app/node_modules'
+    links:
+      - server
+
+  neo4j:
+    image: neo4j:3.3.0
+    volumes:
+      - $HOME/neo4j/data:/data
+      - $HOME/neo4j/logs:/logs
+    ports:
+      - 7474:7474
+      - 7687:7687
+
+  server:
+    image: tomcat:8-jre8
+    volumes:
+      - //target/pm.war:/usr/local/tomcat/webapps/pm.war
+    ports:
+      - 8080:8080
+    links:
+      - neo4j

@@ -1,0 +1,31 @@
+label: obl1
+rules:
+  - label: rule1
+    event:
+      subject:
+        user: "USER_NAME"
+    response:
+      actions:
+        - create:
+            name: name
+            type: type
+            properties:
+              k1: v1
+              k2: v2
+            containers:
+              - cont 1
+              - cont 2
+        - create:
+            name: name
+            type: type
+            properties:
+              k1: v1
+              k2: v2
+            function:
+              name: aFunction
+              args:
+                - name: arg1
+                  value: value1
+            containers:
+              - cont 1
+              - cont 2
